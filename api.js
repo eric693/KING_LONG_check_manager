@@ -44,16 +44,20 @@ async function apiRequest(action, options = {}) {
     let url;
     let fetchOptions;
 
+    // 呼叫端自己帶了 token 就不要蓋掉：LINE 打卡連結（linePunch）的 token 是一次性打卡代碼，
+    // 不是登入憑證。以前一律覆蓋成登入憑證，後端就找不到打卡連結，LINE 打卡永遠失敗。
+    const callerToken = new URLSearchParams(query).has('token');
+
     if (usePost) {
         const body = new URLSearchParams(query);
         body.set('action', name);
-        body.set('token', token);
+        if (!callerToken) body.set('token', token);
         url = API_CONFIG.apiUrl;
         // 用 x-www-form-urlencoded 才不會觸發預檢請求，Apps Script 也讀得到 e.parameter
         fetchOptions = { method: 'POST', body: body };
     } else {
         url = `${API_CONFIG.apiUrl}?action=${encodeURIComponent(name)}` +
-              `&token=${encodeURIComponent(token)}` +
+              (callerToken ? '' : `&token=${encodeURIComponent(token)}`) +
               (query ? '&' + query : '');
         fetchOptions = {};
     }
