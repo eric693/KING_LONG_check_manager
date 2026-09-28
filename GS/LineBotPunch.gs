@@ -21,11 +21,15 @@ function handleLineMessage(event) {
     
     Logger.log(' 員工已註冊: ' + employee.name);
     
-    if (text === '上班打卡') {
-      sendLinePunchLink(replyToken, userId, employee.name, '上班');
-    }
-    else if (text === '下班打卡') {
-      sendLinePunchLink(replyToken, userId, employee.name, '下班');
+    if (text === '上班打卡' || text === '下班打卡') {
+      const punchType = text === '上班打卡' ? '上班' : '下班';
+      // 先檢查順序：不能打就直接說明，不要給一個點了才失敗的連結（規則見 PunchRules.gs）
+      const sequence = checkPunchSequence_(userId, punchType);
+      if (!sequence.ok) {
+        replyMessage(replyToken, ' ' + sequence.msg);
+      } else {
+        sendLinePunchLink(replyToken, userId, employee.name, punchType);
+      }
     }
     else if (text === '取消打卡') {
       clearPunchIntent_(userId);
@@ -378,24 +382,19 @@ function calculateMonthlyStats(groupedRecords, userId, yearMonth) {
   let completeDays = 0;
   
   dates.forEach(date => {
-    const dayRecords = groupedRecords[date];
-    const punchIn = dayRecords.find(r => r.type === '上班');
-    const punchOut = dayRecords.find(r => r.type === '下班');
-    
-    if (punchIn && punchOut) {
-      completeDays++;
-      
-      try {
-        const inTime = new Date(`${date} ${punchIn.time}`);
-        const outTime = new Date(`${date} ${punchOut.time}`);
-        const spanMinutes = Math.round((outTime - inTime) / 60000);
-        
-        if (spanMinutes > 0 && spanMinutes < 24 * 60) {
-          totalWorkHours += computeNetWorkMinutes_(spanMinutes, shiftMap[date] || null) / 60;
-        }
-      } catch (e) {
-        // 忽略計算錯誤
-      }
+    // 一天可能有兩組上下班（休息前打卡）：配成工作段再算，規則見 PunchRules.gs
+    const punches = groupedRecords[date]
+      .filter(r => (r.type === '上班' || r.type === '下班') && (r.note !== '補打卡' || r.audit === 'v'))
+      .map(r => ({ type: r.type, time: r.timestamp instanceof Date ? r.timestamp : new Date(`${date} ${r.time}`) }))
+      .filter(p => !isNaN(p.time.getTime()))
+      .sort((a, b) => a.time - b.time);
+
+    try {
+      const work = computeDayWorkFromPunches_(punches, shiftMap[date] || null);
+      if (work.segments.length && work.unpaired === 0) completeDays++;
+      totalWorkHours += work.netMinutes / 60;
+    } catch (e) {
+      // 忽略計算錯誤
     }
   });
   
@@ -1215,38 +1214,11 @@ function handleLineLocation(event) {
  */
 function determinePunchType(userId) {
   try {
-    const today = Utilities.formatDate(new Date(), 'Asia/Taipei', 'yyyy-MM-dd');
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_ATTENDANCE);
-    const values = sheet.getDataRange().getValues();
-    
-    // 查找今天的打卡記錄
-    let hasPunchIn = false;
-    let hasPunchOut = false;
-    
-    for (let i = 1; i < values.length; i++) {
-      const recordDate = Utilities.formatDate(new Date(values[i][0]), 'Asia/Taipei', 'yyyy-MM-dd');
-      const recordUserId = values[i][1];
-      const recordType = values[i][4];
-      
-      if (recordUserId === userId && recordDate === today) {
-        if (recordType === '上班') hasPunchIn = true;
-        if (recordType === '下班') hasPunchOut = true;
-      }
-    }
-    
-    // 決策邏輯
-    if (!hasPunchIn) {
-      return '上班';
-    } else if (!hasPunchOut) {
-      return '下班';
-    } else {
-      // 已經打過上下班卡，返回加班
-      return '下班'; // 或者可以改成 '加班'
-    }
-    
+    // 一天可以有兩組上下班：上一次打上班就打下班，否則打上班（見 PunchRules.gs）
+    return nextPunchType_(userId);
   } catch (error) {
     Logger.log(' determinePunchType 錯誤: ' + error);
-    return '上班'; // 預設返回上班
+    return '上班';
   }
 }
 

@@ -224,6 +224,11 @@ function checkAttendanceAbnormal(attendanceRows) {
   }
   
   // ===== 步驟 3：檢查每一天的打卡狀態 =====
+  // 兩頭班要打休息卡：當月排班一次讀進來（見 ShiftTemplates.gs / PunchRules.gs）
+  const shiftMap = (targetUserId && targetMonth && typeof getEmployeeShiftMapForMonth === 'function')
+    ? getEmployeeShiftMapForMonth(targetUserId, targetMonth)
+    : {};
+
   if (targetUserId && targetMonth) {
     for (const date of allDatesInMonth) {
       const dayRecords = dailyRecords[targetUserId]?.[date] || [];
@@ -325,6 +330,36 @@ function checkAttendanceAbnormal(attendanceRows) {
           id: `abnormal-${abnormalIdCounter}`
         });
         Logger.log(` ${date}: 缺少下班卡`);
+      }
+
+      // ⭐ 一天可以有兩組上下班（休息前打卡）：上班、下班都有，但次數對不上
+      const pendingAdjust = filteredRows.some(r => r.note === "補打卡" && r.audit === "?");
+      const countedRows = filteredRows.filter(r => r.note !== "補打卡" || r.audit === "v");
+      const inCount = countedRows.filter(r => r.type === "上班").length;
+      const outCount = countedRows.filter(r => r.type === "下班").length;
+
+      if (hasPunchIn && hasPunchOut && !pendingAdjust && inCount !== outCount) {
+        abnormalIdCounter++;
+        abnormalRecords.push({
+          date: date,
+          reason: inCount > outCount ? "STATUS_PUNCH_OUT_MISSING" : "STATUS_PUNCH_IN_MISSING",
+          userId: targetUserId,
+          id: `abnormal-${abnormalIdCounter}`
+        });
+        Logger.log(` ${date}: 上班 ${inCount} 次、下班 ${outCount} 次，少一張卡`);
+      }
+
+      // ⭐ 兩頭班（排班有休息時間）卻只打了一組上下班：沒打休息卡
+      const shift = shiftMap[date];
+      if (shift && Number(shift.breakMinutes) > 0 && !pendingAdjust && inCount === 1 && outCount === 1) {
+        abnormalIdCounter++;
+        abnormalRecords.push({
+          date: date,
+          reason: "STATUS_BREAK_PUNCH_MISSING",
+          userId: targetUserId,
+          id: `abnormal-${abnormalIdCounter}`
+        });
+        Logger.log(` ${date}: 兩頭班沒有打休息卡`);
       }
     }
   }

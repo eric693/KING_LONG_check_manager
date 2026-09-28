@@ -12,6 +12,7 @@
       "intro": "The page you open first every day: announcements, punch buttons, your personal profile, and any attendance exceptions the system found.",
       "steps": [
         "Tap \"Punch In\" when you arrive and \"Punch Out\" before you leave; both the time and your GPS location are recorded.",
+        "On a split shift, punch out before your break and punch in when you come back; up to two pairs a day.",
         "Besides the buttons, you can also punch by typing in LINE, or by scanning the QR code on the company tablet with your phone camera (it opens this system; log in first if asked).",
         "If your phone supports fingerprint or face recognition, tap \"Set up biometrics\" once to pair it, then punch with biometrics from then on.",
         "If you forgot to punch or the time is wrong, submit a make-up punch request with a reason and wait for the administrator's approval.",
@@ -22,7 +23,8 @@
         "Punching requires location permission; if the browser blocks it, the punch fails or is recorded as an exception.",
         "\"Attendance exceptions\" are detected automatically (missing punch, late, early leave). An approved make-up punch clears the exception.",
         "Announcements are sorted by importance; red ones are important, please read them.",
-        "The QR codes on the tablet change every 30 seconds, so photos of them or copies sent to others stop working. Scan them in person."
+        "The QR codes on the tablet change every 30 seconds, so photos of them or copies sent to others stop working. Scan them in person.",
+        "You cannot do the same punch twice in a row; if the order is wrong, the system tells you which punch comes next. If you forget the break punches, attendance issues shows \"Add break start / Add break end\" buttons."
       ],
       "terms": [
         [
@@ -232,7 +234,7 @@
         "Check the location and submit, then confirm it appears under \"View Shifts\"."
       ],
       "notes": [
-        "Staff punch in and out only once; hours worked = time on site minus the shift's break minutes, to the minute.",
+        "On split shifts staff punch out before the break and in when they return (up to two pairs a day); hours follow the actual punches, to the minute. If the break punches are missing, the shift's break minutes are deducted and the day shows up under attendance issues.",
         "On days with no shift, 1 hour is taken off only when someone is on site for more than 8 hours.",
         "The same shift for the same person on the same day is rejected, so check the day first."
       ]

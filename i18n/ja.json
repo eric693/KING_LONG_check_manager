@@ -1276,7 +1276,7 @@
   "SHIFT_TAB_TEMPLATES": "シフト設定",
   "SHIFT_BREAK_LABEL": "休憩（分）",
   "SHIFT_TEMPLATES_TITLE": "シフト設定",
-  "SHIFT_TEMPLATES_DESC": "中抜けシフトは「休憩（分）」で表します。従業員は出勤・退勤の 2 回だけ打刻し、実働時間からこの休憩が引かれます。ここを変更しても、作成済みのシフトは変わりません。",
+  "SHIFT_TEMPLATES_DESC": "中抜けシフトの「休憩（分）」は途中の休憩です。従業員は休憩前に退勤、戻ったら出勤を打刻し、実働は実際の打刻で計算します。休憩の打刻を忘れた場合はここの休憩（分）を差し引きます。ここを変更しても作成済みのシフトは変わりません。",
   "SHIFT_TPL_CODE": "コード",
   "SHIFT_TPL_NAME": "名称",
   "SHIFT_TPL_CROSS_DAY": "日跨ぎ",
@@ -1285,5 +1285,13 @@
   "SHIFT_TPL_ACTIVE": "有効",
   "SHIFT_TPL_ADD": "シフトを追加",
   "SHIFT_TPL_SAVE": "シフト設定を保存",
-  "AUDIT_ACTION_SAVE_SHIFT_TEMPLATES": "シフト設定を変更"
+  "AUDIT_ACTION_SAVE_SHIFT_TEMPLATES": "シフト設定を変更",
+  "ERR_PUNCH_SAME_TYPE": "直前に「{type}」を打刻済みです。次は「{next}」を打刻してください。",
+  "ERR_PUNCH_LIMIT": "本日の「{type}」は 2 回打刻済みです。",
+  "ERR_DUPLICATE_PUNCH": "先ほど打刻済みです。重複して打刻しないでください。",
+  "ERR_INVALID_PUNCH_TYPE": "打刻の種類が正しくありません",
+  "STATUS_BREAK_PUNCH_MISSING": "中抜けシフトの休憩打刻がありません",
+  "BTN_ADJUST_BREAK_START": "休憩開始を補う（退勤）",
+  "BTN_ADJUST_BREAK_END": "休憩終了を補う（出勤）",
+  "PUNCH_BREAK_HINT": "中抜けシフトは休憩前に「退勤」、戻ったら「出勤」を打刻してください（1 日 2 組まで）。"
 }

@@ -1316,7 +1316,7 @@
   "SHIFT_TAB_TEMPLATES": "班別設定",
   "SHIFT_BREAK_LABEL": "休息分鐘",
   "SHIFT_TEMPLATES_TITLE": "班別設定",
-  "SHIFT_TEMPLATES_DESC": "兩頭班用「休息分鐘」表示：員工照常只打上班、下班兩次卡，工時會扣掉這個班的休息時間。修改班別不會影響已經排好的班。",
+  "SHIFT_TEMPLATES_DESC": "兩頭班的「休息分鐘」是班別中間的休息：員工休息前打下班卡、回來打上班卡，工時照實際打卡計算；忘了打休息卡時，會用這裡的休息分鐘補扣。修改班別不會影響已經排好的班。",
   "SHIFT_TPL_CODE": "班別代碼",
   "SHIFT_TPL_NAME": "班別名稱",
   "SHIFT_TPL_CROSS_DAY": "跨日",
@@ -1325,5 +1325,13 @@
   "SHIFT_TPL_ACTIVE": "啟用",
   "SHIFT_TPL_ADD": "新增班別",
   "SHIFT_TPL_SAVE": "儲存班別設定",
-  "AUDIT_ACTION_SAVE_SHIFT_TEMPLATES": "修改班別設定"
+  "AUDIT_ACTION_SAVE_SHIFT_TEMPLATES": "修改班別設定",
+  "ERR_PUNCH_SAME_TYPE": "剛才已經打過{type}卡，下一次請打{next}卡",
+  "ERR_PUNCH_LIMIT": "今天的{type}卡已經打滿 2 次",
+  "ERR_DUPLICATE_PUNCH": "剛才已經打過卡了，請勿重複打卡",
+  "ERR_INVALID_PUNCH_TYPE": "打卡類型不正確",
+  "STATUS_BREAK_PUNCH_MISSING": "兩頭班沒有打休息卡",
+  "BTN_ADJUST_BREAK_START": "補休息開始（下班）",
+  "BTN_ADJUST_BREAK_END": "補休息結束（上班）",
+  "PUNCH_BREAK_HINT": "兩頭班休息前請打「下班卡」，休息完回來再打「上班卡」，一天最多兩組。"
 }

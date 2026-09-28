@@ -1297,7 +1297,7 @@
   "SHIFT_TAB_TEMPLATES": "Shift settings",
   "SHIFT_BREAK_LABEL": "Break (min)",
   "SHIFT_TEMPLATES_TITLE": "Shift settings",
-  "SHIFT_TEMPLATES_DESC": "Split shifts use \"break minutes\": staff still punch in and out once, and the break is taken off their hours. Editing a shift here does not change shifts already scheduled.",
+  "SHIFT_TEMPLATES_DESC": "For split shifts, \"Break (min)\" is the gap in the middle: staff punch out before the break and punch in when they return, and hours follow the actual punches. If they forget the break punches, these break minutes are deducted instead. Editing a shift here does not change shifts already scheduled.",
   "SHIFT_TPL_CODE": "Code",
   "SHIFT_TPL_NAME": "Name",
   "SHIFT_TPL_CROSS_DAY": "Overnight",
@@ -1306,5 +1306,13 @@
   "SHIFT_TPL_ACTIVE": "Active",
   "SHIFT_TPL_ADD": "Add shift",
   "SHIFT_TPL_SAVE": "Save shift settings",
-  "AUDIT_ACTION_SAVE_SHIFT_TEMPLATES": "Edit shift settings"
+  "AUDIT_ACTION_SAVE_SHIFT_TEMPLATES": "Edit shift settings",
+  "ERR_PUNCH_SAME_TYPE": "You already did \"{type}\" last. Your next punch should be \"{next}\".",
+  "ERR_PUNCH_LIMIT": "You have already done \"{type}\" twice today.",
+  "ERR_DUPLICATE_PUNCH": "You just punched. Please do not punch again.",
+  "ERR_INVALID_PUNCH_TYPE": "Invalid punch type",
+  "STATUS_BREAK_PUNCH_MISSING": "No break punches on a split shift",
+  "BTN_ADJUST_BREAK_START": "Add break start (out)",
+  "BTN_ADJUST_BREAK_END": "Add break end (in)",
+  "PUNCH_BREAK_HINT": "On a split shift, punch out before your break and punch in when you return (up to two pairs a day)."
 }

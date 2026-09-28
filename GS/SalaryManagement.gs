@@ -1938,57 +1938,33 @@ function getEmployeeMonthlyAttendanceInternal(employeeId, yearMonth) {
       // 按時間排序
       dayPunches.sort((a, b) => a.fullDateTime - b.fullDateTime);
       
-      // 找出上班和下班打卡
+      // 一天可以有兩組上下班（休息前打卡）：配成工作段再相加，規則見 PunchRules.gs
       const punchIns = dayPunches.filter(p => p.type === '上班');
       const punchOuts = dayPunches.filter(p => p.type === '下班');
-      
-      let punchIn = null;
-      let punchOut = null;
-      let workHours = 0;
-      let breakMinutes = 0;
-      
-      // ⭐ 配對邏輯：取第一個上班和最後一個下班
-      if (punchIns.length > 0) {
-        punchIn = punchIns[0].time;
-      }
-      
-      if (punchOuts.length > 0) {
-        punchOut = punchOuts[punchOuts.length - 1].time;
-      }
-      
-      // 計算工時
-      if (punchIn && punchOut) {
-        try {
-          const inTime = new Date(`${date} ${punchIn}`);
-          const outTime = new Date(`${date} ${punchOut}`);
-          const diffMs = outTime - inTime;
-          
-          if (diffMs > 0) {
-            // 以前一律扣 1 小時午休、再捨去到整數小時：兩頭班多算、短班少算。
-            // 現在扣「當天排班的休息分鐘」，沒排班超過 8 小時才扣 1 小時，算到分鐘（見 ShiftTemplates.gs）
-            const spanMinutes = Math.round(diffMs / 60000);
-            const netMinutes = computeNetWorkMinutes_(spanMinutes, shiftMap[date] || null);
-            breakMinutes = spanMinutes - netMinutes;
-            workHours = minutesToHours_(netMinutes);
-            Logger.log(`   ${date}: ${punchIn} ~ ${punchOut} = ${workHours}h（在店 ${spanMinutes} 分，休息 ${breakMinutes} 分）`);
-          } else {
-            Logger.log(`    ${date}: ${punchIn} ~ ${punchOut} 時間異常（下班早於上班）`);
-          }
-        } catch (e) {
-          Logger.log(`    無法計算 ${date} 的工時: ` + e);
-        }
-      } else {
-        Logger.log(`    ${date}: 打卡不完整 (上班: ${punchIn || '無'}, 下班: ${punchOut || '無'})`);
-      }
+      const punchIn = punchIns.length > 0 ? punchIns[0].time : null;
+      const punchOut = punchOuts.length > 0 ? punchOuts[punchOuts.length - 1].time : null;
 
-      
-      
+      const day = computeDayWorkFromPunches_(
+        dayPunches.filter(p => p.fullDateTime instanceof Date && !isNaN(p.fullDateTime.getTime()))
+                  .map(p => ({ type: p.type, time: p.fullDateTime })),
+        shiftMap[date] || null
+      );
+      const workHours = minutesToHours_(day.netMinutes);
+      const segments = day.segments;
+      const firstIn = segments.length ? segments[0].start : punchIn;
+      const lastOut = segments.length ? segments[segments.length - 1].end : punchOut;
+      const breakMinutes = (firstIn && lastOut)
+        ? Math.max(0, Math.round((new Date(`${date} ${lastOut}`) - new Date(`${date} ${firstIn}`)) / 60000) - day.netMinutes)
+        : 0;
+      Logger.log(`   ${date}: ${segments.map(x => x.start + '~' + x.end).join('、') || '打卡不完整'} = ${workHours}h`);
+
       records.push({
         date: date,
         punchIn: punchIn,
         punchOut: punchOut,
         workHours: workHours,
-        breakMinutes: breakMinutes
+        breakMinutes: breakMinutes,
+        segments: segments   // 每一段的上下班時間，例如 [{start:'10:28', end:'14:31'}, …]
       });
     });
     

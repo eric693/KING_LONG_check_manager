@@ -379,16 +379,20 @@ async function loadDailyWorkHours(yearMonth) {
                 item.className = 'flex justify-between items-center p-2 bg-purple-50 dark:bg-purple-800/10 rounded border border-purple-200 dark:border-purple-700/30';
                 
                 const workHours = parseFloat(record.workHours) || 0;
+                // 一天可能有兩組上下班（兩頭班休息前打卡）：每一段都列出來
+                const timeText = Array.isArray(record.segments) && record.segments.length
+                    ? record.segments.map(seg => `${seg.start} ~ ${seg.end}`).join('、')
+                    : `${record.punchIn || '--'} ~ ${record.punchOut || '--'}`;
                 
                 item.innerHTML = `
                     <div>
                         <span class="font-semibold text-purple-700 dark:text-purple-200">${escapeHtml(record.date)}</span>
                         <span class="text-sm text-purple-600 dark:text-purple-400 ml-2">
-                            ${escapeHtml(record.punchIn || '--')} ~ ${escapeHtml(record.punchOut || '--')}
+                            ${escapeHtml(timeText)}
                         </span>
                     </div>
                     <div class="text-right">
-                        <span class="font-mono text-purple-700 dark:text-purple-300 font-bold">${workHours.toFixed(1)}h</span>
+                        <span class="font-mono text-purple-700 dark:text-purple-300 font-bold">${workHours.toFixed(2)}h</span>
                     </div>
                 `;
                 
@@ -1930,18 +1934,22 @@ async function loadPunchRecords(yearMonth) {
                 const item = document.createElement('div');
                 item.className = 'flex justify-between items-center p-2 bg-gray-50 dark:bg-white/5 rounded';
                 
-                const workHours = record.workHours || 0;
+                const workHours = parseFloat(record.workHours) || 0;
                 totalHours += workHours;
+                // 一天可能有兩組上下班（兩頭班休息前打卡）：每一段都列出來
+                const timeText = Array.isArray(record.segments) && record.segments.length
+                    ? record.segments.map(seg => `${seg.start} ~ ${seg.end}`).join('、')
+                    : `${record.punchIn || '--'} ~ ${record.punchOut || '--'}`;
                 
                 item.innerHTML = `
                     <div>
                         <span class="font-semibold">${escapeHtml(record.date)}</span>
                         <span class="text-sm text-gray-500 dark:text-gray-400 ml-2">
-                            ${escapeHtml(record.punchIn || '--')} ~ ${escapeHtml(record.punchOut || '--')}
+                            ${escapeHtml(timeText)}
                         </span>
                     </div>
                     <div class="text-right">
-                        <span class="font-mono text-blue-600 dark:text-blue-400">${workHours.toFixed(1)}h</span>
+                        <span class="font-mono text-blue-600 dark:text-blue-400">${workHours.toFixed(2)}h</span>
                     </div>
                 `;
                 

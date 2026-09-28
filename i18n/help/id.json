@@ -12,6 +12,7 @@
       "intro": "Halaman yang dibuka pertama setiap hari: pengumuman, tombol absen, data pribadi, dan kejanggalan absensi yang terdeteksi sistem.",
       "steps": [
         "Setibanya di tempat kerja tekan \"Absen masuk\", sebelum pulang tekan \"Absen pulang\"; waktu dan lokasi GPS dicatat bersamaan.",
+        "Shift terpisah: absen keluar sebelum istirahat dan absen masuk saat kembali; maksimal dua pasang sehari.",
         "Selain tombol, Anda juga bisa absen dengan mengetik di LINE, atau memindai kode QR di tablet kantor dengan kamera ponsel (setelah dipindai sistem ini akan terbuka; login dulu jika diminta).",
         "Jika ponsel mendukung sidik jari atau wajah, tekan \"Atur biometrik\" sekali, lalu absen cukup dengan biometrik.",
         "Jika lupa absen atau waktunya salah, ajukan \"Perbaikan absensi\" dengan alasannya dan tunggu persetujuan admin.",
@@ -22,7 +23,8 @@
         "Absen memerlukan izin lokasi; bila diblokir peramban, absen gagal atau tercatat sebagai kejanggalan.",
         "\"Kejanggalan absensi\" ditentukan otomatis (absen kurang, terlambat, pulang cepat); setelah perbaikan disetujui, catatan itu hilang sendiri.",
         "Pengumuman diurutkan menurut tingkat kepentingan; tanda merah berarti penting, harap dibaca.",
-        "Kode QR di tablet berganti setiap 30 detik, jadi foto atau kode yang dikirim ke orang lain tidak bisa dipakai. Pindai langsung di tempat."
+        "Kode QR di tablet berganti setiap 30 detik, jadi foto atau kode yang dikirim ke orang lain tidak bisa dipakai. Pindai langsung di tempat.",
+        "Absen yang sama tidak bisa dua kali berturut-turut; jika urutannya salah, sistem memberi tahu absen berikutnya. Jika lupa absen istirahat, masalah kehadiran menampilkan tombol \"Tambah mulai / selesai istirahat\"."
       ],
       "terms": [
         [
@@ -232,7 +234,7 @@
         "Periksa lokasi lalu simpan, kemudian cek di \"Lihat Shift\"."
       ],
       "notes": [
-        "Karyawan cukup absen masuk dan pulang dua kali; jam kerja = waktu di tempat − menit istirahat shift, dihitung sampai menit.",
+        "Shift terpisah: absen keluar sebelum istirahat dan masuk saat kembali (maks. dua pasang sehari); jam kerja mengikuti absen sebenarnya sampai menit. Jika absen istirahat tidak ada, menit istirahat shift dikurangi dan muncul di masalah kehadiran.",
         "Hari tanpa jadwal: 1 jam istirahat dikurangi hanya jika berada lebih dari 8 jam.",
         "Orang, hari, dan shift yang sama tidak bisa ditambahkan dua kali."
       ]

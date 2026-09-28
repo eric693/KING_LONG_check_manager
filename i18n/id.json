@@ -1276,7 +1276,7 @@
   "SHIFT_TAB_TEMPLATES": "Pengaturan shift",
   "SHIFT_BREAK_LABEL": "Istirahat (mnt)",
   "SHIFT_TEMPLATES_TITLE": "Pengaturan shift",
-  "SHIFT_TEMPLATES_DESC": "Shift terpisah memakai \"menit istirahat\": karyawan tetap absen masuk dan pulang dua kali, dan istirahat dikurangi dari jam kerja. Perubahan di sini tidak mengubah jadwal yang sudah dibuat.",
+  "SHIFT_TEMPLATES_DESC": "\"Istirahat (mnt)\" pada shift terpisah adalah jeda di tengah: karyawan absen keluar sebelum istirahat dan absen masuk saat kembali, jam kerja mengikuti absen sebenarnya. Jika lupa absen istirahat, menit istirahat ini yang dikurangi. Perubahan di sini tidak mengubah jadwal yang sudah dibuat.",
   "SHIFT_TPL_CODE": "Kode",
   "SHIFT_TPL_NAME": "Nama",
   "SHIFT_TPL_CROSS_DAY": "Lintas hari",
@@ -1285,5 +1285,13 @@
   "SHIFT_TPL_ACTIVE": "Aktif",
   "SHIFT_TPL_ADD": "Tambah shift",
   "SHIFT_TPL_SAVE": "Simpan pengaturan shift",
-  "AUDIT_ACTION_SAVE_SHIFT_TEMPLATES": "Ubah pengaturan shift"
+  "AUDIT_ACTION_SAVE_SHIFT_TEMPLATES": "Ubah pengaturan shift",
+  "ERR_PUNCH_SAME_TYPE": "Anda baru saja \"{type}\". Berikutnya silakan \"{next}\".",
+  "ERR_PUNCH_LIMIT": "Hari ini \"{type}\" sudah 2 kali.",
+  "ERR_DUPLICATE_PUNCH": "Anda baru saja absen. Jangan absen dua kali.",
+  "ERR_INVALID_PUNCH_TYPE": "Jenis absen tidak valid",
+  "STATUS_BREAK_PUNCH_MISSING": "Shift terpisah tanpa absen istirahat",
+  "BTN_ADJUST_BREAK_START": "Tambah mulai istirahat (keluar)",
+  "BTN_ADJUST_BREAK_END": "Tambah selesai istirahat (masuk)",
+  "PUNCH_BREAK_HINT": "Shift terpisah: absen keluar sebelum istirahat dan absen masuk saat kembali (maks. dua pasang sehari)."
 }

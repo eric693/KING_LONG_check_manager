@@ -360,31 +360,15 @@ function punch(sessionToken, type, lat, lng, note) {
     return { ok: false, code: "ERR_OUT_OF_RANGE" };
   }
 
-  // 防重複：同一天同類型（上班/下班）只能打一次
+  // 一天最多兩組上下班（休息前要打卡），順序與次數見 PunchRules.gs
+  if (type !== '上班' && type !== '下班') {
+    return { ok: false, code: "ERR_INVALID_PUNCH_TYPE", msg: '打卡類型不正確' };
+  }
   const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_ATTENDANCE);
-  const today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
-  const attendanceValues = sh.getDataRange().getValues();
-
-  for (let i = 1; i < attendanceValues.length; i++) {
-    const row = attendanceValues[i];
-    if (!row[0]) continue;
-
-    const rowDate = Utilities.formatDate(new Date(row[0]), Session.getScriptTimeZone(), 'yyyy-MM-dd');
-    const rowUserId = String(row[1]).trim();
-    const rowType = String(row[4]).trim();
-    const rowNote = String(row[7] || '').trim();
-
-    // 跳過補打卡記錄
-    if (rowNote === '補打卡') continue;
-
-    if (rowDate === today && rowUserId === user.userId && rowType === type) {
-      Logger.log('防重複: ' + user.name + ' 今天（' + today + '）已打 ' + type + ' 卡');
-      return {
-        ok: false,
-        code: "ERR_DUPLICATE_PUNCH",
-        msg: '今天已經打過' + type + '卡，請勿重複打卡'
-      };
-    }
+  const sequence = checkPunchSequence_(user.userId, type, sh.getDataRange().getValues());
+  if (!sequence.ok) {
+    Logger.log('打卡順序不符: ' + user.name + ' ' + type + ' - ' + sequence.msg);
+    return sequence;
   }
 
   // 寫入打卡記錄
@@ -626,7 +610,8 @@ function getAttendanceDetails(monthParam, userIdParam) {
           type: r.type,
           time: formatTime(r.date),
           location: r.location,
-          note: r.note || ''
+          note: r.note || '',
+          audit: r.audit || ''   // 補打卡要核准（v）才算數，判斷當天有沒有少打卡時要用
         });
       }
     });
@@ -689,7 +674,13 @@ function getAttendanceDetails(monthParam, userIdParam) {
         Logger.log(`   ${dateKey}: 有請假記錄，狀態設為 ${daily.reason}`);
       } else {
         // 原有的打卡狀態判斷
-        if (hasPunchIn && hasPunchOut) {
+        // 一天可以有兩組上下班（休息前打卡）：兩種卡都有但次數對不上，也算少打一張
+        const counted = daily.record.filter(r => r.note !== '補打卡' || r.audit === 'v');
+        const inCount = counted.filter(r => r.type === '上班').length;
+        const outCount = counted.filter(r => r.type === '下班').length;
+        if (hasPunchIn && hasPunchOut && inCount !== outCount) {
+          daily.reason = inCount > outCount ? 'STATUS_PUNCH_OUT_MISSING' : 'STATUS_PUNCH_IN_MISSING';
+        } else if (hasPunchIn && hasPunchOut) {
           daily.reason = 'STATUS_PUNCH_NORMAL';
         } else if (!hasPunchIn && !hasPunchOut) {
           daily.reason = 'STATUS_NO_RECORD';
@@ -1477,16 +1468,18 @@ function getEmployeeMonthlyPunchData(employeeId, yearMonth) {
           punchIn: null,
           punchOut: null,
           workHours: 0,
-          status: 'normal'
+          status: 'normal',
+          punches: []
         };
       }
       
-      // 只記錄正常打卡或已核准的補打卡
+      // 只記錄正常打卡或已核准的補打卡；一天可能有兩組上下班，全部留著配對
       if (note !== '補打卡' || audit === 'v') {
-        if (type === '上班') {
-          dailyData[dateKey].punchIn = time;
-        } else if (type === '下班') {
-          dailyData[dateKey].punchOut = time;
+        if (type === '上班' || type === '下班') {
+          dailyData[dateKey].punches.push({ type: type, time: timestamp });
+          // 圖表畫的是第一次上班、最後一次下班
+          if (type === '上班' && !dailyData[dateKey].punchIn) dailyData[dateKey].punchIn = time;
+          if (type === '下班') dailyData[dateKey].punchOut = time;
         }
       }
     });
@@ -1496,18 +1489,11 @@ function getEmployeeMonthlyPunchData(employeeId, yearMonth) {
       ? getEmployeeShiftMapForMonth(employeeId, yearMonth)
       : {};
     const result = Object.values(dailyData).map(day => {
-      if (day.punchIn && day.punchOut) {
-        try {
-          const inTime = new Date(`${day.date} ${day.punchIn}`);
-          const outTime = new Date(`${day.date} ${day.punchOut}`);
-          const spanMinutes = Math.round((outTime - inTime) / 60000);
-          day.workHours = minutesToHours_(computeNetWorkMinutes_(spanMinutes, shiftMap[day.date] || null));
-        } catch (e) {
-          day.workHours = 0;
-        }
-      } else {
-        day.status = 'incomplete';
-      }
+      day.punches.sort((a, b) => a.time - b.time);
+      const work = computeDayWorkFromPunches_(day.punches, shiftMap[day.date] || null);
+      day.workHours = minutesToHours_(work.netMinutes);
+      if (!work.segments.length || work.unpaired > 0) day.status = 'incomplete';
+      delete day.punches;
       return day;
     });
     

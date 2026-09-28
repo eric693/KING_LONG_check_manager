@@ -1332,7 +1332,7 @@
   "SHIFT_TAB_TEMPLATES": "Cài đặt ca",
   "SHIFT_BREAK_LABEL": "Nghỉ (phút)",
   "SHIFT_TEMPLATES_TITLE": "Cài đặt ca",
-  "SHIFT_TEMPLATES_DESC": "Ca gãy dùng \"phút nghỉ\": nhân viên vẫn chỉ chấm vào và ra hai lần, giờ làm sẽ trừ thời gian nghỉ này. Sửa ở đây không ảnh hưởng các ca đã xếp.",
+  "SHIFT_TEMPLATES_DESC": "\"Nghỉ (phút)\" của ca gãy là khoảng nghỉ ở giữa: nhân viên chấm ra trước khi nghỉ và chấm vào khi quay lại, giờ làm tính theo chấm công thực tế. Nếu quên chấm giờ nghỉ, hệ thống trừ số phút nghỉ này. Sửa ở đây không ảnh hưởng các ca đã xếp.",
   "SHIFT_TPL_CODE": "Mã",
   "SHIFT_TPL_NAME": "Tên",
   "SHIFT_TPL_CROSS_DAY": "Qua đêm",
@@ -1341,5 +1341,13 @@
   "SHIFT_TPL_ACTIVE": "Dùng",
   "SHIFT_TPL_ADD": "Thêm ca",
   "SHIFT_TPL_SAVE": "Lưu cài đặt ca",
-  "AUDIT_ACTION_SAVE_SHIFT_TEMPLATES": "Sửa cài đặt ca"
+  "AUDIT_ACTION_SAVE_SHIFT_TEMPLATES": "Sửa cài đặt ca",
+  "ERR_PUNCH_SAME_TYPE": "Bạn vừa \"{type}\". Lần tiếp theo hãy \"{next}\".",
+  "ERR_PUNCH_LIMIT": "Hôm nay đã \"{type}\" đủ 2 lần.",
+  "ERR_DUPLICATE_PUNCH": "Bạn vừa chấm công, vui lòng không chấm trùng.",
+  "ERR_INVALID_PUNCH_TYPE": "Loại chấm công không hợp lệ",
+  "STATUS_BREAK_PUNCH_MISSING": "Ca gãy chưa chấm công giờ nghỉ",
+  "BTN_ADJUST_BREAK_START": "Bổ sung bắt đầu nghỉ (ra)",
+  "BTN_ADJUST_BREAK_END": "Bổ sung kết thúc nghỉ (vào)",
+  "PUNCH_BREAK_HINT": "Ca gãy: chấm \"ra\" trước khi nghỉ và chấm \"vào\" khi quay lại (tối đa 2 cặp mỗi ngày)."
 }

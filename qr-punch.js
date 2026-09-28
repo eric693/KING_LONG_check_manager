@@ -102,7 +102,10 @@ async function handleLinePunchFromUrl() {
                 ERR_LPT_EXPIRED:  t('LPT_ERR_EXPIRED'),
                 // 後端的中文訊息會附上最近的打卡地點與距離，中文介面直接用
                 ERR_NOT_IN_RANGE: punchServerMessage(res, 'LPT_ERR_NOT_IN_RANGE'),
-                ERR_DUPLICATE_PUNCH: t('LPT_ERR_DUPLICATE')
+                ERR_DUPLICATE_PUNCH: t('LPT_ERR_DUPLICATE'),
+                // 一天兩組上下班的順序規則（GS/PunchRules.gs）
+                ERR_PUNCH_SAME_TYPE: t('ERR_PUNCH_SAME_TYPE', res.params || {}),
+                ERR_PUNCH_LIMIT: t('ERR_PUNCH_LIMIT', res.params || {})
             };
             setResult('❌', t('LPT_FAILED'), msgMap[res.code] || punchServerMessage(res, 'LPT_TRY_LATER'), '#f44336');
         }
@@ -149,6 +152,8 @@ async function performQRPunch(qrTokenId) {
                 'ERR_QR_EXPIRED':       t('QR_ERR_EXPIRED'),
                 'ERR_QR_INVALID':       t('QR_ERR_INVALID'),
                 'ERR_DUPLICATE_PUNCH':  punchServerMessage(res, 'QR_ERR_DUPLICATE'),
+                'ERR_PUNCH_SAME_TYPE':  t('ERR_PUNCH_SAME_TYPE', res.params || {}),
+                'ERR_PUNCH_LIMIT':      t('ERR_PUNCH_LIMIT', res.params || {}),
                 'ERR_SESSION_INVALID':  t('QR_ERR_LOGIN')
             };
             showNotification(msgMap[res.code] || punchServerMessage(res, 'NOTIF_QR_PUNCH_FAILED'), 'error');

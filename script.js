@@ -343,6 +343,24 @@ function renderAbnormalRecords(records) {
                     `;
                     break;
                     
+                case 'STATUS_BREAK_PUNCH_MISSING':
+                    // 兩頭班沒打休息卡：休息開始補「下班」、休息結束補「上班」，時間在表單裡自己選
+                    reasonClass = 'text-red-600 dark:text-red-400';
+                    displayReason = t('STATUS_BREAK_PUNCH_MISSING');
+                    buttonHtml = `
+                        <div class="flex flex-col gap-1">
+                            <button data-date="${record.date}" data-type="下班"
+                                    class="adjust-btn px-3 py-1.5 text-xs font-semibold text-white bg-purple-600 dark:bg-purple-500 rounded-md hover:bg-purple-700 transition-colors">
+                                ${t('BTN_ADJUST_BREAK_START')}
+                            </button>
+                            <button data-date="${record.date}" data-type="上班"
+                                    class="adjust-btn px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 dark:bg-indigo-500 rounded-md hover:bg-indigo-700 transition-colors">
+                                ${t('BTN_ADJUST_BREAK_END')}
+                            </button>
+                        </div>
+                    `;
+                    break;
+
                 case 'STATUS_PUNCH_OUT_MISSING':
                     reasonClass = 'text-red-600 dark:text-red-400';
                     displayReason = t('STATUS_PUNCH_OUT_MISSING');
@@ -491,6 +509,24 @@ async function checkAbnormal() {
                             `;
                             break;
                             
+                        case 'STATUS_BREAK_PUNCH_MISSING':
+                            // 兩頭班沒打休息卡：休息開始補「下班」、休息結束補「上班」，時間在表單裡自己選
+                            reasonClass = 'text-red-600 dark:text-red-400';
+                            displayReason = t('STATUS_BREAK_PUNCH_MISSING');
+                            buttonHtml = `
+                                <div class="flex flex-col gap-1">
+                                    <button data-date="${record.date}" data-type="下班"
+                                            class="adjust-btn px-3 py-1.5 text-xs font-semibold text-white bg-purple-600 dark:bg-purple-500 rounded-md hover:bg-purple-700 transition-colors">
+                                        ${t('BTN_ADJUST_BREAK_START')}
+                                    </button>
+                                    <button data-date="${record.date}" data-type="上班"
+                                            class="adjust-btn px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 dark:bg-indigo-500 rounded-md hover:bg-indigo-700 transition-colors">
+                                        ${t('BTN_ADJUST_BREAK_END')}
+                                    </button>
+                                </div>
+                            `;
+                            break;
+
                         case 'STATUS_PUNCH_OUT_MISSING':
                             // 缺下班卡 - 紅色，可補打卡
                             reasonClass = 'text-red-600 dark:text-red-400';
@@ -686,6 +722,7 @@ async function updateMonthlyStats(records) {
         const abnormalReasons = [
             'STATUS_PUNCH_IN_MISSING',
             'STATUS_PUNCH_OUT_MISSING',
+            'STATUS_BREAK_PUNCH_MISSING',
             'STATUS_REPAIR_PENDING',
             'STATUS_REPAIR_REJECTED'
         ];
@@ -2696,7 +2733,10 @@ async function doPunch(type) {
 
         try {
             const res = await callApifetch(action);
-            const msg = t(res.code || "UNKNOWN_ERROR", res.params || {});
+            const msgKey = res.code || "UNKNOWN_ERROR";
+            let msg = t(msgKey, res.params || {});
+            // 錯誤碼沒有翻譯時，顯示後端的中文說明，不要讓員工看到 ERR_… 這種代碼
+            if (msg === msgKey && res.msg) msg = res.msg;
             showNotification(msg, res.ok ? "success" : "error");
 
             if (res.ok) {

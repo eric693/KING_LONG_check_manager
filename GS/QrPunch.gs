@@ -109,23 +109,11 @@ function qrPunch(sessionToken, qrTokenId, locationName) {
   const punchType = verified.punchType;
   const loc = rawLocation || 'QR打卡';
 
-  // 防重複：同一員工同一天同類型只能打一次
+  // 一天最多兩組上下班（休息前要打卡），順序與次數見 PunchRules.gs
   const attendanceSh = SpreadsheetApp.getActive().getSheetByName(SHEET_ATTENDANCE);
+  const sequence = checkPunchSequence_(user.userId, punchType, attendanceSh.getDataRange().getValues());
+  if (!sequence.ok) return sequence;
   const now = new Date();
-  const tz = Session.getScriptTimeZone();
-  const today = Utilities.formatDate(now, tz, 'yyyy-MM-dd');
-  const rows = attendanceSh.getDataRange().getValues();
-
-  for (let i = 1; i < rows.length; i++) {
-    const row = rows[i];
-    if (!row[0]) continue;
-    if (String(row[7] || '').trim() === '補打卡') continue;
-    if (Utilities.formatDate(new Date(row[0]), tz, 'yyyy-MM-dd') === today &&
-        String(row[1]).trim() === user.userId &&
-        String(row[4]).trim() === punchType) {
-      return { ok: false, code: 'ERR_DUPLICATE_PUNCH', msg: '今天已打過' + punchType + '卡，請勿重複打卡' };
-    }
-  }
 
   const punchRow = [now, user.userId, user.dept, user.name, punchType, 'QR打卡', loc, '', '', 'QR打卡'];
   attendanceSh.getRange(attendanceSh.getLastRow() + 1, 1, 1, punchRow.length).setValues([punchRow]);

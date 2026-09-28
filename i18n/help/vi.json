@@ -12,6 +12,7 @@
       "intro": "Trang mở đầu mỗi ngày: thông báo, nút chấm công, thông tin cá nhân và các bất thường chấm công do hệ thống phát hiện.",
       "steps": [
         "Đến nơi làm việc bấm \"Chấm công vào\", trước khi về bấm \"Chấm công ra\"; hệ thống ghi cả thời gian và vị trí GPS.",
+        "Ca gãy: chấm \"ra\" trước khi nghỉ và chấm \"vào\" khi quay lại; tối đa 2 cặp mỗi ngày.",
         "Ngoài nút bấm, bạn còn có thể chấm công bằng cách nhắn trong LINE, hoặc dùng camera điện thoại quét mã QR trên máy tính bảng của công ty (quét xong hệ thống này sẽ mở ra; nếu chưa đăng nhập thì đăng nhập trước).",
         "Nếu điện thoại hỗ trợ vân tay hoặc khuôn mặt, bấm \"Thiết lập sinh trắc học\" một lần rồi dùng sinh trắc học để chấm công nhanh.",
         "Quên chấm công hoặc sai giờ thì gửi \"Đề nghị bổ sung chấm công\", ghi rõ lý do và chờ quản trị viên duyệt.",
@@ -22,7 +23,8 @@
         "Chấm công cần quyền định vị; nếu trình duyệt chặn, thao tác sẽ thất bại hoặc bị ghi là bất thường.",
         "\"Bất thường chấm công\" do hệ thống tự nhận định (thiếu chấm công, đi muộn, về sớm); khi đề nghị bổ sung được duyệt, mục này tự mất.",
         "Thông báo sắp theo mức quan trọng; mục màu đỏ là thông báo quan trọng, hãy đọc kỹ.",
-        "Mã QR trên máy tính bảng đổi mỗi 30 giây, ảnh chụp hoặc mã gửi cho người khác sẽ không dùng được. Hãy quét tại chỗ."
+        "Mã QR trên máy tính bảng đổi mỗi 30 giây, ảnh chụp hoặc mã gửi cho người khác sẽ không dùng được. Hãy quét tại chỗ.",
+        "Không thể chấm cùng một loại hai lần liên tiếp; nếu sai thứ tự, hệ thống sẽ cho biết lần tiếp theo cần chấm loại nào. Quên chấm giờ nghỉ thì mục bất thường sẽ có nút \"Bổ sung bắt đầu / kết thúc nghỉ\"."
       ],
       "terms": [
         [
@@ -232,7 +234,7 @@
         "Kiểm tra địa điểm rồi lưu, sau đó xem ở \"Xem ca làm\"."
       ],
       "notes": [
-        "Nhân viên chỉ chấm vào và ra hai lần; giờ làm = thời gian có mặt − phút nghỉ của ca, tính đến phút.",
+        "Ca gãy: chấm ra trước khi nghỉ và chấm vào khi quay lại (tối đa 2 cặp mỗi ngày); giờ làm tính theo chấm công thực tế đến phút. Thiếu chấm giờ nghỉ thì trừ phút nghỉ của ca và hiện trong bất thường chấm công.",
         "Ngày không xếp ca: chỉ trừ 1 giờ nghỉ khi có mặt hơn 8 giờ.",
         "Cùng người, cùng ngày, cùng ca sẽ không được thêm trùng."
       ]
