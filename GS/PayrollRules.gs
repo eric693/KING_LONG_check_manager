@@ -33,6 +33,58 @@ const PAYROLL_ATTENDANCE_BREAKING_LEAVES = [
   'ABSENCE_WITHOUT_LEAVE', '曠工'
 ];
 
+// 中文假別 → 代碼（請假紀錄新舊資料兩種都有）
+const PAYROLL_LEAVE_CODE_BY_NAME = {
+  '事假': 'PERSONAL_LEAVE', '病假': 'SICK_LEAVE', '未住院病假': 'SICK_LEAVE',
+  '住院病假': 'HOSPITALIZATION_LEAVE', '曠工': 'ABSENCE_WITHOUT_LEAVE'
+};
+
+// 全勤說明、生日說明：後端回傳 { code, params }，前端依語系翻譯（i18n 同名鍵）。
+// 這裡的中文只拿來寫進試算表的「全勤說明」欄，給直接看試算表的人讀。
+const PAYROLL_MESSAGES_ZH = {
+  PAYROLL_ATT_QUALIFIED: '符合全勤',
+  PAYROLL_ATT_NOT_QUALIFIED: '未全勤',
+  PAYROLL_ATT_LATE_OVER: '遲到超過 {minutes} 分鐘 {count} 次',
+  PAYROLL_ATT_LATE_GRACE: '{minutes} 分鐘內的遲到 {count} 次（可容許 {allowed} 次）',
+  PAYROLL_ATT_MISSED: '忘記打卡 {count} 次（可容許 {allowed} 次）',
+  PAYROLL_ATT_LEAVE: '有請 {types}',
+  PAYROLL_ATT_ABSENT: '有排班未出勤 {count} 天（{dates}）',
+  PAYROLL_ATT_PT_QUALIFIED: '排班 {hours} 小時，符合全勤',
+  PAYROLL_ATT_PT_SHORT: '排班 {hours} 小時，未達 {required} 小時',
+  PAYROLL_ATT_MANUAL: '管理員調整',
+  PAYROLL_BDAY_GIVEN: '當月壽星（到職 {hireDate}，依{source}）',
+  PAYROLL_BDAY_NO_HIRE: '當月壽星，但沒有到職日期，未發生日禮金',
+  PAYROLL_BDAY_TENURE: '當月壽星，到職未滿 {months} 個月（到職 {hireDate}）',
+  PAYROLL_HIRE_SRC_CONFIG: '薪資設定',
+  PAYROLL_HIRE_SRC_EMPLOYEES: '員工名單',
+  PAYROLL_HIRE_SRC_ACCOUNT: '帳號建立日'
+};
+
+function payrollLeaveNameZh_(code) {
+  return (typeof LEAVE_TYPES !== 'undefined' && LEAVE_TYPES[code] && LEAVE_TYPES[code].name) || code;
+}
+
+/** { code, params } → 中文 */
+function payrollMessageZh_(msg) {
+  if (!msg) return '';
+  const params = msg.params || {};
+  return String(PAYROLL_MESSAGES_ZH[msg.code] || msg.code).replace(/\{(\w+)\}/g, (m, key) => {
+    const value = params[key];
+    if (Array.isArray(value)) return value.map(v => key === 'types' ? payrollLeaveNameZh_(v) : v).join('、');
+    if (typeof value === 'string' && PAYROLL_MESSAGES_ZH[value]) return PAYROLL_MESSAGES_ZH[value];
+    return value === undefined ? m : String(value);
+  });
+}
+
+/** 全勤說明 { status, reasons, manual } → 中文 */
+function payrollAttendanceZh_(info) {
+  if (!info || !info.status) return '';
+  let text = payrollMessageZh_({ code: info.status, params: info.params });
+  if (info.reasons && info.reasons.length) text += '：' + info.reasons.map(payrollMessageZh_).join('；');
+  if (info.manual) text += (text ? '；' : '') + PAYROLL_MESSAGES_ZH.PAYROLL_ATT_MANUAL;
+  return text;
+}
+
 const PAYROLL_MAX_MANUAL_ITEMS = 20;
 const PAYROLL_MAX_AMOUNT = 1000000;
 const PAYROLL_MAX_NOTE = 500;
@@ -142,8 +194,12 @@ function readSavedPayrollAdjustments_(employeeId, yearMonth) {
       if (String(data[i][0]) !== salaryId) continue;
       const raw = String(data[i][col] || '').trim();
       if (!raw) return null;
-      const checked = normalizePayrollAdjustments_(JSON.parse(raw));
-      return checked.ok ? checked.adjustments : null;
+      const parsed = JSON.parse(raw);
+      const checked = normalizePayrollAdjustments_(parsed);
+      if (!checked.ok) return null;
+      // 全勤／生日說明的代碼一併留著：只存欄位、不重算的存檔路徑才不會把它們弄丟
+      if (parsed && parsed.messages) checked.adjustments.messages = parsed.messages;
+      return checked.adjustments;
     }
   } catch (error) {
     Logger.log(' 讀取計薪調整失敗（改用空白）: ' + error);
@@ -190,7 +246,8 @@ function getApprovedLeavesForMonth_(employeeId, yearMonth) {
     if (!start) continue;
     const end = payrollParseDate_(row[6]) || start;
     if (end < monthStart || start > monthEnd) continue;
-    list.push({ type: String(row[4] || '').trim(), start: start, end: end });
+    const type = String(row[4] || '').trim();
+    list.push({ type: PAYROLL_LEAVE_CODE_BY_NAME[type] || type, start: start, end: end });
   }
   return list;
 }
@@ -211,15 +268,15 @@ function getEmployeeBirthday_(employeeId) {
  */
 function getEmployeeHireDate_(employeeId, config) {
   const fromConfig = payrollParseDate_(config && config['到職日期']);
-  if (fromConfig) return { date: fromConfig, source: '薪資設定' };
+  if (fromConfig) return { date: fromConfig, source: 'PAYROLL_HIRE_SRC_CONFIG' };
 
   const data = getSheetValues_(SHEET_EMPLOYEES);
   for (let i = 1; i < data.length; i++) {
     if (String(data[i][EMPLOYEE_COL.USER_ID]).trim() !== String(employeeId).trim()) continue;
     const hire = payrollParseDate_(data[i][EMPLOYEE_COL.HIRE_DATE]);
-    if (hire) return { date: hire, source: '員工名單' };
+    if (hire) return { date: hire, source: 'PAYROLL_HIRE_SRC_EMPLOYEES' };
     const created = payrollParseDate_(data[i][EMPLOYEE_COL.CREATED]);
-    if (created) return { date: created, source: '帳號建立日' };
+    if (created) return { date: created, source: 'PAYROLL_HIRE_SRC_ACCOUNT' };
   }
   return { date: null, source: '' };
 }
@@ -228,7 +285,7 @@ function getEmployeeHireDate_(employeeId, config) {
 
 /**
  * 正職全勤
- * @returns {{ qualified: boolean, reasons: string[], lateGraceUsed: number, missedPunches: number }}
+ * @returns {{ qualified: boolean, reasons: Array<{code, params}>, lateGraceUsed: number, missedPunches: number }}
  */
 function evaluateFullTimeAttendance_(rules, attendance, shiftMap, leaves, yearMonth, today) {
   const reasons = [];
@@ -250,20 +307,26 @@ function evaluateFullTimeAttendance_(rules, attendance, shiftMap, leaves, yearMo
     if (late <= rules.lateGraceMinutes) lateGraceUsed++;
     else lateOver++;
   });
-  if (lateOver > 0) reasons.push(`遲到超過 ${rules.lateGraceMinutes} 分鐘 ${lateOver} 次`);
+  if (lateOver > 0) {
+    reasons.push({ code: 'PAYROLL_ATT_LATE_OVER', params: { minutes: rules.lateGraceMinutes, count: lateOver } });
+  }
   if (lateGraceUsed > rules.lateGraceTimes) {
-    reasons.push(`${rules.lateGraceMinutes} 分鐘內的遲到 ${lateGraceUsed} 次（可容許 ${rules.lateGraceTimes} 次）`);
+    reasons.push({ code: 'PAYROLL_ATT_LATE_GRACE',
+                   params: { minutes: rules.lateGraceMinutes, count: lateGraceUsed, allowed: rules.lateGraceTimes } });
   }
 
   // 忘記打卡：補打卡、配不成對的卡
   const missedPunches = attendance.reduce((sum, r) => sum + (r.adjustedCount || 0) + (r.unpaired || 0), 0);
   if (missedPunches > rules.maxMissedPunches) {
-    reasons.push(`忘記打卡 ${missedPunches} 次（可容許 ${rules.maxMissedPunches} 次）`);
+    reasons.push({ code: 'PAYROLL_ATT_MISSED', params: { count: missedPunches, allowed: rules.maxMissedPunches } });
   }
 
   // 請假
   const breaking = leaves.filter(l => PAYROLL_ATTENDANCE_BREAKING_LEAVES.indexOf(l.type) !== -1);
-  if (breaking.length > 0) reasons.push(`有請 ${breaking.map(l => l.type).join('、')}`);
+  if (breaking.length > 0) {
+    const types = breaking.map(l => l.type).filter((type, i, all) => all.indexOf(type) === i);
+    reasons.push({ code: 'PAYROLL_ATT_LEAVE', params: { types: types } });
+  }
 
   // 曠工：有排班、沒打卡、也沒請假（只看今天以前的班）
   const absent = Object.keys(shiftMap).filter(date => {
@@ -274,7 +337,7 @@ function evaluateFullTimeAttendance_(rules, attendance, shiftMap, leaves, yearMo
     const day = payrollParseDate_(date);
     return !leaves.some(l => day >= l.start && day <= l.end);
   }).sort();
-  if (absent.length > 0) reasons.push(`有排班未出勤 ${absent.length} 天（${absent.join('、')}）`);
+  if (absent.length > 0) reasons.push({ code: 'PAYROLL_ATT_ABSENT', params: { count: absent.length, dates: absent } });
 
   return { qualified: reasons.length === 0, reasons: reasons, lateGraceUsed: lateGraceUsed, missedPunches: missedPunches };
 }
@@ -283,18 +346,20 @@ function evaluateFullTimeAttendance_(rules, attendance, shiftMap, leaves, yearMo
 function evaluateBirthdayGift_(amount, rules, employeeId, config, yearMonth) {
   const birthday = getEmployeeBirthday_(employeeId);
   const [y, m] = yearMonth.split('-').map(Number);
-  if (!birthday) return { amount: 0, note: '' };
-  if (birthday.getMonth() + 1 !== m) return { amount: 0, note: '' };
+  if (!birthday) return { amount: 0, message: null };
+  if (birthday.getMonth() + 1 !== m) return { amount: 0, message: null };
 
   const hire = getEmployeeHireDate_(employeeId, config);
-  if (!hire.date) return { amount: 0, note: '當月壽星，但沒有到職日期，未發生日禮金' };
+  if (!hire.date) return { amount: 0, message: { code: 'PAYROLL_BDAY_NO_HIRE', params: {} } };
 
   const monthEnd = new Date(y, m, 0);
   const eligibleFrom = new Date(hire.date.getFullYear(), hire.date.getMonth() + rules.birthdayMinTenureMonths, hire.date.getDate());
   if (eligibleFrom > monthEnd) {
-    return { amount: 0, note: `當月壽星，到職未滿 ${rules.birthdayMinTenureMonths} 個月（到職 ${payrollDateKey_(hire.date)}）` };
+    return { amount: 0, message: { code: 'PAYROLL_BDAY_TENURE',
+                                   params: { months: rules.birthdayMinTenureMonths, hireDate: payrollDateKey_(hire.date) } } };
   }
-  return { amount: amount, note: `當月壽星（到職 ${payrollDateKey_(hire.date)}，依${hire.source}）` };
+  return { amount: amount, message: { code: 'PAYROLL_BDAY_GIVEN',
+                                      params: { hireDate: payrollDateKey_(hire.date), source: hire.source } } };
 }
 
 // ==================== 套用 ====================
@@ -322,12 +387,12 @@ function applyPayrollRules_(data, config, adjustments) {
   let deductions = deductionsBefore;
 
   let attendanceBonus = Number(data.attendanceBonus) || 0;
-  let attendanceNote = '';
+  let attendanceInfo = null;   // { status, params, reasons, manual }
   let attendanceQualified = attendanceBonus > 0;
   let mealSubsidy = 0;
   let mealDays = 0;
   let birthdayGift = 0;
-  let birthdayNote = '';
+  let birthdayMessage = null;
 
   if (rules.enabled) {
     const attendance = getEmployeeMonthlyAttendanceInternal(employeeId, yearMonth);
@@ -341,14 +406,18 @@ function applyPayrollRules_(data, config, adjustments) {
       const result = evaluateFullTimeAttendance_(rules, attendance, shiftMap, leaves, yearMonth, today);
       attendanceQualified = result.qualified;
       attendanceBonus = result.qualified ? rules.fullTimeAttendanceBonus : 0;
-      attendanceNote = result.qualified ? '符合全勤' : '未全勤：' + result.reasons.join('；');
+      attendanceInfo = {
+        status: result.qualified ? 'PAYROLL_ATT_QUALIFIED' : 'PAYROLL_ATT_NOT_QUALIFIED',
+        params: {},
+        reasons: result.reasons
+      };
 
       // 餐費：實際工時滿門檻的天數
       mealDays = attendance.filter(r => (Number(r.workHours) || 0) >= rules.mealMinHours).length;
 
       const gift = evaluateBirthdayGift_(rules.fullTimeBirthdayGift, rules, employeeId, config, yearMonth);
       birthdayGift = gift.amount;
-      birthdayNote = gift.note;
+      birthdayMessage = gift.message;
     } else {
       // 兼職全勤：看排班時數
       const scheduledMinutes = Object.keys(shiftMap)
@@ -358,9 +427,11 @@ function applyPayrollRules_(data, config, adjustments) {
       const qualified = scheduledHours >= rules.partTimeAttendanceHours;
       attendanceQualified = qualified;
       attendanceBonus = qualified ? rules.partTimeAttendanceBonus : 0;
-      attendanceNote = qualified
-        ? `排班 ${scheduledHours} 小時，符合全勤`
-        : `排班 ${scheduledHours} 小時，未達 ${rules.partTimeAttendanceHours} 小時`;
+      attendanceInfo = {
+        status: qualified ? 'PAYROLL_ATT_PT_QUALIFIED' : 'PAYROLL_ATT_PT_SHORT',
+        params: { hours: scheduledHours, required: rules.partTimeAttendanceHours },
+        reasons: []
+      };
 
       // 餐費：排班滿門檻、而且當天有出勤
       const worked = {};
@@ -371,7 +442,7 @@ function applyPayrollRules_(data, config, adjustments) {
 
       const gift = evaluateBirthdayGift_(rules.partTimeBirthdayGift, rules, employeeId, config, yearMonth);
       birthdayGift = gift.amount;
-      birthdayNote = gift.note;
+      birthdayMessage = gift.message;
     }
 
     mealSubsidy = mealDays * rules.mealPerDay;
@@ -380,7 +451,7 @@ function applyPayrollRules_(data, config, adjustments) {
   // 管理員在這張薪資單上直接改了全勤獎金，就以管理員為準
   if (adj.attendanceBonus !== null && adj.attendanceBonus !== undefined) {
     attendanceBonus = adj.attendanceBonus;
-    attendanceNote = (attendanceNote ? attendanceNote + '；' : '') + '管理員調整';
+    attendanceInfo = Object.assign({ status: '', params: {}, reasons: [] }, attendanceInfo, { manual: true });
   }
 
   const advanceAuto = sumApprovedAdvances_(employeeId, yearMonth);
@@ -398,11 +469,13 @@ function applyPayrollRules_(data, config, adjustments) {
 
   data.attendanceBonus = attendanceBonus;
   data.attendanceQualified = attendanceQualified;
-  data.attendanceNote = attendanceNote;
+  data.attendanceInfo = attendanceInfo;
+  data.attendanceNote = payrollAttendanceZh_(attendanceInfo);   // 中文，寫進試算表的「全勤說明」
   data.mealSubsidy = mealSubsidy;
   data.mealDays = mealDays;
   data.birthdayGift = birthdayGift;
-  data.birthdayNote = birthdayNote;
+  data.birthdayMessage = birthdayMessage;
+  data.birthdayNote = payrollMessageZh_(birthdayMessage);
   data.salesBonus = salesBonus;
   data.advanceDeduction = advanceDeduction;
   data.advanceAuto = advanceAuto;
@@ -415,7 +488,9 @@ function applyPayrollRules_(data, config, adjustments) {
     advanceDeduction: adj.advanceDeduction === undefined ? null : adj.advanceDeduction,
     attendanceBonus: adj.attendanceBonus === undefined ? null : adj.attendanceBonus,
     manualItems: manualItems,
-    note: adj.note || ''
+    note: adj.note || '',
+    // 給前端翻譯用：從試算表讀回的薪資單也能依語系顯示全勤／生日說明（存檔時才會用到，讀回時會被忽略）
+    messages: { attendance: attendanceInfo, birthday: birthdayMessage }
   };
   data.payrollRulesApplied = !!rules.enabled;
   data.grossSalary = Math.round(gross);

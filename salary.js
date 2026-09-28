@@ -1385,7 +1385,7 @@ function displaySalaryCalculation(data, container) {
                         <span class="font-mono">${formatCurrency(data.performanceBonus || 0)}</span>
                     </div>
                     ${payrollCalcRowsHtml(ruleItems.earnings)}
-                    ${data.birthdayNote ? `<p class="text-xs text-gray-500 dark:text-gray-400 mb-1">${escapeHtml(data.birthdayNote)}</p>` : ''}
+                    ${ruleItems.birthdayNote ? `<p class="text-xs text-gray-500 dark:text-gray-400 mb-1">${escapeHtml(ruleItems.birthdayNote)}</p>` : ''}
                     
                     ${weekdayOvertimePay > 0 ? `
                         <div class="calculation-row">

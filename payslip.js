@@ -29,6 +29,44 @@ function payslipRows(items) {
 }
 
 /**
+ * 後端的全勤／生日說明是 { code, params }，這裡依目前語系翻成文字。
+ * 陣列參數（假別、日期）先各自翻譯再用該語系的分隔符號串起來。
+ */
+function payrollMessageText(msg) {
+    if (!msg || !msg.code) return '';
+    const sep = t('PAYROLL_LIST_SEPARATOR');
+    const params = {};
+    Object.entries(msg.params || {}).forEach(([key, value]) => {
+        params[key] = Array.isArray(value) ? value.map(v => t(String(v))).join(sep) : value;
+    });
+    return t(msg.code, params);
+}
+
+function payrollAttendanceText(info) {
+    if (!info) return '';
+    let text = info.status ? payrollMessageText({ code: info.status, params: info.params }) : '';
+    if (info.reasons && info.reasons.length) {
+        text += t('PAYROLL_REASON_INTRO') + info.reasons.map(payrollMessageText).join(t('PAYROLL_REASON_SEPARATOR'));
+    }
+    if (info.manual) text += (text ? t('PAYROLL_REASON_SEPARATOR') : '') + t('PAYROLL_ATT_MANUAL');
+    return text;
+}
+
+/** 計算結果直接帶 attendanceInfo；從試算表讀回的在「計薪調整」JSON 的 messages 裡 */
+function payrollSavedMessages(data) {
+    if (data.attendanceInfo !== undefined || data.birthdayMessage !== undefined) {
+        return { attendance: data.attendanceInfo, birthday: data.birthdayMessage };
+    }
+    try {
+        const saved = JSON.parse(data['計薪調整'] || 'null');
+        if (saved && saved.messages) return saved.messages;
+    } catch (error) {
+        console.warn('計薪調整格式錯誤:', error);
+    }
+    return null;
+}
+
+/**
  * 計薪規則加上的項目（餐費、生日禮金、銷售獎金、預支、手動加減項目）。
  * 計算結果用英文欄位；從「月薪資記錄」讀回來的是中文欄名，兩種都要認得。
  * 薪資單、試算結果、員工自己的薪資頁都用這一份，三邊才會一致。
@@ -79,10 +117,20 @@ function payrollRuleItems(data, options) {
         (customDeductions || []).forEach(i => deductions.push([String(i.name || ''), i.amount]));
     }
     
+    // 有代碼就依語系翻譯；很舊的資料只有中文，就照原文顯示
+    const messages = payrollSavedMessages(data);
+    const attendanceNote = messages && messages.attendance
+        ? payrollAttendanceText(messages.attendance)
+        : (data.attendanceNote !== undefined ? data.attendanceNote : (data['全勤說明'] || ''));
+    const birthdayNote = messages && messages.birthday
+        ? payrollMessageText(messages.birthday)
+        : (data.birthdayNote || '');
+    
     return {
         earnings: earnings,
         deductions: deductions,
-        attendanceNote: data.attendanceNote !== undefined ? data.attendanceNote : (data['全勤說明'] || ''),
+        attendanceNote: attendanceNote,
+        birthdayNote: birthdayNote,
         note: note || ''
     };
 }
@@ -213,6 +261,7 @@ function buildPayslipHtml(data) {
     <span>${payslipMoney(data.netSalary)}</span>
   </div>
   
+  ${ruleItems.attendanceNote ? `<div class="note"><strong>${escapeHtml(t('PAYROLL_ATTENDANCE_NOTE'))}：</strong>${escapeHtml(ruleItems.attendanceNote)}</div>` : ''}
   ${ruleItems.note ? `<div class="note"><strong>${escapeHtml(t('PAYROLL_PAYSLIP_NOTE'))}：</strong>${escapeHtml(ruleItems.note)}</div>` : ''}
   
   <div class="sign">
