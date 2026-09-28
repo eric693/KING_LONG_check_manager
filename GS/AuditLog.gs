@@ -234,7 +234,8 @@ const ADMIN_AUDIT_ACTIONS = {
   createQrToken: '產生打卡 QR Code',
   resetKioskKey: '重設平板打卡連結',
   disableKiosk: '停用平板打卡',
-  saveShiftTemplates: '修改班別設定'
+  saveShiftTemplates: '修改班別設定',
+  savePayrollAdjustments: '調整薪資單（銷售獎金、預支、手動項目）'
 };
 
 // 這些參數不寫進記錄：路由用的、登入憑證、個資

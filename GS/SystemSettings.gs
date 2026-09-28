@@ -296,6 +296,51 @@ const DEFAULT_INCOME_TAX_RULES = {
 /**
  * 驗證所得稅設定
  */
+// ==================== 計薪規則（全勤、餐費、生日禮金） ====================
+//
+// 店家自己的計薪規則，金額與門檻都可以在薪資頁的「薪資規則」調整，見 PayrollRules.gs。
+// 正職 = 薪資類型「月薪」，兼職 = 「時薪」。
+const DEFAULT_PAYROLL_RULES = {
+  enabled: true,
+  // 正職全勤：每月可以有 lateGraceTimes 次、每次 lateGraceMinutes 分鐘內的遲到；
+  // 忘記打卡（補打卡或缺卡）最多 maxMissedPunches 次
+  fullTimeAttendanceBonus: 2000,
+  lateGraceMinutes: 5,
+  lateGraceTimes: 1,
+  maxMissedPunches: 2,
+  // 兼職全勤：當月排班時數達 partTimeAttendanceHours
+  partTimeAttendanceBonus: 1000,
+  partTimeAttendanceHours: 96,
+  // 餐費：一天工作（正職看實際工時、兼職看排班）滿 mealMinHours 小時，加發 mealPerDay
+  mealPerDay: 110,
+  mealMinHours: 8,
+  // 生日禮金：生日在當月，且到職滿 birthdayMinTenureMonths 個月
+  fullTimeBirthdayGift: 1200,
+  partTimeBirthdayGift: 600,
+  birthdayMinTenureMonths: 3
+};
+
+function validatePayrollRules_(input) {
+  if (!input || typeof input !== 'object') return { ok: false, msg: '計薪規則格式錯誤' };
+  const rules = { enabled: input.enabled !== false };
+  const limits = {
+    fullTimeAttendanceBonus: [0, 100000], lateGraceMinutes: [0, 120], lateGraceTimes: [0, 31],
+    maxMissedPunches: [0, 62], partTimeAttendanceBonus: [0, 100000], partTimeAttendanceHours: [0, 400],
+    mealPerDay: [0, 10000], mealMinHours: [0, 24], fullTimeBirthdayGift: [0, 100000],
+    partTimeBirthdayGift: [0, 100000], birthdayMinTenureMonths: [0, 120]
+  };
+  for (const key of Object.keys(limits)) {
+    const raw = (input[key] === undefined || input[key] === null || input[key] === '') ? DEFAULT_PAYROLL_RULES[key] : input[key];
+    const value = Number(raw);
+    const [min, max] = limits[key];
+    if (!isFinite(value) || value < min || value > max) {
+      return { ok: false, msg: `計薪規則「${key}」要介於 ${min}～${max}` };
+    }
+    rules[key] = value;
+  }
+  return { ok: true, payrollRules: rules };
+}
+
 function validateIncomeTaxRules_(input) {
   if (!input || typeof input !== 'object') {
     return { ok: false, msg: '所得稅設定格式錯誤' };
@@ -432,6 +477,7 @@ function getSalaryRules_() {
     let overtimeRules = DEFAULT_OVERTIME_RULES;
     let insuranceBrackets = DEFAULT_INSURANCE_BRACKETS;
     let incomeTaxRules = DEFAULT_INCOME_TAX_RULES;
+    let payrollRules = DEFAULT_PAYROLL_RULES;
 
     if (stored && stored.value) {
       const parsed = JSON.parse(stored.value);
@@ -450,6 +496,12 @@ function getSalaryRules_() {
         Logger.log(` 投保級距設定不合法，改用預設值：${checkedBrackets.msg}`);
       }
 
+      // 舊的設定裡還沒有計薪規則，沒有就沿用預設值
+      if (parsed.payrollRules) {
+        const checkedPayroll = validatePayrollRules_(parsed.payrollRules);
+        if (checkedPayroll.ok) payrollRules = checkedPayroll.payrollRules;
+      }
+
       // 舊的設定裡還沒有這一段，沒有就沿用預設值
       if (parsed.incomeTaxRules) {
         const checkedTax = validateIncomeTaxRules_(parsed.incomeTaxRules);
@@ -464,7 +516,8 @@ function getSalaryRules_() {
     const rules = {
       overtimeRules: overtimeRules,
       insuranceBrackets: insuranceBrackets,
-      incomeTaxRules: incomeTaxRules
+      incomeTaxRules: incomeTaxRules,
+      payrollRules: payrollRules
     };
     cache.put(SALARY_RULES_CACHE_KEY, JSON.stringify(rules), WORK_SCHEDULE_CACHE_TTL);
     return rules;
@@ -474,7 +527,8 @@ function getSalaryRules_() {
     return {
       overtimeRules: DEFAULT_OVERTIME_RULES,
       insuranceBrackets: DEFAULT_INSURANCE_BRACKETS,
-      incomeTaxRules: DEFAULT_INCOME_TAX_RULES
+      incomeTaxRules: DEFAULT_INCOME_TAX_RULES,
+      payrollRules: DEFAULT_PAYROLL_RULES
     };
   }
 }
@@ -518,10 +572,12 @@ function handleGetSalaryRules(params) {
       overtimeRules: rules.overtimeRules,
       insuranceBrackets: rules.insuranceBrackets,
       incomeTaxRules: rules.incomeTaxRules,
+      payrollRules: rules.payrollRules,
       defaults: {
         overtimeRules: DEFAULT_OVERTIME_RULES,
         insuranceBrackets: DEFAULT_INSURANCE_BRACKETS,
-        incomeTaxRules: DEFAULT_INCOME_TAX_RULES
+        incomeTaxRules: DEFAULT_INCOME_TAX_RULES,
+        payrollRules: DEFAULT_PAYROLL_RULES
       },
       isDefault: !(stored && stored.value)
     };
@@ -547,6 +603,7 @@ function handleUpdateSalaryRules(params) {
     let overtimeRules = current.overtimeRules;
     let insuranceBrackets = current.insuranceBrackets;
     let incomeTaxRules = current.incomeTaxRules;
+    let payrollRules = current.payrollRules || DEFAULT_PAYROLL_RULES;
 
     // 兩個區塊各自獨立，只送其中一個就只改那一個
     if (params.overtimeRules) {
@@ -567,10 +624,17 @@ function handleUpdateSalaryRules(params) {
       incomeTaxRules = checked.incomeTaxRules;
     }
 
+    if (params.payrollRules) {
+      const checked = validatePayrollRules_(JSON.parse(params.payrollRules));
+      if (!checked.ok) return { ok: false, code: 'INVALID_PAYROLL_RULES', msg: checked.msg };
+      payrollRules = checked.payrollRules;
+    }
+
     const rules = {
       overtimeRules: overtimeRules,
       insuranceBrackets: insuranceBrackets,
-      incomeTaxRules: incomeTaxRules
+      incomeTaxRules: incomeTaxRules,
+      payrollRules: payrollRules
     };
     writeSystemSetting_(SETTING_KEY_SALARY_RULES, JSON.stringify(rules), user.name || '');
     CacheService.getScriptCache().remove(SALARY_RULES_CACHE_KEY);
@@ -582,7 +646,8 @@ function handleUpdateSalaryRules(params) {
       msg: '薪資規則已更新',
       overtimeRules: overtimeRules,
       insuranceBrackets: insuranceBrackets,
-      incomeTaxRules: incomeTaxRules
+      incomeTaxRules: incomeTaxRules,
+      payrollRules: payrollRules
     };
 
   } catch (error) {
@@ -610,7 +675,8 @@ function handleResetSalaryRules(params) {
       msg: '已還原為預設薪資規則',
       overtimeRules: DEFAULT_OVERTIME_RULES,
       insuranceBrackets: DEFAULT_INSURANCE_BRACKETS,
-      incomeTaxRules: DEFAULT_INCOME_TAX_RULES
+      incomeTaxRules: DEFAULT_INCOME_TAX_RULES,
+      payrollRules: DEFAULT_PAYROLL_RULES
     };
 
   } catch (error) {

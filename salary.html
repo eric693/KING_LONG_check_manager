@@ -1433,6 +1433,19 @@
 
                     <hr class="section-divider">
 
+                    <!-- 計薪規則：全勤、餐費、生日禮金 -->
+                    <h3 class="text-lg font-semibold mb-2" data-i18n="PAYROLL_RULES_TITLE">計薪規則（全勤、餐費、生日禮金）</h3>
+                    <p class="summary-hint mb-4" data-i18n="PAYROLL_RULES_DESC">
+                        正職 = 薪資類型「月薪」，兼職 = 「時薪」。月薪的加班費時薪以（基本薪資＋伙食費＋職務加給）÷ 30 ÷ 8 計算，倍率在下方「加班倍率」設定。改動後新計算的薪資才會套用。
+                    </p>
+                    <label style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;color:var(--text);">
+                        <input type="checkbox" id="payroll-rules-enabled">
+                        <span data-i18n="PAYROLL_RULES_ENABLED">啟用計薪規則</span>
+                    </label>
+                    <div class="form-grid" id="payroll-rules-editor"></div>
+
+                    <hr class="section-divider">
+
                     <!-- 加班倍率 -->
                     <h3 class="text-lg font-semibold mb-2" data-i18n="SALARY_OVERTIME_RULES_TITLE">加班倍率與時數上限</h3>
                     <p class="summary-hint mb-4" data-i18n="SALARY_OVERTIME_RULES_DESC">

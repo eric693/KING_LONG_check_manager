@@ -294,13 +294,15 @@
         "Nếu thấy số tiền bất thường, đối chiếu chấm công và làm thêm cùng tháng rồi báo quản trị viên."
       ],
       "notes": [
-        "Lương là thông tin mật, tránh mở hoặc chụp màn hình trên thiết bị dùng chung."
+        "Lương là thông tin mật, tránh mở hoặc chụp màn hình trên thiết bị dùng chung.",
+        "Cuối phiếu lương cho biết tháng này có thưởng chuyên cần không và lý do, cùng ghi chú của quản trị viên."
       ]
     },
     "salary-setting": {
       "intro": "Thiết lập quy tắc lương và điều kiện lương của từng nhân viên. Phía trên là quy tắc chung toàn công ty; bên dưới chọn người ở trái và nhập điều kiện ở phải.",
       "steps": [
         "'Thiết lập toàn công ty' cho phép tự định nghĩa phụ cấp và khoản trừ, chỉnh hệ số tăng ca và bậc bảo hiểm.",
+        "\"Quy tắc lương\" đặt số tiền và điều kiện cho thưởng chuyên cần, tiền ăn và quà sinh nhật. Toàn thời gian = loại lương \"tháng\", bán thời gian = \"giờ\".",
         "Sau khi định nghĩa khoản tự tạo, ô nhập số tiền tương ứng sẽ xuất hiện ở cuối biểu mẫu của mỗi nhân viên.",
         "Chọn nhân viên từ danh sách tìm kiếm bên trái, rồi nhập loại lương, mức cơ bản, phụ cấp và khoản trừ ở bên phải và lưu."
       ],
@@ -308,7 +310,10 @@
         "Thiết lập áp dụng cho các lần tính sau, hãy xác nhận tháng hiệu lực; bảng lương đã tạo không tự tính lại.",
         "Điền bậc bảo hiểm theo đúng bảng do cơ quan quản lý công bố, sai sẽ làm lệch khoản trừ.",
         "Không đổi mã của khoản tự định nghĩa sau khi đã đặt; đổi mã coi như khoản mới và số tiền đã nhập sẽ không khớp.",
-        "Xoá một khoản tự định nghĩa chỉ khiến nó không được tính vào lương; số tiền vẫn được giữ và quay lại khi thêm lại."
+        "Xoá một khoản tự định nghĩa chỉ khiến nó không được tính vào lương; số tiền vẫn được giữ và quay lại khi thêm lại.",
+        "Chuyên cần toàn thời gian: mỗi tháng được đi trễ trong 5 phút 1 lần và quên chấm công 2 lần; trễ quá 5 phút, nghỉ việc riêng/ốm/nằm viện hoặc vắng không phép thì mất thưởng (có thể chỉnh số lần, số phút).",
+        "Tiền ăn: số ngày đủ 8 giờ (toàn thời gian tính giờ thực, bán thời gian tính giờ xếp ca) × 110. Quà sinh nhật cần sinh nhật trong tháng và làm đủ 3 tháng (ngày vào làm lấy từ cài đặt lương).",
+        "Lương giờ tăng ca của nhân viên tháng = (lương cơ bản + tiền ăn + phụ cấp chức vụ) ÷ 30 ÷ 8. Hệ số mặc định theo Luật Lao động, chỉnh ở phần hệ số tăng ca."
       ],
       "terms": [
         [
@@ -322,6 +327,10 @@
         [
           "Bậc bảo hiểm",
           "Khung lương dùng để tính bảo hiểm lao động và y tế, đối chiếu theo bảng công bố."
+        ],
+        [
+          "Ghi chú chuyên cần",
+          "Mỗi phiếu lương ghi rõ có thưởng chuyên cần không và lý do (ví dụ \"trễ quá 5 phút 1 lần\")."
         ]
       ]
     },
@@ -340,12 +349,15 @@
       "steps": [
         "Chọn nhân viên và tháng cần tính. Bên dưới sẽ hiện người đó hưởng lương tháng hay lương giờ.",
         "Bấm Bắt đầu tính và xem kết quả: chấm công, làm thêm và các khoản trừ.",
-        "Kiểm tra xong thì lưu thành bảng lương chính thức. Muốn tính cả công ty một lượt, dùng tính hàng loạt trong Báo cáo lương."
+        "Kiểm tra xong thì lưu thành bảng lương chính thức. Muốn tính cả công ty một lượt, dùng tính hàng loạt trong Báo cáo lương.",
+        "Sau khi tính, điền thưởng doanh số, khấu trừ tạm ứng, khoản thủ công và ghi chú ở \"Điều chỉnh phiếu lương\", rồi bấm \"Lưu và tính lại\"."
       ],
       "notes": [
         "Hãy duyệt hết đơn bổ sung chấm công, làm thêm và nghỉ phép của tháng đó trước, nếu không kết quả sẽ bị thiếu.",
         "Tính lại cùng một tháng sẽ ghi đè kết quả trước đó.",
-        "Thiếu dữ liệu chấm công làm giờ của nhân viên lương giờ bị hụt, nên xử lý hết đơn bổ sung trước."
+        "Thiếu dữ liệu chấm công làm giờ của nhân viên lương giờ bị hụt, nên xử lý hết đơn bổ sung trước.",
+        "Để trống khấu trừ tạm ứng thì tự lấy các tạm ứng đã duyệt trong tháng; để trống thưởng chuyên cần thì theo quy tắc, điền số tiền để ghi đè.",
+        "Điều chỉnh được lưu trên phiếu lương và giữ lại mỗi lần tính lại, kể cả khi nhân viên tự mở phiếu lương."
       ],
       "terms": [
         [

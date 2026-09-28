@@ -559,6 +559,50 @@ function renderPayslipAcknowledgement(data) {
     };
 }
 
+/**
+ * 員工薪資頁：計薪規則的項目（餐費、生日禮金、銷售獎金、手動加項）接在應發項目後面，
+ * 預支與手動減項接在扣款後面，全勤說明與備註放在最下面。每次重畫前先清掉上一次的。
+ */
+function renderEmployeePayrollItems(data) {
+    document.querySelectorAll('.payroll-rule-item').forEach(el => el.remove());
+    const items = payrollRuleItems(data);
+    
+    const appendRows = (anchorId, rows, isDeduction) => {
+        const anchor = document.getElementById(anchorId);
+        if (!anchor || !anchor.parentElement) return;
+        const container = anchor.parentElement.parentElement || anchor.parentElement;
+        rows.filter(([, amount]) => (parseFloat(amount) || 0) !== 0).forEach(([name, amount]) => {
+            const row = document.createElement('div');
+            row.className = 'payroll-rule-item flex justify-between text-sm';
+            const label = document.createElement('span');
+            label.textContent = name + '：';
+            const value = document.createElement('span');
+            value.className = 'font-mono ' + (isDeduction ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400');
+            value.textContent = (isDeduction ? '-' : '') + formatCurrency(amount);
+            row.appendChild(label);
+            row.appendChild(value);
+            container.appendChild(row);
+        });
+    };
+    appendRows('detail-performance-bonus', items.earnings, false);
+    appendRows('detail-other-deductions', items.deductions, true);
+    
+    const bank = document.getElementById('detail-bank-name');
+    const host = bank && bank.closest('.bank-info') ? bank.closest('.bank-info').parentElement : null;
+    if (!host) return;
+    [[t('PAYROLL_ATTENDANCE_NOTE'), items.attendanceNote], [t('PAYROLL_PAYSLIP_NOTE'), items.note]]
+        .filter(([, text]) => text)
+        .forEach(([label, text]) => {
+            const p = document.createElement('p');
+            p.className = 'payroll-rule-item text-sm mt-2';
+            const strong = document.createElement('strong');
+            strong.textContent = label + '：';
+            p.appendChild(strong);
+            p.appendChild(document.createTextNode(text));
+            host.appendChild(p);
+        });
+}
+
 function displayEmployeeSalary(data) {
     console.log(' 顯示薪資明細（完整版）:', data);
     
@@ -581,19 +625,8 @@ function displayEmployeeSalary(data) {
     safeSet('gross-salary', formatCurrency(data.grossSalary));  // ← 改這裡
     safeSet('net-salary', formatCurrency(data.netSalary));      // ← 改這裡
     
-    // 計算扣款總額
-    const deductions = 
-        (parseFloat(data.laborFee) || 0) +           // ← 改這裡
-        (parseFloat(data.healthFee) || 0) +          // ← 改這裡
-        (parseFloat(data.employmentFee) || 0) +      // ← 改這裡
-        (parseFloat(data.pensionSelf) || 0) +        // ← 改這裡
-        (parseFloat(data.incomeTax) || 0) +          // ← 改這裡
-        (parseFloat(data.leaveDeduction) || 0) +     // ← 改這裡
-        (parseFloat(data.earlyLeaveDeduction || data['早退扣款']) || 0) +
-        (parseFloat(data.welfareFee) || 0) +         // ← 改這裡
-        (parseFloat(data.dormitoryFee) || 0) +       // ← 改這裡
-        (parseFloat(data.groupInsurance) || 0) +     // ← 改這裡
-        (parseFloat(data.otherDeductions) || 0);     // ← 改這裡
+    // 扣款總額 = 應發 − 實發（自訂扣款、預支、手動減項都在裡面，才會跟實發對得起來）
+    const deductions = (parseFloat(data.grossSalary) || 0) - (parseFloat(data.netSalary) || 0);
     
     safeSet('total-deductions', formatCurrency(deductions));
     
@@ -695,6 +728,7 @@ function displayEmployeeSalary(data) {
     
     //  自訂津貼／扣款：項目由管理員定義，所以只能動態長出來
     renderCustomSalaryItems(data);
+    renderEmployeePayrollItems(data);
     
     // 加班費
     safeSet('detail-weekday-overtime', formatCurrency(data.weekdayOvertimePay || 0));
@@ -1159,19 +1193,11 @@ function displaySalaryCalculation(data, container) {
     // 記住這次的計算結果，列印薪資明細時直接用，不再向後端要一次
     if (typeof setLastCalculatedSalary === 'function') setLastCalculatedSalary(data);
     
-    // 計算扣款總額
-    const totalDeductions = 
-        (parseFloat(data.laborFee) || 0) + 
-        (parseFloat(data.healthFee) || 0) + 
-        (parseFloat(data.employmentFee) || 0) + 
-        (parseFloat(data.pensionSelf) || 0) + 
-        (parseFloat(data.incomeTax) || 0) + 
-        (parseFloat(data.leaveDeduction) || 0) +
-        (parseFloat(data.earlyLeaveDeduction || data['早退扣款']) || 0) +
-        (parseFloat(data.welfareFee) || 0) +
-        (parseFloat(data.dormitoryFee) || 0) +
-        (parseFloat(data.groupInsurance) || 0) +
-        (parseFloat(data.otherDeductions) || 0);
+    // 扣款總額 = 應發 − 實發（自訂扣款、預支、手動減項都在裡面，才會跟實發對得起來）
+    const totalDeductions = (parseFloat(data.grossSalary) || 0) - (parseFloat(data.netSalary) || 0);
+    
+    // 計薪規則加上的項目：餐費、生日禮金、銷售獎金、預支、手動加減項目
+    const ruleItems = payrollRuleItems(data);
     
     const isHourly = data.salaryType === '時薪';
     
@@ -1353,10 +1379,13 @@ function displaySalaryCalculation(data, container) {
                         <span>${tHtml('SALARY_ATTENDANCE_BONUS')}</span>
                         <span class="font-mono">${formatCurrency(data.attendanceBonus || 0)}</span>
                     </div>
+                    ${ruleItems.attendanceNote ? `<p class="text-xs text-gray-500 dark:text-gray-400 mb-1">${escapeHtml(ruleItems.attendanceNote)}</p>` : ''}
                     <div class="calculation-row">
                         <span>${tHtml('SALARY_PERFORMANCE_BONUS')}</span>
                         <span class="font-mono">${formatCurrency(data.performanceBonus || 0)}</span>
                     </div>
+                    ${payrollCalcRowsHtml(ruleItems.earnings)}
+                    ${data.birthdayNote ? `<p class="text-xs text-gray-500 dark:text-gray-400 mb-1">${escapeHtml(data.birthdayNote)}</p>` : ''}
                     
                     ${weekdayOvertimePay > 0 ? `
                         <div class="calculation-row">
@@ -1467,6 +1496,7 @@ function displaySalaryCalculation(data, container) {
                         <span>${tHtml('SALARY_OTHER_DEDUCT')}</span>
                         <span class="font-mono">${formatCurrency(data.otherDeductions || 0)}</span>
                     </div>
+                    ${payrollCalcRowsHtml(ruleItems.deductions)}
                     
                     <div class="calculation-row total">
                         <span>${tHtml('SALARY_NET')}</span>
@@ -1474,8 +1504,126 @@ function displaySalaryCalculation(data, container) {
                     </div>
                 </div>
             </div>
+            ${ruleItems.note ? `<p class="text-sm mt-4"><strong>${tHtml('PAYROLL_PAYSLIP_NOTE')}：</strong>${escapeHtml(ruleItems.note)}</p>` : ''}
+            <div class="payroll-adjust-panel mt-6"></div>
         </div>
     `;
+    
+    // 計薪規則只套在月薪、時薪；週薪沒有這些項目
+    if (data.payrollAdjustments) {
+        renderPayrollAdjustPanel(data, container.querySelector('.payroll-adjust-panel'), container);
+    }
+}
+
+/** 計算結果裡的一列列項目（金額是 0 的不列） */
+function payrollCalcRowsHtml(items) {
+    return items
+        .filter(([, amount]) => (parseFloat(amount) || 0) !== 0)
+        .map(([label, amount]) => `
+            <div class="calculation-row">
+                <span>${escapeHtml(label)}</span>
+                <span class="font-mono">${formatCurrency(amount)}</span>
+            </div>`)
+        .join('');
+}
+
+/**
+ * 計薪調整：每張薪資單各自填的銷售獎金、預支抵扣、全勤（手動）、手動加減項目、備註。
+ * 按儲存後由後端用這些值重算並存檔，之後重算（包括員工自己打開薪資單）都會沿用。
+ */
+function renderPayrollAdjustPanel(data, panel, container) {
+    if (!panel) return;
+    const adj = data.payrollAdjustments || {};
+    const valueOf = v => (v === null || v === undefined) ? '' : v;
+    
+    panel.innerHTML = `
+        <div class="p-4 rounded-lg border border-indigo-200 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/20">
+            <h4 class="font-semibold mb-1 text-indigo-800 dark:text-indigo-300">${tHtml('PAYROLL_ADJUST_TITLE')}</h4>
+            <p class="text-xs text-indigo-700 dark:text-indigo-300 mb-3">${tHtml('PAYROLL_ADJUST_HINT')}</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                <label class="block text-sm">
+                    <span>${tHtml('PAYROLL_SALES_BONUS')}</span>
+                    <input type="number" min="0" step="1" class="form-input w-full pa-sales" value="${escapeHtml(String(valueOf(adj.salesBonus) || ''))}">
+                </label>
+                <label class="block text-sm">
+                    <span>${tHtml('PAYROLL_ADVANCE_DEDUCTION')}</span>
+                    <input type="number" min="0" step="1" class="form-input w-full pa-advance" value="${escapeHtml(String(valueOf(adj.advanceDeduction)))}"
+                           placeholder="${escapeHtml(String(data.advanceAuto || 0))}">
+                    <span class="text-xs text-gray-500 dark:text-gray-400">${tHtml('PAYROLL_ADVANCE_AUTO_HINT', { amount: formatCurrency(data.advanceAuto || 0) })}</span>
+                </label>
+                <label class="block text-sm">
+                    <span>${tHtml('PAYROLL_ATTENDANCE_OVERRIDE')}</span>
+                    <input type="number" min="0" step="1" class="form-input w-full pa-attendance" value="${escapeHtml(String(valueOf(adj.attendanceBonus)))}">
+                    <span class="text-xs text-gray-500 dark:text-gray-400">${tHtml('PAYROLL_ATTENDANCE_AUTO_HINT')}</span>
+                </label>
+            </div>
+            <div class="text-sm font-semibold mb-2">${tHtml('PAYROLL_MANUAL_ITEMS')}</div>
+            <div class="pa-items space-y-2 mb-2"></div>
+            <button type="button" class="ghost-btn pa-add-item mb-3">${tHtml('PAYROLL_ADD_ITEM')}</button>
+            <label class="block text-sm mb-3">
+                <span>${tHtml('PAYROLL_PAYSLIP_NOTE')}</span>
+                <textarea rows="2" maxlength="500" class="form-input w-full pa-note"></textarea>
+            </label>
+            <button type="button" class="submit-btn pa-save" style="max-width: 240px;">${tHtml('PAYROLL_SAVE_ADJUST')}</button>
+        </div>`;
+    
+    panel.querySelector('.pa-note').value = adj.note || '';
+    
+    const list = panel.querySelector('.pa-items');
+    const addRow = item => {
+        const row = document.createElement('div');
+        row.className = 'pa-item flex flex-wrap gap-2 items-center';
+        row.innerHTML = `
+            <select class="form-input pa-item-type" style="width:auto;">
+                <option value="add">${tHtml('PAYROLL_MANUAL_ADD')}</option>
+                <option value="sub">${tHtml('PAYROLL_MANUAL_SUB')}</option>
+            </select>
+            <input type="text" maxlength="30" class="form-input pa-item-name" style="flex:1;min-width:8rem;" placeholder="${escapeHtml(t('PAYROLL_ITEM_NAME'))}">
+            <input type="number" min="0" step="1" class="form-input pa-item-amount" style="width:8rem;" placeholder="${escapeHtml(t('PAYROLL_ITEM_AMOUNT'))}">
+            <button type="button" class="row-remove-btn pa-item-remove">${tHtml('PAYROLL_REMOVE_ITEM')}</button>`;
+        row.querySelector('.pa-item-type').value = item && item.type === 'sub' ? 'sub' : 'add';
+        row.querySelector('.pa-item-name').value = (item && item.name) || '';
+        row.querySelector('.pa-item-amount').value = (item && item.amount) || '';
+        row.querySelector('.pa-item-remove').onclick = () => row.remove();
+        list.appendChild(row);
+    };
+    (adj.manualItems || []).forEach(addRow);
+    panel.querySelector('.pa-add-item').onclick = () => addRow(null);
+    
+    const button = panel.querySelector('.pa-save');
+    button.onclick = async () => {
+        const numberOrNull = el => el.value.trim() === '' ? null : Number(el.value);
+        const adjustments = {
+            salesBonus: numberOrNull(panel.querySelector('.pa-sales')) || 0,
+            advanceDeduction: numberOrNull(panel.querySelector('.pa-advance')),
+            attendanceBonus: numberOrNull(panel.querySelector('.pa-attendance')),
+            manualItems: Array.from(list.querySelectorAll('.pa-item')).map(row => ({
+                type: row.querySelector('.pa-item-type').value,
+                name: row.querySelector('.pa-item-name').value.trim(),
+                amount: row.querySelector('.pa-item-amount').value
+            })),
+            note: panel.querySelector('.pa-note').value
+        };
+        
+        button.disabled = true;
+        try {
+            const res = await callApifetch(
+                `savePayrollAdjustments&employeeId=${encodeURIComponent(data.employeeId)}` +
+                `&yearMonth=${encodeURIComponent(data.yearMonth)}` +
+                `&adjustments=${encodeURIComponent(JSON.stringify(adjustments))}`);
+            if (res.ok && res.data) {
+                displaySalaryCalculation(res.data, container);
+                showNotification(t('PAYROLL_SAVED'), 'success');
+            } else {
+                showNotification(res.msg || t('PAYROLL_SAVE_FAILED'), 'error');
+                button.disabled = false;
+            }
+        } catch (error) {
+            console.error('儲存計薪調整失敗:', error);
+            showNotification(t('PAYROLL_SAVE_FAILED'), 'error');
+            button.disabled = false;
+        }
+    };
 }
 /**
  *  儲存薪資記錄（修正版 - 包含所有必要欄位）
@@ -1483,6 +1631,21 @@ function displaySalaryCalculation(data, container) {
 async function saveSalaryRecord(data) {
     try {
         showNotification(t('SALARY_SAVING_RECORD'), 'info');
+        
+        // 月薪、時薪：交給後端用同一套規則重算再存，沿用這張薪資單的計薪調整。
+        // 以前是把畫面上的數字一欄欄傳回去存，會漏掉國定假日出勤薪資、早退扣款、自訂項目這些欄位。
+        if (data.payrollAdjustments) {
+            const saved = await callApifetch(
+                `savePayrollAdjustments&employeeId=${encodeURIComponent(data.employeeId)}` +
+                `&yearMonth=${encodeURIComponent(data.yearMonth)}` +
+                `&adjustments=${encodeURIComponent(JSON.stringify(data.payrollAdjustments))}`);
+            if (saved.ok) {
+                showNotification(t('SALARY_RECORD_SAVED'), 'success');
+            } else {
+                showNotification(t('SALARY_SAVE_FAILED') + ': ' + (saved.msg || t('UNKNOWN_ERROR')), 'error');
+            }
+            return;
+        }
         
         //  修正：加入完整的欄位（特別是 salaryType, hourlyRate, totalWorkHours）
         const queryString = 

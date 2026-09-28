@@ -294,13 +294,15 @@
         "Bila ada angka yang meragukan, bandingkan dengan catatan absensi dan lembur bulan yang sama sebelum melapor ke admin."
       ],
       "notes": [
-        "Data gaji rahasia; hindari membuka atau memotret layarnya di perangkat bersama."
+        "Data gaji rahasia; hindari membuka atau memotret layarnya di perangkat bersama.",
+        "Bagian bawah slip menunjukkan apakah Anda mendapat bonus kehadiran bulan ini dan alasannya, serta catatan dari admin."
       ]
     },
     "salary-setting": {
       "intro": "Mengatur aturan gaji dan kondisi gaji tiap karyawan. Aturan seluruh perusahaan ada di atas; di bawah, pilih orang di kiri dan isi kondisinya di kanan.",
       "steps": [
         "'Pengaturan tingkat perusahaan' dipakai untuk menentukan tunjangan dan potongan kustom, serta menyetel tarif lembur dan tingkat asuransi.",
+        "\"Aturan gaji\" mengatur jumlah dan syarat bonus kehadiran, uang makan, dan hadiah ulang tahun. Penuh waktu = jenis gaji \"bulanan\", paruh waktu = \"per jam\".",
         "Setelah item kustom ditentukan, kolom jumlahnya muncul di bagian bawah formulir setiap karyawan.",
         "Pilih karyawan dari daftar yang bisa dicari di kiri, lalu isi jenis gaji, jumlah pokok, tunjangan dan potongan di kanan, kemudian simpan."
       ],
@@ -308,7 +310,10 @@
         "Pengaturan berlaku untuk perhitungan berikutnya, jadi pastikan bulan berlakunya; slip yang sudah ada tidak dihitung ulang.",
         "Isi tingkat asuransi sesuai tabel resmi yang diumumkan; salah isi berarti potongan salah.",
         "Jangan ubah kode item kustom setelah ditetapkan; kode yang berubah dianggap item baru dan jumlah yang sudah diisi tidak lagi cocok.",
-        "Menghapus item kustom hanya membuatnya tidak dihitung ke gaji. Jumlahnya tetap tersimpan dan kembali bila item ditambahkan lagi."
+        "Menghapus item kustom hanya membuatnya tidak dihitung ke gaji. Jumlahnya tetap tersimpan dan kembali bila item ditambahkan lagi.",
+        "Bonus kehadiran penuh waktu: per bulan boleh terlambat ≤5 menit 1 kali dan lupa absen 2 kali; terlambat lebih dari 5 menit, cuti pribadi/sakit/rawat inap, atau mangkir membatalkannya (angka bisa diubah).",
+        "Uang makan: jumlah hari dengan 8+ jam (penuh waktu jam nyata, paruh waktu jam terjadwal) × 110. Hadiah ulang tahun perlu ulang tahun bulan ini dan masa kerja 3+ bulan (tanggal masuk dari pengaturan gaji).",
+        "Tarif lembur per jam karyawan bulanan = (gaji pokok + uang makan + tunjangan jabatan) ÷ 30 ÷ 8. Pengali default sesuai UU Ketenagakerjaan dan bisa diubah di tarif lembur."
       ],
       "terms": [
         [
@@ -322,6 +327,10 @@
         [
           "Tingkat asuransi",
           "Rentang gaji untuk menghitung asuransi tenaga kerja dan kesehatan, dicocokkan dengan tabel resmi."
+        ],
+        [
+          "Keterangan bonus kehadiran",
+          "Setiap slip gaji mencatat apakah bonus didapat dan alasannya (mis. \"terlambat lebih dari 5 menit 1 kali\")."
         ]
       ]
     },
@@ -340,12 +349,15 @@
       "steps": [
         "Pilih karyawan dan bulan perhitungan. Keterangan di bawah menunjukkan apakah dia bergaji bulanan atau per jam.",
         "Tekan Mulai hitung lalu periksa hasilnya: absensi, lembur, dan potongan.",
-        "Simpan sebagai slip resmi jika sudah benar. Untuk menghitung seluruh perusahaan sekaligus, gunakan hitung massal di Laporan Gaji."
+        "Simpan sebagai slip resmi jika sudah benar. Untuk menghitung seluruh perusahaan sekaligus, gunakan hitung massal di Laporan Gaji.",
+        "Setelah menghitung, isi bonus penjualan, potongan kasbon, item manual, dan catatan di \"Penyesuaian slip gaji\", lalu tekan \"Simpan dan hitung ulang\"."
       ],
       "notes": [
         "Setujui dulu semua koreksi absensi, lembur, dan cuti bulan itu, kalau tidak hasilnya akan kurang.",
         "Menghitung ulang bulan yang sama akan menimpa hasil sebelumnya.",
-        "Absensi yang hilang membuat jam karyawan per jam jadi kurang, jadi bereskan dulu antrean koreksi absensi."
+        "Absensi yang hilang membuat jam karyawan per jam jadi kurang, jadi bereskan dulu antrean koreksi absensi.",
+        "Kosongkan potongan kasbon untuk memakai kasbon yang disetujui bulan ini; kosongkan bonus kehadiran untuk mengikuti aturan, atau isi jumlah untuk menimpanya.",
+        "Penyesuaian disimpan di slip dan dipakai lagi setiap dihitung ulang, termasuk saat karyawan membuka slipnya sendiri."
       ],
       "terms": [
         [

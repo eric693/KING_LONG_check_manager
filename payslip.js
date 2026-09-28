@@ -29,6 +29,65 @@ function payslipRows(items) {
 }
 
 /**
+ * 計薪規則加上的項目（餐費、生日禮金、銷售獎金、預支、手動加減項目）。
+ * 計算結果用英文欄位；從「月薪資記錄」讀回來的是中文欄名，兩種都要認得。
+ * 薪資單、試算結果、員工自己的薪資頁都用這一份，三邊才會一致。
+ */
+function payrollRuleItems(data, options) {
+    const pick = (key, header) => {
+        const v = data[key] !== undefined ? data[key] : data[header];
+        return parseFloat(v) || 0;
+    };
+    
+    let manualItems = Array.isArray(data.manualItems) ? data.manualItems : null;
+    let note = data.payslipNote !== undefined ? data.payslipNote : (data['薪資單備註'] || '');
+    if (!manualItems) {
+        manualItems = [];
+        try {
+            const saved = JSON.parse(data['計薪調整'] || 'null');
+            if (saved && Array.isArray(saved.manualItems)) manualItems = saved.manualItems;
+        } catch (error) {
+            console.warn('計薪調整格式錯誤:', error);
+        }
+    }
+    
+    const mealDays = parseInt(data.mealDays, 10) || 0;
+    const earnings = [
+        [mealDays ? t('PAYROLL_MEAL_SUBSIDY_DAYS', { days: mealDays }) : t('PAYROLL_MEAL_SUBSIDY'), pick('mealSubsidy', '餐費')],
+        [t('PAYROLL_BIRTHDAY_GIFT'), pick('birthdayGift', '生日禮金')],
+        [t('PAYROLL_SALES_BONUS'), pick('salesBonus', '銷售獎金')]
+    ].concat(manualItems.filter(i => i.type !== 'sub').map(i => [String(i.name || ''), i.amount]));
+    
+    const deductions = [
+        [t('PAYROLL_ADVANCE_DEDUCTION'), pick('advanceDeduction', '預支抵扣')]
+    ].concat(manualItems.filter(i => i.type === 'sub').map(i => [String(i.name || ''), i.amount]));
+    
+    // 薪資單要把自訂津貼／扣款也列出來（薪資頁另外有 renderCustomSalaryItems）
+    if (options && options.includeCustom) {
+        let allowances = data.customAllowances;
+        let customDeductions = data.customDeductions;
+        if (!allowances && !customDeductions && data['自訂項目明細']) {
+            try {
+                const detail = JSON.parse(data['自訂項目明細']) || {};
+                allowances = detail.allowances;
+                customDeductions = detail.deductions;
+            } catch (error) {
+                console.warn('自訂項目明細格式錯誤:', error);
+            }
+        }
+        (allowances || []).forEach(i => earnings.push([String(i.name || ''), i.amount]));
+        (customDeductions || []).forEach(i => deductions.push([String(i.name || ''), i.amount]));
+    }
+    
+    return {
+        earnings: earnings,
+        deductions: deductions,
+        attendanceNote: data.attendanceNote !== undefined ? data.attendanceNote : (data['全勤說明'] || ''),
+        note: note || ''
+    };
+}
+
+/**
  * 組出薪資明細表的 HTML
  */
 function buildPayslipHtml(data) {
@@ -48,6 +107,8 @@ function buildPayslipHtml(data) {
         [t('SALARY_HOLIDAY_WORK_PAY') !== 'SALARY_HOLIDAY_WORK_PAY'
             ? t('SALARY_HOLIDAY_WORK_PAY') : '國定假日出勤薪資', data.holidayWorkPay]
     ];
+    const ruleItems = payrollRuleItems(data, { includeCustom: true });
+    earnings.push(...ruleItems.earnings);
     
     const deductions = [
         [t('SALARY_LABOR_INS'), data.laborFee],
@@ -61,9 +122,10 @@ function buildPayslipHtml(data) {
         [t('SALARY_DORMITORY_FEE_LABEL'), data.dormitoryFee],
         [t('SALARY_GROUP_INSURANCE_LABEL'), data.groupInsurance],
         [t('SALARY_OTHER_DEDUCT'), data.otherDeductions]
-    ];
+    ].concat(ruleItems.deductions);
     
-    const totalDeductions = deductions.reduce((sum, [, v]) => sum + num(v), 0);
+    // 扣款合計 = 應發 − 實發：自訂扣款、預支、手動減項都算在裡面，跟實發金額一定對得起來
+    const totalDeductions = num(data.grossSalary) - num(data.netSalary);
     const account = String(data.bankAccount || '');
     // 明細會被列印出來，帳號只留末四碼
     const maskedAccount = account ? account.slice(-4).padStart(account.length, '*') : '';
@@ -93,6 +155,7 @@ function buildPayslipHtml(data) {
   tr.total td { border-top: 2px solid #333; border-bottom: 0; font-weight: 700; padding-top: 8px; }
   .net { margin-top: 18px; padding: 12px 14px; background: #f0f4ff; border: 1px solid #c7d2fe; border-radius: 6px;
          display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: 700; }
+  .note { margin-top: 12px; font-size: 13px; white-space: pre-wrap; }
   .sign { margin-top: 28px; display: flex; justify-content: space-between; font-size: 13px; color: #444; }
   .sign span { border-top: 1px solid #999; padding-top: 6px; width: 45%; }
   .foot { margin-top: 18px; font-size: 11px; color: #777; }
@@ -149,6 +212,8 @@ function buildPayslipHtml(data) {
     <span>${escapeHtml(t('SALARY_NET'))}</span>
     <span>${payslipMoney(data.netSalary)}</span>
   </div>
+  
+  ${ruleItems.note ? `<div class="note"><strong>${escapeHtml(t('PAYROLL_PAYSLIP_NOTE'))}：</strong>${escapeHtml(ruleItems.note)}</div>` : ''}
   
   <div class="sign">
     <span>${escapeHtml(t('PAYSLIP_SIGNATURE'))}</span>

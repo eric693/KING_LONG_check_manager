@@ -29,7 +29,8 @@ const ROUTE_ACCESS = {
   resetKioskKey: 'admin',
   disableKiosk: 'admin',
   getKioskStatus: 'admin',
-  saveShiftTemplates: 'admin'
+  saveShiftTemplates: 'admin',
+  savePayrollAdjustments: 'admin'
 };
 
 /**
@@ -225,6 +226,8 @@ function doGet(e) {
         return respond1(handleGetShiftTemplates(e.parameter));
       case "saveShiftTemplates":
         return respond1(handleSaveShiftTemplates(e.parameter));
+      case "savePayrollAdjustments":
+        return respond1(handleSavePayrollAdjustments(e.parameter));
       
       // ==================== 薪資系統 ====================
       case "setEmployeeSalaryTW":

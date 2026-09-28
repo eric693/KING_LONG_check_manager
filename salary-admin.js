@@ -34,6 +34,21 @@ const OVERTIME_RULE_FIELDS = [
   { key: 'maxHolidayHours', labelKey: 'RULE_MAX_HOLIDAY',      fallback: '國定假日每日上限 (小時)', step: '0.5' }
 ];
 
+// 計薪規則（PayrollRules.gs）：金額與門檻
+const PAYROLL_RULE_FIELDS = [
+  { key: 'fullTimeAttendanceBonus', labelKey: 'PAYROLL_RULE_FT_ATTENDANCE',    fallback: '正職全勤獎金', step: '1' },
+  { key: 'lateGraceMinutes',        labelKey: 'PAYROLL_RULE_LATE_GRACE_MIN',   fallback: '遲到緩衝（分鐘）', step: '1' },
+  { key: 'lateGraceTimes',          labelKey: 'PAYROLL_RULE_LATE_GRACE_TIMES', fallback: '每月可緩衝次數', step: '1' },
+  { key: 'maxMissedPunches',        labelKey: 'PAYROLL_RULE_MAX_MISSED',       fallback: '每月可忘卡次數', step: '1' },
+  { key: 'partTimeAttendanceBonus', labelKey: 'PAYROLL_RULE_PT_ATTENDANCE',    fallback: '兼職全勤獎金', step: '1' },
+  { key: 'partTimeAttendanceHours', labelKey: 'PAYROLL_RULE_PT_HOURS',         fallback: '兼職全勤排班時數', step: '0.5' },
+  { key: 'mealPerDay',              labelKey: 'PAYROLL_RULE_MEAL_PER_DAY',     fallback: '餐費（每天）', step: '1' },
+  { key: 'mealMinHours',            labelKey: 'PAYROLL_RULE_MEAL_MIN_HOURS',   fallback: '餐費門檻（小時）', step: '0.5' },
+  { key: 'fullTimeBirthdayGift',    labelKey: 'PAYROLL_RULE_FT_BIRTHDAY',      fallback: '正職生日禮金', step: '1' },
+  { key: 'partTimeBirthdayGift',    labelKey: 'PAYROLL_RULE_PT_BIRTHDAY',      fallback: '兼職生日禮金', step: '1' },
+  { key: 'birthdayMinTenureMonths', labelKey: 'PAYROLL_RULE_BIRTHDAY_TENURE',  fallback: '生日禮金到職滿（月）', step: '1' }
+];
+
 /**
  * 翻譯小工具：沒有翻譯就用寫在程式裡的中文，不要讓畫面出現翻譯鍵
  */
@@ -412,6 +427,46 @@ function renderOvertimeRulesEditor(rules) {
   });
 }
 
+function renderPayrollRulesEditor(rules) {
+  const container = document.getElementById('payroll-rules-editor');
+  if (!container || !rules) return;
+
+  const enabled = document.getElementById('payroll-rules-enabled');
+  if (enabled) enabled.checked = rules.enabled !== false;
+
+  container.innerHTML = '';
+  PAYROLL_RULE_FIELDS.forEach(field => {
+    const group = document.createElement('div');
+    group.className = 'form-group';
+
+    const label = document.createElement('label');
+    label.className = 'form-label';
+    label.setAttribute('for', `payroll-rule-${field.key}`);
+    label.textContent = ta(field.labelKey, field.fallback);
+
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.className = 'form-input payroll-rule-input';
+    input.id = `payroll-rule-${field.key}`;
+    input.dataset.ruleKey = field.key;
+    input.step = field.step;
+    input.min = '0';
+    input.value = (rules[field.key] === undefined) ? '' : rules[field.key];
+
+    group.appendChild(label);
+    group.appendChild(input);
+    container.appendChild(group);
+  });
+}
+
+function collectPayrollRules() {
+  const rules = { enabled: !!document.getElementById('payroll-rules-enabled')?.checked };
+  document.querySelectorAll('.payroll-rule-input').forEach(input => {
+    rules[input.dataset.ruleKey] = parseFloat(input.value);
+  });
+  return rules;
+}
+
 function renderInsuranceBracketsEditor(brackets) {
   const container = document.getElementById('insurance-brackets-editor');
   if (!container || !Array.isArray(brackets)) return;
@@ -554,6 +609,7 @@ async function loadSalaryRules() {
       renderOvertimeRulesEditor(res.overtimeRules);
       renderInsuranceBracketsEditor(res.insuranceBrackets);
       renderIncomeTaxEditor(res.incomeTaxRules);
+      renderPayrollRulesEditor(res.payrollRules);
     }
   } catch (error) {
     console.error('載入薪資規則失敗:', error);
@@ -589,12 +645,17 @@ async function saveSalaryRules() {
       `overtimeRules=${encodeURIComponent(JSON.stringify(overtimeRules))}` +
       `&insuranceBrackets=${encodeURIComponent(JSON.stringify(brackets))}` +
       `&incomeTaxRules=${encodeURIComponent(JSON.stringify(collectIncomeTaxRules()))}`;
-    const res = await callApifetch(`updateSalaryRules&${query}`, null);
+    const payrollEditor = document.getElementById('payroll-rules-editor');
+    const payrollQuery = (payrollEditor && payrollEditor.children.length)
+      ? `&payrollRules=${encodeURIComponent(JSON.stringify(collectPayrollRules()))}`
+      : '';
+    const res = await callApifetch(`updateSalaryRules&${query}${payrollQuery}`, null);
 
     if (res.ok) {
       renderOvertimeRulesEditor(res.overtimeRules || overtimeRules);
       renderInsuranceBracketsEditor(res.insuranceBrackets || brackets);
       if (res.incomeTaxRules) renderIncomeTaxEditor(res.incomeTaxRules);
+      if (res.payrollRules) renderPayrollRulesEditor(res.payrollRules);
       showNotification(ta('SALARY_RULES_SAVED', '薪資規則已更新'), 'success');
     } else {
       showNotification(res.msg || ta('SALARY_RULES_SAVE_FAILED', '薪資規則更新失敗'), 'error');
@@ -616,6 +677,7 @@ async function resetSalaryRules() {
       renderOvertimeRulesEditor(res.overtimeRules);
       renderInsuranceBracketsEditor(res.insuranceBrackets);
       renderIncomeTaxEditor(res.incomeTaxRules);
+      renderPayrollRulesEditor(res.payrollRules);
       showNotification(ta('SALARY_RULES_RESET_DONE', '已還原為預設薪資規則'), 'success');
     } else {
       showNotification(res.msg || ta('SALARY_RULES_SAVE_FAILED', '薪資規則更新失敗'), 'error');

@@ -294,13 +294,15 @@
         "If an amount looks wrong, compare it with the same month's attendance and overtime records before contacting the administrator."
       ],
       "notes": [
-        "Salary data is confidential - avoid opening or screenshotting it on shared devices."
+        "Salary data is confidential - avoid opening or screenshotting it on shared devices.",
+        "The bottom of the payslip shows whether you earned the attendance bonus this month and why, plus any note from the admin."
       ]
     },
     "salary-setting": {
       "intro": "Set the pay rules and each employee's pay conditions. Company-wide rules are at the top; below, pick a person on the left and fill in their conditions on the right.",
       "steps": [
         "Company-wide settings let you define custom allowances and deductions, and adjust overtime rates and insurance brackets.",
+        "\"Payroll rules\" set the amounts and thresholds for the attendance bonus, meal pay and birthday gift. Full-time = \"monthly\" salary type, part-time = \"hourly\".",
         "Once custom items are defined, a matching amount field appears at the bottom of every employee's form.",
         "Pick an employee from the searchable list on the left, then set salary type, base amount, allowances and deductions, and save."
       ],
@@ -308,7 +310,10 @@
         "Settings apply to future calculations, so check which month they take effect from; existing payslips are not recalculated.",
         "Fill in insurance brackets from the official published table — wrong figures mean wrong deductions.",
         "Do not change a custom item's code once set; a changed code is a new item and the amounts already entered no longer match it.",
-        "Deleting a custom item only stops it counting toward pay. The amounts stay on file and come back if you add it again."
+        "Deleting a custom item only stops it counting toward pay. The amounts stay on file and come back if you add it again.",
+        "Full-time attendance bonus: one late arrival within 5 minutes and 2 missed punches are allowed per month; being more than 5 minutes late, personal/sick/hospital leave or an unexcused absence cancels it (the numbers are adjustable).",
+        "Meal pay: days with 8+ hours (actual hours for full-time, scheduled hours for part-time) × NT$110. The birthday gift needs a birthday this month and 3+ months of employment (hire date from the salary settings).",
+        "Overtime hourly rate for monthly staff = (base + meal allowance + position allowance) ÷ 30 ÷ 8. The multipliers default to the Labor Standards Act and can be changed under overtime rates."
       ],
       "terms": [
         [
@@ -322,6 +327,10 @@
         [
           "Insurance bracket",
           "The salary band used to work out labor and health insurance, matched against the official published table."
+        ],
+        [
+          "Attendance bonus note",
+          "Each payslip says whether the bonus was earned and why not (e.g. \"late more than 5 minutes once\")."
         ]
       ]
     },
@@ -340,12 +349,15 @@
       "steps": [
         "Pick the employee and the month. The hint below shows whether they are monthly or hourly paid.",
         "Press Start calculation and review the result: attendance, overtime and deductions.",
-        "Save it as an official payslip once it checks out. To run the whole company at once, use the batch calculation in Salary Reports."
+        "Save it as an official payslip once it checks out. To run the whole company at once, use the batch calculation in Salary Reports.",
+        "After calculating, fill in the sales bonus, advance repayment, manual items and a note under \"Payslip adjustments\", then press \"Save and recalculate\"."
       ],
       "notes": [
         "Approve every punch correction, overtime and leave request for that month first, or the result will come out short.",
         "Recalculating the same month overwrites the previous result.",
-        "Missing punches make hourly staff's hours too low, so clear the punch-correction queue first."
+        "Missing punches make hourly staff's hours too low, so clear the punch-correction queue first.",
+        "Leave the advance blank to use this month's approved advance requests; leave the attendance bonus blank to follow the payroll rules, or enter an amount to override.",
+        "Adjustments are kept on the payslip and reused on every recalculation, including when the employee opens their own payslip."
       ],
       "terms": [
         [
