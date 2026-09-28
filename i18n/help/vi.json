@@ -224,25 +224,55 @@
       ]
     },
     "add-tab": {
-      "intro": "Thêm từng ca một: nhân viên, ngày, loại ca và địa điểm.",
+      "intro": "Thêm từng ca: chọn nhân viên, ngày, ca và địa điểm.",
       "steps": [
-        "Chọn nhân viên và ngày, chọn loại ca thì giờ sẽ tự điền.",
-        "Xác nhận địa điểm rồi gửi, sau đó vào \"Xem xếp ca\" kiểm tra."
+        "Chọn nhân viên và ngày rồi chọn ca; giờ vào, giờ ra và phút nghỉ được lấy từ cài đặt ca, giờ làm hiển thị bên dưới biểu mẫu.",
+        "Ca gãy (ví dụ 10:30–21:30) cũng chỉ cần chọn một ca; khoảng nghỉ ở giữa đã nằm trong \"phút nghỉ\".",
+        "Muốn điều chỉnh riêng ca này thì sửa trực tiếp giờ hoặc phút nghỉ.",
+        "Kiểm tra địa điểm rồi lưu, sau đó xem ở \"Xem ca làm\"."
       ],
       "notes": [
-        "Cùng một người trong cùng một ngày mà xếp trùng sẽ xung đột; hãy kiểm tra trước khi thêm."
+        "Nhân viên chỉ chấm vào và ra hai lần; giờ làm = thời gian có mặt − phút nghỉ của ca, tính đến phút.",
+        "Ngày không xếp ca: chỉ trừ 1 giờ nghỉ khi có mặt hơn 8 giờ.",
+        "Cùng người, cùng ngày, cùng ca sẽ không được thêm trùng."
       ]
     },
     "batch-tab": {
-      "intro": "Xếp ca cho nhiều nhân viên trong cả một giai đoạn, phù hợp để lên lịch cố định cho tháng sau.",
+      "intro": "Tải lên tệp CSV hoặc Excel để thêm nhiều ca cùng lúc, tiện cho lịch cố định tháng sau.",
       "steps": [
-        "Chọn khoảng ngày và loại ca cần áp dụng, rồi tích chọn nhân viên.",
-        "Đặt các thứ trong tuần cần xếp (ví dụ thứ Hai đến thứ Sáu) và gửi.",
-        "Xong thì vào \"Xem xếp ca\" kiểm tra vài ngày cho chắc."
+        "Bấm \"Tải mẫu\" và điền theo các cột: mã nhân viên, tên, ngày, ca, giờ vào, giờ ra, địa điểm, ghi chú, phút nghỉ.",
+        "Có thể chỉ nhập mã ca (ví dụ E); giờ và phút nghỉ để trống sẽ lấy từ cài đặt ca. Điền vào nếu muốn điều chỉnh.",
+        "Chọn tệp, kiểm tra bản xem trước (tên ca và giờ), rồi bấm \"Xác nhận tải lên\".",
+        "Sau đó kiểm tra vài ngày ở \"Xem ca làm\"."
       ],
       "notes": [
-        "Thao tác này tạo rất nhiều dữ liệu; trước khi gửi hãy kiểm tra lại khoảng ngày và danh sách người.",
-        "Ngày lễ và ngày nghỉ đã duyệt không tự động bỏ qua, bạn phải tự kiểm tra và điều chỉnh."
+        "Sao chép mã nhân viên từ quản lý nhân viên ở trang quản trị; dòng sai mã sẽ thất bại.",
+        "Ca đã có (cùng người, ngày, ca) sẽ được bỏ qua và liệt kê trong kết quả.",
+        "Ngày lễ và nghỉ phép đã duyệt không tự bỏ qua, hãy tự kiểm tra."
+      ]
+    },
+    "templates-tab": {
+      "intro": "Quản lý các ca của cửa hàng: mã, tên, giờ vào/ra dự kiến và phút nghỉ. Khi xếp ca chỉ cần chọn ca là tự điền.",
+      "steps": [
+        "Mỗi dòng là một ca. Nhập mã (ví dụ E), tên, giờ và phút nghỉ; tổng phút và giờ làm được tính tự động.",
+        "Ca gãy thì ghi khoảng giữa vào \"Nghỉ (phút)\", ví dụ 10:30–21:30 nghỉ 180 phút = làm 8 giờ.",
+        "Ca kết thúc sau nửa đêm thì đánh dấu \"Qua đêm\". Ca không dùng nữa thì bỏ \"Dùng\" thay vì xóa.",
+        "Cuối cùng bấm \"Lưu cài đặt ca\"."
+      ],
+      "notes": [
+        "Chỉ quản trị viên được sửa: phút nghỉ ảnh hưởng trực tiếp đến giờ làm và lương của nhân viên theo giờ.",
+        "Thay đổi chỉ áp dụng cho các ca xếp sau này; ca đã xếp (hoặc đã trả lương) không đổi.",
+        "Mã không được trùng. Ca nghỉ cả ngày như nghỉ phép có thể để trống giờ."
+      ],
+      "terms": [
+        [
+          "Nghỉ (phút)",
+          "Thời gian nghỉ không lương giữa ca, được trừ khỏi giờ làm."
+        ],
+        [
+          "Qua đêm",
+          "Ca kết thúc vào ngày hôm sau, ví dụ vào 20:00 ra 02:00."
+        ]
       ]
     },
     "stats-tab": {

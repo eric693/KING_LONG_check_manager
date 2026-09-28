@@ -39,6 +39,7 @@
         ['view-tab', 'SHIFT_TAB_VIEW'],
         ['add-tab', 'SHIFT_TAB_ADD'],
         ['batch-tab', 'SHIFT_TAB_BATCH'],
+        ['templates-tab', 'SHIFT_TAB_TEMPLATES'],
         ['stats-tab', 'SHIFT_TAB_STATS']
       ]
     },

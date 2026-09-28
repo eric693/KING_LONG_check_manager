@@ -1491,14 +1491,17 @@ function getEmployeeMonthlyPunchData(employeeId, yearMonth) {
       }
     });
     
-    // 計算工時
+    // 計算工時：跟薪資同一套規則，扣當天排班的休息分鐘（見 ShiftTemplates.gs）
+    const shiftMap = (typeof getEmployeeShiftMapForMonth === 'function')
+      ? getEmployeeShiftMapForMonth(employeeId, yearMonth)
+      : {};
     const result = Object.values(dailyData).map(day => {
       if (day.punchIn && day.punchOut) {
         try {
           const inTime = new Date(`${day.date} ${day.punchIn}`);
           const outTime = new Date(`${day.date} ${day.punchOut}`);
-          const diffMs = outTime - inTime;
-          day.workHours = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
+          const spanMinutes = Math.round((outTime - inTime) / 60000);
+          day.workHours = minutesToHours_(computeNetWorkMinutes_(spanMinutes, shiftMap[day.date] || null));
         } catch (e) {
           day.workHours = 0;
         }

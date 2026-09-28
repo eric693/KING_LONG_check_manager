@@ -224,25 +224,55 @@
       ]
     },
     "add-tab": {
-      "intro": "Tambah satu sif: karyawan, tanggal, jenis sif, dan lokasi.",
+      "intro": "Tambah jadwal satu per satu: pilih karyawan, tanggal, shift, dan lokasi.",
       "steps": [
-        "Pilih karyawan dan tanggal, lalu jenis sif - jamnya terisi otomatis.",
-        "Pastikan lokasi kerja benar lalu kirim, kemudian periksa di \"Lihat jadwal\"."
+        "Pilih karyawan dan tanggal, lalu pilih shift; jam masuk, pulang, dan menit istirahat diisi dari pengaturan shift, dan jam kerja tampil di bawah formulir.",
+        "Shift terpisah (mis. 10:30–21:30) cukup pilih satu shift; jeda di tengah sudah tercatat di \"menit istirahat\".",
+        "Untuk menyesuaikan jadwal ini saja, ubah langsung jam atau menit istirahatnya.",
+        "Periksa lokasi lalu simpan, kemudian cek di \"Lihat Shift\"."
       ],
       "notes": [
-        "Menjadwalkan orang yang sama pada hari yang sama dua kali akan bentrok; periksa dulu sebelum menambah."
+        "Karyawan cukup absen masuk dan pulang dua kali; jam kerja = waktu di tempat − menit istirahat shift, dihitung sampai menit.",
+        "Hari tanpa jadwal: 1 jam istirahat dikurangi hanya jika berada lebih dari 8 jam.",
+        "Orang, hari, dan shift yang sama tidak bisa ditambahkan dua kali."
       ]
     },
     "batch-tab": {
-      "intro": "Menjadwalkan banyak karyawan untuk satu periode sekaligus, cocok untuk jadwal tetap bulan berikutnya.",
+      "intro": "Unggah file CSV atau Excel untuk menambah banyak jadwal sekaligus, cocok untuk jadwal tetap bulan depan.",
       "steps": [
-        "Pilih rentang tanggal dan jenis sif yang dipakai, lalu centang karyawannya.",
-        "Tentukan hari dalam minggu yang dijadwalkan (misalnya Senin sampai Jumat) lalu kirim.",
-        "Setelah selesai, periksa beberapa hari secara acak di \"Lihat jadwal\"."
+        "Tekan \"Unduh Template\" dan isi sesuai kolom: ID karyawan, nama, tanggal, shift, masuk, pulang, lokasi, catatan, menit istirahat.",
+        "Cukup isi kode shift (mis. E); jam dan istirahat yang kosong diisi dari pengaturan shift. Isi sendiri jika ingin menyesuaikan.",
+        "Pilih file, periksa pratinjau (nama shift dan jam), lalu tekan \"Konfirmasi Unggah\".",
+        "Setelah itu cek beberapa hari di \"Lihat Shift\"."
       ],
       "notes": [
-        "Penjadwalan massal menghasilkan banyak data; periksa lagi rentang tanggal dan daftar orangnya sebelum mengirim.",
-        "Hari libur nasional dan cuti yang sudah disetujui tidak dilewati otomatis, periksa dan sesuaikan sendiri."
+        "Salin ID karyawan dari manajemen karyawan di halaman admin; baris dengan ID salah akan gagal.",
+        "Jadwal yang sudah ada (orang, hari, shift sama) dilewati dan dicantumkan di hasil.",
+        "Hari libur nasional dan cuti yang disetujui tidak dilewati otomatis; periksa sendiri."
+      ]
+    },
+    "templates-tab": {
+      "intro": "Kelola shift toko: kode, nama, jam masuk/pulang rencana, dan menit istirahat. Saat membuat jadwal, pilih shift dan semuanya terisi otomatis.",
+      "steps": [
+        "Satu baris adalah satu shift. Isi kode (mis. E), nama, jam, dan menit istirahat; total menit dan jam kerja dihitung otomatis.",
+        "Untuk shift terpisah, isi jeda di tengah pada \"Istirahat (mnt)\", mis. 10:30–21:30 istirahat 180 menit = kerja 8 jam.",
+        "Centang \"Lintas hari\" untuk shift yang selesai lewat tengah malam. Shift yang tidak dipakai lagi cukup hapus centang \"Aktif\", tidak perlu dihapus.",
+        "Terakhir tekan \"Simpan pengaturan shift\"."
+      ],
+      "notes": [
+        "Hanya admin yang bisa mengubah: menit istirahat langsung memengaruhi jam dan gaji karyawan per jam.",
+        "Perubahan hanya berlaku untuk jadwal berikutnya; jadwal yang sudah dibuat (atau dibayar) tidak berubah.",
+        "Kode tidak boleh sama. Shift libur seharian seperti cuti boleh tanpa jam."
+      ],
+      "terms": [
+        [
+          "Istirahat (mnt)",
+          "Waktu istirahat tanpa bayaran di tengah shift, dikurangi dari jam kerja."
+        ],
+        [
+          "Lintas hari",
+          "Shift yang selesai keesokan hari, mis. masuk 20:00 pulang 02:00."
+        ]
       ]
     },
     "stats-tab": {

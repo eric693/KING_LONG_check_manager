@@ -91,14 +91,58 @@ function getShiftSheet() {
       '建立者',
       '最後修改時間',
       '最後修改者',
-      '狀態'
+      '狀態',
+      '休息分鐘'
     ];
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#4285f4').setFontColor('#ffffff');
     sheet.setFrozenRows(1);
+  } else if (sheet.getRange(1, SHIFT_BREAK_COL).getValue() === '') {
+    // 加上「休息分鐘」之前建立的排班表：補欄位標題（舊排班這欄空白，工時照沒排班的規則算）
+    sheet.getRange(1, SHIFT_BREAK_COL).setValue('休息分鐘');
   }
   
   return sheet;
+}
+
+// 排班表第 15 欄：這筆排班的休息分鐘（兩頭班中間的休息）。空白 = 沒有記錄
+const SHIFT_BREAK_COL = 15;
+
+/** 排班表這一列的休息分鐘；空白（舊資料）回傳 null */
+function shiftRowBreakMinutes_(row) {
+  const value = row[SHIFT_BREAK_COL - 1];
+  if (value === '' || value === null || value === undefined) return null;
+  const n = Number(value);
+  return isNaN(n) ? null : n;
+}
+
+/**
+ * 決定一筆排班的班別名稱、上下班時間與休息分鐘。
+ *
+ * 畫面上選了班別會自己帶好時間與休息分鐘；批次上傳或其他來源可能只寫了班別代碼或名稱，
+ * 這時候從班別設定補上。班別一律存成班別設定裡的名稱（例如上傳時寫 E，存成「午晚班1」）。
+ */
+function resolveShiftFields_(shiftData, templates) {
+  const template = (typeof findShiftTemplate_ === 'function') ? findShiftTemplate_(shiftData.shiftType, templates) : null;
+
+  let breakMinutes = '';
+  const given = shiftData.breakMinutes;
+  if (given !== undefined && given !== null && String(given).trim() !== '') {
+    const n = Number(given);
+    if (!Number.isInteger(n) || n < 0 || n > 720) {
+      throw new Error('休息分鐘要是 0～720 的整數');
+    }
+    breakMinutes = n;
+  } else if (template) {
+    breakMinutes = template.breakMinutes;
+  }
+
+  return {
+    shiftType: template ? template.name : shiftData.shiftType,
+    startTime: shiftData.startTime || (template ? template.startTime : ''),
+    endTime: shiftData.endTime || (template ? template.endTime : ''),
+    breakMinutes: breakMinutes
+  };
 }
 
 /**
@@ -117,11 +161,13 @@ function addShift(shiftData) {
       };
     }
     
+    const resolved = resolveShiftFields_(shiftData);
+
     // ⭐⭐⭐ 修正：傳入班別參數
     const isDuplicate = checkDuplicateShift(
       shiftData.employeeId, 
       shiftData.date, 
-      shiftData.shiftType
+      resolved.shiftType
     );
     
     if (isDuplicate) {
@@ -139,16 +185,17 @@ function addShift(shiftData) {
       shiftData.employeeId,
       shiftData.employeeName || '',
       formatDateOnly(shiftData.date),
-      shiftData.shiftType,
-      formatTimeOnly(shiftData.startTime),
-      formatTimeOnly(shiftData.endTime),
+      resolved.shiftType,
+      formatTimeOnly(resolved.startTime),
+      formatTimeOnly(resolved.endTime),
       shiftData.location || '',
       shiftData.note || '',
       timestamp,
       userId,
       timestamp,
       userId,
-      '正常'
+      '正常',
+      resolved.breakMinutes
     ];
     
     sheet.appendRow(rowData);
@@ -212,9 +259,16 @@ function batchAddShifts(shiftsArray) {
     Logger.log(' 工作表中已有 ' + existingShifts.size + ' 個排班');
     Logger.log('');
     
+    // 班別設定只讀一次，整批共用
+    const templates = (typeof readShiftTemplates_ === 'function') ? readShiftTemplates_() : [];
+
     // 處理每筆資料
     shiftsArray.forEach((shiftData, index) => {
       try {
+        // 上傳檔案裡的班別可能寫代碼（E）或名稱；統一換成班別設定裡的名稱，並補上時間與休息分鐘
+        const resolved = resolveShiftFields_(shiftData, templates);
+        shiftData.shiftType = resolved.shiftType;
+
         Logger.log(` 處理第 ${index + 1}/${shiftsArray.length} 筆`);
         Logger.log(`   員工: ${shiftData.employeeName}`);
         Logger.log(`   日期: ${shiftData.date}`);
@@ -257,15 +311,16 @@ function batchAddShifts(shiftsArray) {
           shiftData.employeeName || '',
           formattedDate,
           shiftData.shiftType,
-          formatTimeOnly(shiftData.startTime),
-          formatTimeOnly(shiftData.endTime),
+          formatTimeOnly(resolved.startTime),
+          formatTimeOnly(resolved.endTime),
           shiftData.location || '',
           shiftData.note || '',
           timestamp,
           userId,
           timestamp,
           userId,
-          '正常'
+          '正常',
+          resolved.breakMinutes
         ];
         
         sheet.appendRow(rowData);
@@ -339,7 +394,8 @@ function getShifts(filters) {
         createdBy: row[10],
         updatedAt: row[11],
         updatedBy: row[12],
-        status: row[13]
+        status: row[13],
+        breakMinutes: shiftRowBreakMinutes_(row)
       });
     }
     
@@ -389,7 +445,8 @@ function getShiftById(shiftId) {
             createdBy: data[i][10],
             updatedAt: data[i][11],
             updatedBy: data[i][12],
-            status: data[i][13]
+            status: data[i][13],
+            breakMinutes: shiftRowBreakMinutes_(data[i])
           }
         };
       }
@@ -422,6 +479,13 @@ function updateShift(shiftId, updateData) {
       if (data[i][0] === shiftId) {
         if (updateData.date) sheet.getRange(i + 1, 4).setValue(formatDateOnly(updateData.date));
         if (updateData.shiftType) sheet.getRange(i + 1, 5).setValue(updateData.shiftType);
+        // 有給休息分鐘就用；只換了班別沒給，就用新班別的休息分鐘
+        const hasBreak = updateData.breakMinutes !== undefined && updateData.breakMinutes !== null &&
+                         String(updateData.breakMinutes).trim() !== '';
+        if (hasBreak || updateData.shiftType) {
+          const resolved = resolveShiftFields_({ shiftType: updateData.shiftType || data[i][4], breakMinutes: updateData.breakMinutes });
+          if (hasBreak || resolved.breakMinutes !== '') sheet.getRange(i + 1, SHIFT_BREAK_COL).setValue(resolved.breakMinutes);
+        }
         if (updateData.startTime) sheet.getRange(i + 1, 6).setValue(formatTimeOnly(updateData.startTime));
         if (updateData.endTime) sheet.getRange(i + 1, 7).setValue(formatTimeOnly(updateData.endTime));
         if (updateData.location) sheet.getRange(i + 1, 8).setValue(updateData.location);
@@ -512,7 +576,8 @@ function getEmployeeShiftForDate(employeeId, date) {
               shiftType: data[i][4],
               startTime: formatTimeOnly(data[i][5]),
               endTime: formatTimeOnly(data[i][6]),
-              location: data[i][7]
+              location: data[i][7],
+              breakMinutes: shiftRowBreakMinutes_(data[i])
             }
           };
         }
@@ -704,7 +769,8 @@ function getEmployeeShiftMapForMonth(employeeId, yearMonth) {
         shiftType: data[i][4],
         startTime: formatTimeOnly(data[i][5]),
         endTime: formatTimeOnly(data[i][6]),
-        location: data[i][7]
+        location: data[i][7],
+        breakMinutes: shiftRowBreakMinutes_(data[i])
       };
     }
 

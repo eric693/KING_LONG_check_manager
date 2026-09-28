@@ -224,25 +224,55 @@
       ]
     },
     "add-tab": {
-      "intro": "Add a single shift: employee, date, shift type and location.",
+      "intro": "Add one shift at a time: pick the employee, date, shift and location.",
       "steps": [
-        "Pick the employee and date, then the shift type - the hours fill in automatically.",
-        "Confirm the work location and submit, then check \"View shifts\" to see it listed."
+        "Choose the employee and date, then a shift. Start, end and break minutes are filled in from the shift settings, and the hours for that shift appear under the form.",
+        "For a split shift (e.g. 10:30–21:30), just pick that shift; the gap in the middle is already its break minutes.",
+        "To adjust just this one, change the times or break minutes directly.",
+        "Check the location and submit, then confirm it appears under \"View Shifts\"."
       ],
       "notes": [
-        "Two shifts for the same person on the same day conflict - check the day before adding."
+        "Staff punch in and out only once; hours worked = time on site minus the shift's break minutes, to the minute.",
+        "On days with no shift, 1 hour is taken off only when someone is on site for more than 8 hours.",
+        "The same shift for the same person on the same day is rejected, so check the day first."
       ]
     },
     "batch-tab": {
-      "intro": "Assign shifts for several employees over a whole period at once - ideal for next month's regular roster.",
+      "intro": "Upload a CSV or Excel file to add many shifts at once, e.g. next month's rota.",
       "steps": [
-        "Choose the date range and the shift type, then tick the employees to schedule.",
-        "Set which weekdays to schedule (for example Monday to Friday) and submit.",
-        "Afterwards spot-check a few days under \"View shifts\" to confirm the result."
+        "Press \"Download Template\" and fill in the columns: employee ID, name, date, shift, start, end, location, note, break minutes.",
+        "You can enter just the shift code (e.g. E); blank times and break minutes come from the shift settings. Fill them in to adjust a single row.",
+        "Pick the file, check the preview (shift names and times), then press \"Confirm Upload\".",
+        "Spot-check a few days under \"View Shifts\" afterwards."
       ],
       "notes": [
-        "Batch scheduling creates a lot of records - double-check the range and the people before submitting.",
-        "Public holidays and approved leave are not skipped automatically; review and adjust them yourself."
+        "Copy employee IDs from employee management on the admin page; rows with a wrong ID fail.",
+        "A shift that already exists for the same person, day and shift is skipped and listed in the result.",
+        "Public holidays and approved leave are not skipped automatically; check and adjust them yourself."
+      ]
+    },
+    "templates-tab": {
+      "intro": "Manage the shop's shifts: code, name, planned start and end, and break minutes. Picking a shift when scheduling fills these in.",
+      "steps": [
+        "Each row is a shift. Enter the code (e.g. E), name, times and break minutes; total minutes and work hours are calculated for you.",
+        "For a split shift, put the gap in \"Break (min)\", e.g. 10:30–21:30 with a 180-minute break is 8 work hours.",
+        "Tick \"Overnight\" for shifts ending after midnight. Untick \"Active\" for shifts you no longer use instead of deleting them.",
+        "Press \"Save shift settings\" when done."
+      ],
+      "notes": [
+        "Only admins can change these: break minutes directly affect hourly staff's hours and pay.",
+        "Changes only apply to shifts scheduled afterwards; shifts already scheduled (or paid) stay as they were.",
+        "Codes must be unique. Day-off shifts such as leave can be left without times."
+      ],
+      "terms": [
+        [
+          "Break (min)",
+          "Unpaid time in the middle of a shift, taken off the hours worked."
+        ],
+        [
+          "Overnight",
+          "The shift ends the next day, e.g. 20:00 to 02:00."
+        ]
       ]
     },
     "stats-tab": {

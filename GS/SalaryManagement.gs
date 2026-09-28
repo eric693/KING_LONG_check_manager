@@ -1755,7 +1755,7 @@ function calculateHourlySalary(employeeId, yearMonth) {
       yearMonth: yearMonth,
       salaryType: '時薪',
       hourlyRate: hourlyRate,
-      totalWorkHours: parseFloat(totalWorkHours.toFixed(1)),
+      totalWorkHours: Math.round(totalWorkHours * 100) / 100,  // 工時算到分鐘，顯示也要到小數兩位
       baseSalary: Math.round(basePay),
       positionAllowance: positionAllowance,
       mealAllowance: mealAllowance,
@@ -1833,11 +1833,21 @@ function getEmployeeMonthlyAttendanceInternal(employeeId, yearMonth) {
     const headers = data[0];
     Logger.log(' 打卡紀錄欄位: ' + headers.join(', '));
     
-    const punchTimeIndex = headers.indexOf('打卡時間');
-    const userIdIndex = headers.indexOf('userId');
-    const typeIndex = headers.indexOf('打卡類別');
-    const noteIndex = headers.indexOf('備註');
-    const auditIndex = headers.indexOf('管理員審核');
+    // 先用標題找欄位；找不到就用固定位置。打卡時一律照這個順序寫入
+    // （時間、員工ID、部門、姓名、類別、GPS、地點、備註、審核、裝置），但範本的標題是
+    // 「打卡人員ＩＤ」不是「userId」，以前找不到就整個回傳空的：時薪員工工時變 0、工時明細空白。
+    const col = (names, position) => {
+      for (const name of names) {
+        const i = headers.indexOf(name);
+        if (i !== -1) return i;
+      }
+      return position;
+    };
+    const punchTimeIndex = col(['打卡時間'], 0);
+    const userIdIndex = col(['userId', '打卡人員ＩＤ', '打卡人員ID', '員工ID'], 1);
+    const typeIndex = col(['打卡類別'], 4);
+    const noteIndex = col(['備註'], 7);
+    const auditIndex = col(['管理員審核'], 8);
     
     Logger.log(' 欄位索引:');
     Logger.log('   打卡時間: ' + punchTimeIndex);
@@ -1916,6 +1926,11 @@ function getEmployeeMonthlyAttendanceInternal(employeeId, yearMonth) {
     
     // ⭐⭐⭐ 關鍵修正：配對上下班記錄並計算工時
     const records = [];
+
+    // 當月排班一次讀進來：工時要扣「那天那個班」的休息分鐘（兩頭班中間的休息）
+    const shiftMap = (typeof getEmployeeShiftMapForMonth === 'function')
+      ? getEmployeeShiftMapForMonth(employeeId, yearMonth)
+      : {};
     
     Object.keys(recordsByDate).forEach(date => {
       const dayPunches = recordsByDate[date];
@@ -1930,6 +1945,7 @@ function getEmployeeMonthlyAttendanceInternal(employeeId, yearMonth) {
       let punchIn = null;
       let punchOut = null;
       let workHours = 0;
+      let breakMinutes = 0;
       
       // ⭐ 配對邏輯：取第一個上班和最後一個下班
       if (punchIns.length > 0) {
@@ -1948,11 +1964,13 @@ function getEmployeeMonthlyAttendanceInternal(employeeId, yearMonth) {
           const diffMs = outTime - inTime;
           
           if (diffMs > 0) {
-            const totalHours = diffMs / (1000 * 60 * 60);
-            const lunchBreak = 1;
-            // workHours = Math.max(0, totalHours - lunchBreak);
-            workHours = Math.floor(Math.max(0, totalHours - lunchBreak));
-            Logger.log(`   ${date}: ${punchIn} ~ ${punchOut} = ${workHours.toFixed(2)}h (原始: ${totalHours.toFixed(2)}h)`);
+            // 以前一律扣 1 小時午休、再捨去到整數小時：兩頭班多算、短班少算。
+            // 現在扣「當天排班的休息分鐘」，沒排班超過 8 小時才扣 1 小時，算到分鐘（見 ShiftTemplates.gs）
+            const spanMinutes = Math.round(diffMs / 60000);
+            const netMinutes = computeNetWorkMinutes_(spanMinutes, shiftMap[date] || null);
+            breakMinutes = spanMinutes - netMinutes;
+            workHours = minutesToHours_(netMinutes);
+            Logger.log(`   ${date}: ${punchIn} ~ ${punchOut} = ${workHours}h（在店 ${spanMinutes} 分，休息 ${breakMinutes} 分）`);
           } else {
             Logger.log(`    ${date}: ${punchIn} ~ ${punchOut} 時間異常（下班早於上班）`);
           }
@@ -1969,7 +1987,8 @@ function getEmployeeMonthlyAttendanceInternal(employeeId, yearMonth) {
         date: date,
         punchIn: punchIn,
         punchOut: punchOut,
-        workHours: workHours
+        workHours: workHours,
+        breakMinutes: breakMinutes
       });
     });
     
@@ -2885,7 +2904,7 @@ function getEmployeeWorkHoursAPI() {
     });
     
     // 5. 保留1位小數
-    const totalWorkHoursRounded = parseFloat(totalWorkHours.toFixed(1));
+    const totalWorkHoursRounded = Math.round(totalWorkHours * 100) / 100;
     
     Logger.log(` 總工作時數: ${totalWorkHoursRounded}h`);
     

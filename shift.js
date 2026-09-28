@@ -21,10 +21,241 @@ let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth(); // 0-11
 let allMonthShifts = [];
 
+// ========== 班別設定 ==========
+//
+// 班別（代碼、名稱、預定上下班、休息分鐘）由管理員在「班別設定」分頁維護，存在後端，
+// 見 GS/ShiftTemplates.gs。兩頭班用休息分鐘表示，員工照常只打兩次卡。
+
+let shiftTemplates = [];
+const LEAVE_SHIFT_TYPES = ['年假', '過年假', '國定假日', '排休'];
+
+function timeToMinutes(value) {
+    const m = String(value || '').match(/^(\d{1,2}):(\d{2})/);
+    return m ? Number(m[1]) * 60 + Number(m[2]) : null;
+}
+
+/** 跟後端 calcShiftMinutes_ 同一套算法：下班早於上班視為跨日 */
+function calcShiftMinutes(startTime, endTime, crossDay, breakMinutes) {
+    const start = timeToMinutes(startTime);
+    const end = timeToMinutes(endTime);
+    if (start === null || end === null) return { totalMinutes: 0, workMinutes: 0 };
+    let total = end - start;
+    if (crossDay || total <= 0) total += 24 * 60;
+    return { totalMinutes: total, workMinutes: Math.max(0, total - (Number(breakMinutes) || 0)) };
+}
+
+function formatWorkHours(minutes) {
+    return String(Math.round(minutes / 60 * 100) / 100);
+}
+
+/** 代碼優先（名稱可能重複，例如兩個「午班2」），再用名稱找 */
+function findShiftTemplate(value) {
+    const key = String(value || '').trim();
+    if (!key) return null;
+    return shiftTemplates.find(t => t.code.toUpperCase() === key.toUpperCase()) ||
+           shiftTemplates.find(t => t.name === key) || null;
+}
+
+function shiftTemplateLabel(tpl) {
+    if (!tpl.startTime) return `${tpl.code}｜${tpl.name}`;
+    const parts = [`${tpl.startTime}–${tpl.endTime}`];
+    if (tpl.breakMinutes) parts.push(t('SHIFT_BREAK_SHORT', { minutes: tpl.breakMinutes }));
+    parts.push(t('SHIFT_HOURS_SHORT', { hours: tpl.workHours }));
+    return `${tpl.code}｜${tpl.name}（${parts.join('，')}）`;
+}
+
+// 後端還沒更新（沒有 getShiftTemplates）時的備援，內容跟 GS/ShiftTemplates.gs 的預設班別一樣。
+// 前端推上 GitHub Pages 就生效，Apps Script 要另外部署，兩者之間的空窗期排班仍然能選班別。
+const FALLBACK_SHIFT_TEMPLATES = [
+    ['E', '午晚班1', '10:30', '21:30', 180], ['A', '午晚班2', '11:30', '22:00', 150],
+    ['G', '午晚班3', '11:00', '21:30', 150], ['F', '午班1', '10:30', '14:30', 0],
+    ['B', '午班2', '11:30', '15:30', 0], ['H', '午班2', '11:00', '15:00', 0],
+    ['C', '晚班1', '18:00', '21:30', 0], ['D', '晚班2', '17:00', '21:00', 0],
+    ['I', '晚班3', '17:30', '21:30', 0], ['X', '休假', '', '', 0]
+].map(([code, name, startTime, endTime, breakMinutes]) => {
+    const m = calcShiftMinutes(startTime, endTime, false, breakMinutes);
+    return { code, name, startTime, endTime, crossDay: false, breakMinutes, active: true,
+             totalMinutes: m.totalMinutes, workMinutes: m.workMinutes, workHours: Math.round(m.workMinutes / 60 * 100) / 100 };
+});
+
+async function loadShiftTemplates() {
+    try {
+        const data = await apiRequestJson('getShiftTemplates');
+        shiftTemplates = (data.ok && Array.isArray(data.templates)) ? data.templates : FALLBACK_SHIFT_TEMPLATES;
+    } catch (error) {
+        console.warn('載入班別設定失敗，先用預設班別:', error);
+        shiftTemplates = FALLBACK_SHIFT_TEMPLATES;
+    }
+    renderShiftTypeOptions();
+}
+
+/**
+ * 把啟用中的班別放進兩個選單：新增排班（值是 tpl:代碼）、篩選（值是班別名稱，跟排班表存的一樣）
+ */
+function renderShiftTypeOptions() {
+    const active = shiftTemplates.filter(tpl => tpl.active);
+
+    const fill = (select, valueOf) => {
+        if (!select) return;
+        select.querySelectorAll('optgroup.template-group').forEach(g => g.remove());
+        select.querySelectorAll('optgroup.leave-group').forEach(g => { g.label = t('SHIFT_LEAVE_GROUP'); });
+        if (!active.length) return;
+        const group = document.createElement('optgroup');
+        group.className = 'template-group';
+        group.label = t('SHIFT_TEMPLATE_GROUP');
+        const seen = new Set();
+        active.forEach(tpl => {
+            const value = valueOf(tpl);
+            if (seen.has(value)) return;  // 篩選用名稱，同名的班別只列一次
+            seen.add(value);
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = shiftTemplateLabel(tpl);
+            group.appendChild(option);
+        });
+        // 插在「請選擇」「全部」之後
+        const first = select.querySelector('option');
+        select.insertBefore(group, first ? first.nextSibling : select.firstChild);
+    };
+
+    fill(document.getElementById('shift-type'), tpl => 'tpl:' + tpl.code);
+    fill(document.getElementById('filter-shift-type'), tpl => tpl.name);
+}
+
+/** 新增／編輯表單目前選的班別 → 要存進排班的班別名稱 */
+function selectedShiftTypeName() {
+    const value = document.getElementById('shift-type').value;
+    if (value.startsWith('tpl:')) {
+        const tpl = findShiftTemplate(value.slice(4));
+        return tpl ? tpl.name : '';
+    }
+    return value;
+}
+
+function selectedTemplate() {
+    const value = document.getElementById('shift-type').value;
+    return value.startsWith('tpl:') ? findShiftTemplate(value.slice(4)) : null;
+}
+
+/** 表單下方的工時提示：在店 X 小時，扣休息 Y 分，工時 Z 小時 */
+function updateShiftHoursHint() {
+    const hint = document.getElementById('shift-hours-hint');
+    if (!hint) return;
+    const start = document.getElementById('start-time').value;
+    const end = document.getElementById('end-time').value;
+    const breakMinutes = Number(document.getElementById('shift-break').value) || 0;
+    const tpl = selectedTemplate();
+    const m = calcShiftMinutes(start, end, tpl ? tpl.crossDay : false, breakMinutes);
+    if (!m.totalMinutes || (start === '00:00' && end === '00:00')) {
+        hint.textContent = '';
+        return;
+    }
+    hint.textContent = t('SHIFT_HOURS_HINT', {
+        total: formatWorkHours(m.totalMinutes),
+        break: breakMinutes,
+        hours: formatWorkHours(m.workMinutes)
+    });
+}
+
+// ---------- 班別設定分頁（管理員） ----------
+
+let templateDraft = [];
+
+function renderTemplateEditor() {
+    templateDraft = shiftTemplates.map(tpl => Object.assign({}, tpl));
+    drawTemplateRows();
+}
+
+function drawTemplateRows() {
+    const body = document.getElementById('templates-body');
+    if (!body) return;
+    body.innerHTML = '';
+
+    templateDraft.forEach((tpl, index) => {
+        const tr = document.createElement('tr');
+        if (tpl.active === false) tr.className = 'inactive';
+
+        const cell = child => { const td = document.createElement('td'); td.appendChild(child); tr.appendChild(td); return td; };
+        const input = (type, field, extra) => {
+            const el = document.createElement('input');
+            el.type = type;
+            if (type === 'checkbox') el.checked = !!tpl[field];
+            else el.value = tpl[field] === undefined || tpl[field] === null ? '' : tpl[field];
+            Object.assign(el, extra || {});
+            el.addEventListener(type === 'checkbox' ? 'change' : 'input', () => {
+                tpl[field] = type === 'checkbox' ? el.checked : (type === 'number' ? Number(el.value) || 0 : el.value.trim());
+                refreshCalc();
+                if (field === 'active') tr.className = el.checked ? '' : 'inactive';
+            });
+            return el;
+        };
+
+        cell(input('text', 'code', { className: 'tpl-code', maxLength: 10 }));
+        cell(input('text', 'name', { maxLength: 30 }));
+        cell(input('time', 'startTime'));
+        cell(input('time', 'endTime'));
+        cell(input('checkbox', 'crossDay'));
+        cell(input('number', 'breakMinutes', { min: 0, max: 720, step: 5 }));
+        const totalCell = cell(document.createTextNode(''));
+        const hoursCell = cell(document.createTextNode(''));
+        totalCell.className = hoursCell.className = 'tpl-calc';
+        cell(input('checkbox', 'active'));
+
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'btn-icon btn-danger';
+        del.textContent = t('BTN_DELETE');
+        del.addEventListener('click', () => {
+            templateDraft.splice(index, 1);
+            drawTemplateRows();
+        });
+        cell(del);
+
+        function refreshCalc() {
+            const m = calcShiftMinutes(tpl.startTime, tpl.endTime, tpl.crossDay, tpl.breakMinutes);
+            totalCell.textContent = tpl.startTime ? m.totalMinutes : '—';
+            hoursCell.textContent = tpl.startTime ? formatWorkHours(m.workMinutes) : '0';
+        }
+        refreshCalc();
+        body.appendChild(tr);
+    });
+}
+
+async function saveShiftTemplates() {
+    const button = document.getElementById('save-templates-btn');
+    if (typeof generalButtonState === 'function') generalButtonState(button, 'processing', t('LOADING'));
+    try {
+        const payload = templateDraft.map(tpl => ({
+            code: String(tpl.code || '').trim(),
+            name: String(tpl.name || '').trim(),
+            startTime: tpl.startTime || '',
+            endTime: tpl.endTime || '',
+            crossDay: !!tpl.crossDay,
+            breakMinutes: Number(tpl.breakMinutes) || 0,
+            active: tpl.active !== false
+        }));
+        const data = await apiRequestJson(`saveShiftTemplates&templates=${encodeURIComponent(JSON.stringify(payload))}`);
+        if (data.ok) {
+            shiftTemplates = data.templates || [];
+            renderShiftTypeOptions();
+            renderTemplateEditor();
+            showMessage(t('SHIFT_TPL_SAVED'), 'success');
+        } else {
+            showMessage(data.msg || t('SHIFT_TPL_SAVE_FAILED'), 'error');
+        }
+    } catch (error) {
+        console.error('儲存班別設定失敗:', error);
+        showMessage(t('SHIFT_TPL_SAVE_FAILED'), 'error');
+    } finally {
+        if (typeof generalButtonState === 'function') generalButtonState(button, 'idle');
+    }
+}
+
 // ========== 初始化 ==========
 document.addEventListener('DOMContentLoaded', async function() { 
     await loadTranslations(detectLang());
     await loadUserPermissions();
+    await loadShiftTemplates();
     initializeTabs();
     loadEmployees();
     loadLocations();
@@ -59,7 +290,12 @@ function initializeTabs() {
             const tabName = this.getAttribute('data-tab');
             //  檢查權限
             if ((tabName === 'add' || tabName === 'batch') && !isAdmin && !isScheduler) {
-                showMessage(' 權限不足：只有管理員可以使用此功能', 'error');
+                showMessage(t('SHIFT_NO_PERMISSION'), 'error');
+                return;
+            }
+            // 班別設定會影響薪資（休息分鐘），只有管理員能改
+            if (tabName === 'templates' && !isAdmin) {
+                showMessage(t('SHIFT_NO_PERMISSION'), 'error');
                 return;
             }
             switchTab(tabName);
@@ -83,6 +319,8 @@ function switchTab(tabName) {
         loadShifts();
     } else if (tabName === 'stats') {
         loadStats();
+    } else if (tabName === 'templates') {
+        renderTemplateEditor();
     }
 }
 
@@ -105,6 +343,19 @@ function setupEventListeners() {
             autoFillShiftTime(this.value);
         });
     }
+    ['start-time', 'end-time', 'shift-break'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', updateShiftHoursHint);
+    });
+
+    // 用 onclick 指定而不是 addEventListener：初始化就算跑了兩次，按一下也只會加一列
+    const addTplBtn = document.getElementById('add-template-btn');
+    if (addTplBtn) addTplBtn.onclick = () => {
+        templateDraft.push({ code: '', name: '', startTime: '', endTime: '', crossDay: false, breakMinutes: 0, active: true });
+        drawTemplateRows();
+    };
+    const saveTplBtn = document.getElementById('save-templates-btn');
+    if (saveTplBtn) saveTplBtn.onclick = saveShiftTemplates;
 }
 
 
@@ -156,6 +407,8 @@ async function loadUserPermissions() {
 function updateUIForPermissions() {
     const addTab = document.querySelector('[data-tab="add"]');
     const batchTab = document.querySelector('[data-tab="batch"]');
+    const templatesTab = document.querySelector('[data-tab="templates"]');
+    if (templatesTab) templatesTab.style.display = isAdmin ? 'block' : 'none';
     
     const canSchedule = isAdmin || isScheduler;
     
@@ -194,61 +447,44 @@ function checkSchedulingPermission(actionName) {
     console.log(' 權限檢查通過');
     return true;
 }
-function autoFillShiftTime(shiftType) {
-    const times = {
-        // 廚房班別
-        '廚房A班': ['11:00', '20:00'],
-        '廚房B班': ['11:30', '20:30'],
-        '廚房C班': ['12:00', '21:00'],
-        '廚房D班': ['13:00', '22:00'],
-        '廚房E班': ['14:00', '23:00'],
-        '廚房F班': ['15:00', '00:00'],
-        '廚房G班': ['11:30', '15:00'],
-        '廚房H班': ['18:00', '23:00'],
-        '廚房I班': ['18:00', '00:00'],
-        
-        // 外場班別
-        '外場A1班': ['11:00', '20:00'],
-        '外場A2班': ['11:30', '16:30'],
-        '外場A3班': ['11:30', '17:00'],
-        '外場A4班': ['11:30', '20:30'],
-        '外場B1班': ['16:00', '01:00'],
-        '外場B2班': ['17:00', '01:00'],
-        '外場B3班': ['18:00', '01:00'],
-        '外場B4班': ['19:00', '01:00'],
-        
-        // 假別
-        '年假': ['00:00', '00:00'],
-        '過年假': ['00:00', '00:00'],
-        '國定假日': ['00:00', '00:00'],
-        '排休': ['00:00', '00:00']
-    };
-    
+function autoFillShiftTime(value) {
     const startTimeInput = document.getElementById('start-time');
     const endTimeInput = document.getElementById('end-time');
-    
-    // 假別處理
-    if (shiftType === '年假' || shiftType === '過年假' || shiftType === '國定假日' || shiftType === '排休') {
+    const breakInput = document.getElementById('shift-break');
+
+    const enable = on => {
+        startTimeInput.disabled = !on;
+        endTimeInput.disabled = !on;
+        if (breakInput) breakInput.disabled = !on;
+    };
+
+    // 假別：整天不上班
+    if (LEAVE_SHIFT_TYPES.includes(value)) {
         startTimeInput.value = '00:00';
         endTimeInput.value = '00:00';
-        startTimeInput.disabled = true;
-        endTimeInput.disabled = true;
-    } 
+        if (breakInput) breakInput.value = 0;
+        enable(false);
+    }
     // 自訂班別
-    else if (shiftType === '自訂') {
+    else if (value === '自訂') {
         startTimeInput.value = '';
         endTimeInput.value = '';
-        startTimeInput.disabled = false;
-        endTimeInput.disabled = false;
+        if (breakInput) breakInput.value = '';
+        enable(true);
         startTimeInput.focus();
-    } 
-    // 預設班別
-    else if (times[shiftType]) {
-        startTimeInput.value = times[shiftType][0];
-        endTimeInput.value = times[shiftType][1];
-        startTimeInput.disabled = false;
-        endTimeInput.disabled = false;
     }
+    // 班別設定裡的班別：帶入時間與休息分鐘，還是可以手動調整
+    else if (value.startsWith('tpl:')) {
+        const tpl = findShiftTemplate(value.slice(4));
+        if (tpl) {
+            // 休假這類沒有時間的班別當成整天不上班
+            startTimeInput.value = tpl.startTime || '00:00';
+            endTimeInput.value = tpl.endTime || '00:00';
+            if (breakInput) breakInput.value = tpl.breakMinutes;
+            enable(!!tpl.startTime);
+        }
+    }
+    updateShiftHoursHint();
 }
 // ==================== 員工載入函式（完整除錯版） ====================
 
@@ -632,7 +868,7 @@ function createShiftItem(shift) {
         <div class="shift-info">
             <h3>${escapeHtml(shift.employeeName)} ${shiftTypeBadge}</h3>
             <p>${t('SHIFT_DATE_LABEL')}: ${formatDate(shift.date)}</p>
-            <p>${t('SHIFT_TIME_LABEL')}: ${startTime} - ${endTime}</p>
+            <p>${t('SHIFT_TIME_LABEL')}: ${startTime} - ${endTime}${shiftHoursText(shift)}</p>
             <p>${t('SHIFT_LOCATION_LABEL')}: ${escapeHtml(shift.location || '')}</p>
             ${shift.note ? `<p>${t('SHIFT_NOTE_LABEL')}: ${escapeHtml(shift.note)}</p>` : ''}
         </div>
@@ -641,6 +877,20 @@ function createShiftItem(shift) {
     
     return div;
 }
+/** 排班清單上的「（休 180 分，工時 8 小時）」；假別、整天休不顯示 */
+function shiftHoursText(shift) {
+    const start = formatTimeOnly(shift.startTime);
+    const end = formatTimeOnly(shift.endTime);
+    if (!start || (start === '00:00' && end === '00:00')) return '';
+    const breakMinutes = Number(shift.breakMinutes) || 0;
+    const m = calcShiftMinutes(start, end, false, breakMinutes);
+    if (!m.totalMinutes) return '';
+    const parts = [];
+    if (breakMinutes) parts.push(t('SHIFT_BREAK_SHORT', { minutes: breakMinutes }));
+    parts.push(t('SHIFT_HOURS_SHORT', { hours: formatWorkHours(m.workMinutes) }));
+    return `（${escapeHtml(parts.join('，'))}）`;
+}
+
 // 更新 getShiftTypeBadge 函數以支援新班別
 function getShiftTypeBadge(shiftType) {
     const badgeClass = {
@@ -697,9 +947,10 @@ async function addShift() {
         return;
     }
     
-    const shiftType = document.getElementById('shift-type').value;
+    const shiftType = selectedShiftTypeName();
     const startTime = document.getElementById('start-time').value;
     const endTime = document.getElementById('end-time').value;
+    const breakMinutes = document.getElementById('shift-break').value;
     
     // 驗證時間欄位
     if (!startTime || !endTime) {
@@ -708,7 +959,8 @@ async function addShift() {
     }
     
     // 驗證時間邏輯(結束時間應該晚於開始時間,除非是跨日班)
-    if (startTime >= endTime && endTime !== '00:00') {
+    const tplForCheck = selectedTemplate();
+    if (startTime >= endTime && endTime !== '00:00' && !(tplForCheck && tplForCheck.crossDay)) {
         const confirmCrossDay = confirm(t('SHIFT_CONFIRM_CROSS_DAY'));
         if (!confirmCrossDay) {
             return;
@@ -727,6 +979,7 @@ async function addShift() {
         shiftType: shiftType,
         startTime: startTime,
         endTime: endTime,
+        breakMinutes: breakMinutes,
         location: document.getElementById('shift-location').value,
         note: shiftNoteEl ? shiftNoteEl.value : ''
     };
@@ -764,11 +1017,17 @@ async function editShift(shiftId) {
     document.querySelector('#add-tab h2').textContent = t('SHIFT_EDIT_TITLE');
     document.getElementById('employee-select').value = shift.employeeId;
     document.getElementById('shift-date').value = shift.date;
-    document.getElementById('shift-type').value = shift.shiftType;
+    selectShiftTypeForEdit(shift);
     
     // 格式化時間
     document.getElementById('start-time').value = formatTimeOnly(shift.startTime);
     document.getElementById('end-time').value = formatTimeOnly(shift.endTime);
+    document.getElementById('start-time').disabled = false;
+    document.getElementById('end-time').disabled = false;
+    const breakInput = document.getElementById('shift-break');
+    breakInput.disabled = false;
+    breakInput.value = (shift.breakMinutes === null || shift.breakMinutes === undefined) ? '' : shift.breakMinutes;
+    updateShiftHoursHint();
     
     document.getElementById('shift-location').value = shift.location;
     
@@ -804,9 +1063,10 @@ async function updateShift(shiftId) {
         employeeId: selectedOption.value,
         employeeName: selectedOption.dataset.name || selectedOption.textContent.split('(')[0].trim(),
         date: document.getElementById('shift-date').value,
-        shiftType: document.getElementById('shift-type').value,
+        shiftType: selectedShiftTypeName(),
         startTime: document.getElementById('start-time').value,
         endTime: document.getElementById('end-time').value,
+        breakMinutes: document.getElementById('shift-break').value,
         location: document.getElementById('shift-location').value,
         note: shiftNoteEl ? shiftNoteEl.value : ''
     };
@@ -960,6 +1220,41 @@ function resetForm() {
     const today = todayStr();
     const shiftDateEl = document.getElementById('shift-date');
     if (shiftDateEl) shiftDateEl.value = today;
+
+    ['start-time', 'end-time', 'shift-break'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = false;
+    });
+    document.querySelectorAll('#shift-type option.legacy-shift').forEach(o => o.remove());
+    updateShiftHoursHint();
+}
+
+/**
+ * 編輯時把班別選回去：
+ * 名稱與時間都跟某個班別一樣 → 選那個班別；否則（舊的班別名稱、手動調過時間）加一個臨時選項保留原名稱
+ */
+function selectShiftTypeForEdit(shift) {
+    const select = document.getElementById('shift-type');
+    select.querySelectorAll('option.legacy-shift').forEach(o => o.remove());
+
+    const start = formatTimeOnly(shift.startTime);
+    const end = formatTimeOnly(shift.endTime);
+    const exact = shiftTemplates.find(tpl => tpl.name === shift.shiftType && tpl.startTime === start && tpl.endTime === end) ||
+                  shiftTemplates.find(tpl => tpl.name === shift.shiftType);
+    if (exact) {
+        select.value = 'tpl:' + exact.code;
+        return;
+    }
+    if ([...select.options].some(o => o.value === shift.shiftType)) {
+        select.value = shift.shiftType;
+        return;
+    }
+    const option = document.createElement('option');
+    option.value = shift.shiftType;
+    option.textContent = shift.shiftType;
+    option.className = 'legacy-shift';
+    select.appendChild(option);
+    select.value = shift.shiftType;
 }
 
 // ========== 批量上傳 ==========
@@ -1151,7 +1446,8 @@ function parseBatchData(content, filename) {
         
         //  修正：CSV 範本格式為：員工ID, 員工姓名, 日期, 班別, 上班時間, 下班時間, 地點, 備註
         // 檢查是否有足夠的欄位(至少 6 個)
-        if (values.length >= 6) {
+        // 用班別代碼時，上下班時間可以空白（從班別設定帶入），所以至少 4 欄就好
+        if (values.length >= 4) {
             const shift = {
                 employeeId: values[0],      //  第 1 欄: 員工ID
                 employeeName: values[1],    //  第 2 欄: 員工姓名
@@ -1160,8 +1456,18 @@ function parseBatchData(content, filename) {
                 startTime: values[4],       //  第 5 欄: 上班時間
                 endTime: values[5],         //  第 6 欄: 下班時間
                 location: values[6] || '',  //  第 7 欄: 地點
-                note: values[7] || ''       //  第 8 欄: 備註
+                note: values[7] || '',      //  第 8 欄: 備註
+                breakMinutes: values[8] || ''  // 第 9 欄: 休息分鐘（空白就用班別設定的）
             };
+
+            // 班別寫代碼（E）或名稱都可以；時間、休息分鐘空白就從班別設定補上
+            const tpl = findShiftTemplate(shift.shiftType);
+            if (tpl) {
+                shift.shiftType = tpl.name;
+                if (!shift.startTime) shift.startTime = tpl.startTime || '00:00';
+                if (!shift.endTime) shift.endTime = tpl.endTime || '00:00';
+                if (shift.breakMinutes === '') shift.breakMinutes = tpl.breakMinutes;
+            }
             
             console.log('   解析結果:');
             console.log('    員工ID:', shift.employeeId);
@@ -1257,35 +1563,26 @@ function displayBatchPreview(data) {
     let html = '<div style="overflow-x: auto;">'; // 加入水平捲動容器
     html += '<table style="width: 100%; border-collapse: collapse; min-width: 1200px;">'; // 設定最小寬度
     
-    //  表頭：顯示所有欄位
-    html += '<tr style="background: #f5f5f5;">';
-    html += '<th style="padding: 12px; border: 1px solid #ddd; text-align: left; white-space: nowrap;">員工ID</th>';
-    html += '<th style="padding: 12px; border: 1px solid #ddd; text-align: left; white-space: nowrap;">員工姓名</th>';
-    html += '<th style="padding: 12px; border: 1px solid #ddd; text-align: left; white-space: nowrap;">日期</th>';
-    html += '<th style="padding: 12px; border: 1px solid #ddd; text-align: left; white-space: nowrap;">班別</th>';
-    html += '<th style="padding: 12px; border: 1px solid #ddd; text-align: left; white-space: nowrap;">上班時間</th>';
-    html += '<th style="padding: 12px; border: 1px solid #ddd; text-align: left; white-space: nowrap;">下班時間</th>';
-    html += '<th style="padding: 12px; border: 1px solid #ddd; text-align: left; white-space: nowrap;">地點</th>';
-    html += '<th style="padding: 12px; border: 1px solid #ddd; text-align: left; min-width: 150px;">備註</th>'; //  新增備註欄
-    html += '</tr>';
-    
-    //  資料列：顯示前 20 筆資料（增加顯示筆數）
-    data.slice(0, 20).forEach((row, index) => {
-        html += '<tr style="border-bottom: 1px solid #eee;">';
-        html += `<td style="padding: 10px; border: 1px solid #ddd; font-size: 12px; font-family: monospace;">${row.employeeId || ''}</td>`;
-        html += `<td style="padding: 10px; border: 1px solid #ddd;">${row.employeeName || ''}</td>`;
-        html += `<td style="padding: 10px; border: 1px solid #ddd; white-space: nowrap;">${row.date || ''}</td>`;
-        html += `<td style="padding: 10px; border: 1px solid #ddd; white-space: nowrap;">${row.shiftType || ''}</td>`;
-        html += `<td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${row.startTime || ''}</td>`;
-        html += `<td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${row.endTime || ''}</td>`;
-        html += `<td style="padding: 10px; border: 1px solid #ddd;">${row.location || ''}</td>`;
-        html += `<td style="padding: 10px; border: 1px solid #ddd; max-width: 200px; word-wrap: break-word;">${row.note || ''}</td>`; //  顯示備註
-        html += '</tr>';
+    // 表頭與內容都要跳脫：上傳檔案的內容不能直接當成 HTML
+    const cellStyle = 'padding: 10px; border: 1px solid #ddd;';
+    const headers = ['SHIFT_EMPLOYEE_ID', 'SHIFT_EMPLOYEE_NAME', 'SHIFT_DATE_LABEL', 'SHIFT_TYPE_LABEL',
+                     'SHIFT_START_TIME', 'SHIFT_END_TIME', 'SHIFT_BREAK_LABEL', 'SHIFT_LOCATION_LABEL', 'SHIFT_NOTE_LABEL'];
+    html += '<tr style="background: #f5f5f5;">' +
+        headers.map(key => `<th style="padding: 12px; border: 1px solid #ddd; text-align: left; white-space: nowrap;">${escapeHtml(t(key))}</th>`).join('') +
+        '</tr>';
+
+    //  資料列：顯示前 20 筆資料
+    data.slice(0, 20).forEach(row => {
+        const cells = [row.employeeId, row.employeeName, row.date, row.shiftType, row.startTime, row.endTime,
+                       row.breakMinutes === '' || row.breakMinutes === undefined ? '' : row.breakMinutes, row.location, row.note];
+        html += '<tr style="border-bottom: 1px solid #eee;">' +
+            cells.map(v => `<td style="${cellStyle}">${escapeHtml(v === undefined || v === null ? '' : String(v))}</td>`).join('') +
+            '</tr>';
     });
     
     //  如果資料超過 20 筆，顯示提示
     if (data.length > 20) {
-        html += `<tr><td colspan="8" style="text-align: center; padding: 10px; color: #666; background: #f9f9f9;">還有 ${data.length - 20} 筆資料...</td></tr>`;
+        html += `<tr><td colspan="9" style="text-align: center; padding: 10px; color: #666; background: #f9f9f9;">${escapeHtml(t('SHIFT_PREVIEW_MORE', { count: data.length - 20 }))}</td></tr>`;
     }
     
     html += '</table>';
@@ -1389,29 +1686,18 @@ function cancelBatchUpload() {
 }
 
 function downloadTemplate() {
-    //  包含所有班別類型：廚房、外場、年假（特休）、過年假、排休
-    const template = '員工ID,員工姓名,日期,班別,上班時間,下班時間,地點,備註\n' +
-                    'Ue76b65367821240ac26387d2972a5adf,洪培瑜Eric,2026-02-01,廚房A班,11:00,20:00,總公司,\n' +
-                    'Ue76b65367821240ac26387d2972a5adf,洪培瑜Eric,2026-02-02,廚房B班,11:30,20:30,分公司,\n' +
-                    'Ue76b65367821240ac26387d2972a5adf,洪培瑜Eric,2026-02-03,廚房C班,12:00,21:00,總公司,\n' +
-                    'Ue76b65367821240ac26387d2972a5adf,洪培瑜Eric,2026-02-04,外場A1班,11:00,20:00,總公司,\n' +
-                    'Ue76b65367821240ac26387d2972a5adf,洪培瑜Eric,2026-02-05,外場B1班,16:00,01:00,分公司,跨日班\n' +
-                    'Ue76b65367821240ac26387d2972a5adf,洪培瑜Eric,2026-02-06,廚房G班,11:30,15:00,總公司,短班\n' +
-                    'Ue76b65367821240ac26387d2972a5adf,洪培瑜Eric,2026-02-07,外場A2班,11:30,16:30,總公司,\n' +
-                    'Ue76b65367821240ac26387d2972a5adf,洪培瑜Eric,2026-02-08,年假,00:00,00:00,總公司,年假(特休)\n' +
-                    'Ue76b65367821240ac26387d2972a5adf,洪培瑜Eric,2026-02-09,過年假,00:00,00:00,總公司,春節假期\n' +
-                    'Ue76b65367821240ac26387d2972a5adf,洪培瑜Eric,2026-02-10,排休,00:00,00:00,總公司,一般休假\n' +
-                    'Ue76b65367821240ac26387d2972a5adf,洪培瑜Eric,2026-02-11,廚房H班,18:00,23:00,分公司,\n' +
-                    'Ue76b65367821240ac26387d2972a5adf,洪培瑜Eric,2026-02-12,外場B3班,18:00,01:00,總公司,跨日班';
-    
+    // 班別可以只填代碼（E、A、C…），上下班時間與休息分鐘留白就會從班別設定帶入；
+    // 要臨時調整就直接填時間或休息分鐘。員工ID 請到管理員頁的員工管理複製。
+    const codes = shiftTemplates.filter(tpl => tpl.active).map(tpl => tpl.code);
+    const pick = (i, fallback) => codes[i] || fallback;
+    const template = '員工ID,員工姓名,日期,班別,上班時間,下班時間,地點,備註,休息分鐘\n' +
+        `員工ID,王小明,2026-10-01,${pick(0, 'E')},,,總店,兩頭班：時間與休息分鐘自動帶入,\n` +
+        `員工ID,王小明,2026-10-02,${pick(6, 'C')},,,總店,,\n` +
+        `員工ID,王小明,2026-10-03,${pick(3, 'F')},11:00,15:00,總店,手動調整時間,0\n` +
+        '員工ID,王小明,2026-10-04,排休,00:00,00:00,總店,,\n';
+
     downloadCSV(template, '排班範本.csv');
-    
-    console.log(' 範本檔案已下載');
-    console.log('   共 12 筆測試資料');
-    console.log('   包含：廚房班別、外場班別、年假(特休)、過年假、國定假日、排休');
-    console.log('   格式: 員工ID, 員工姓名, 日期, 班別, 上班時間, 下班時間, 地點, 備註');
-    
-    showMessage(' 範本下載成功！包含所有班別類型（含年假和過年假），請依照範本格式填寫', 'success');
+    showMessage(t('SHIFT_TEMPLATE_DOWNLOADED'), 'success');
 }
 
 

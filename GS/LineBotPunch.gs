@@ -254,7 +254,7 @@ function sendMonthlyRecords(replyToken, userId, employeeName, yearMonth) {
     const groupedRecords = groupRecordsByDate(records);
     
     // 計算統計資訊
-    const stats = calculateMonthlyStats(groupedRecords);
+    const stats = calculateMonthlyStats(groupedRecords, userId, yearMonth);
     
     // 建立 Flex Message
     // 如果記錄太多（超過 10 天），使用 Carousel 分頁顯示
@@ -367,7 +367,12 @@ function groupRecordsByDate(records) {
 /**
  *  計算月份統計資訊
  */
-function calculateMonthlyStats(groupedRecords) {
+function calculateMonthlyStats(groupedRecords, userId, yearMonth) {
+  // 工時跟薪資同一套規則：扣當天排班的休息分鐘（見 ShiftTemplates.gs）
+  const shiftMap = (userId && yearMonth && typeof getEmployeeShiftMapForMonth === 'function')
+    ? getEmployeeShiftMapForMonth(userId, yearMonth)
+    : {};
+
   const dates = Object.keys(groupedRecords);
   let totalWorkHours = 0;
   let completeDays = 0;
@@ -383,11 +388,10 @@ function calculateMonthlyStats(groupedRecords) {
       try {
         const inTime = new Date(`${date} ${punchIn.time}`);
         const outTime = new Date(`${date} ${punchOut.time}`);
-        const diffMs = outTime - inTime;
-        const hours = diffMs / (1000 * 60 * 60);
+        const spanMinutes = Math.round((outTime - inTime) / 60000);
         
-        if (hours > 0 && hours < 24) {
-          totalWorkHours += hours;
+        if (spanMinutes > 0 && spanMinutes < 24 * 60) {
+          totalWorkHours += computeNetWorkMinutes_(spanMinutes, shiftMap[date] || null) / 60;
         }
       } catch (e) {
         // 忽略計算錯誤

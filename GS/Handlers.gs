@@ -698,7 +698,8 @@ function handleAddShift(params) {
       startTime: params.startTime,
       endTime: params.endTime,
       location: params.location,
-      note: params.note || ''
+      note: params.note || '',
+      breakMinutes: params.breakMinutes
     };
     
     if (!shiftData.employeeId || !shiftData.date || !shiftData.shiftType) {
@@ -795,7 +796,8 @@ function handleUpdateShift(params) {
       startTime: params.startTime,
       endTime: params.endTime,
       location: params.location,
-      note: params.note
+      note: params.note,
+      breakMinutes: params.breakMinutes
     };
     
     const result = updateShift(params.shiftId, updateData);
@@ -1869,7 +1871,9 @@ function handleGetEmployeeMonthlyAttendance(params) {
     
     Logger.log(` 員工 ${user.name} 查詢 ${yearMonth} 打卡記錄`);
     
-    const records = getEmployeeMonthlyAttendance(user.userId, yearMonth);
+    // 以前呼叫的是 getEmployeeMonthlyAttendance()：那支不收參數、回傳的是 ContentService 物件，
+    // 前端拿到的 records 永遠是空的，薪資頁的「每日工時明細」一直顯示沒有資料
+    const records = getEmployeeMonthlyAttendanceInternal(user.userId, yearMonth);
     
     return {
       ok: true,

@@ -28,7 +28,8 @@ const ROUTE_ACCESS = {
   createQrToken: 'admin',
   resetKioskKey: 'admin',
   disableKiosk: 'admin',
-  getKioskStatus: 'admin'
+  getKioskStatus: 'admin',
+  saveShiftTemplates: 'admin'
 };
 
 /**
@@ -220,6 +221,10 @@ function doGet(e) {
         return respond1(handleGetWeeklyShiftStats(e.parameter));
       case "exportShifts":
         return respond1(handleExportShifts(e.parameter));
+      case "getShiftTemplates":
+        return respond1(handleGetShiftTemplates(e.parameter));
+      case "saveShiftTemplates":
+        return respond1(handleSaveShiftTemplates(e.parameter));
       
       // ==================== 薪資系統 ====================
       case "setEmployeeSalaryTW":

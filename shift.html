@@ -796,6 +796,20 @@
                 grid-template-columns: 1fr;
             }
         }
+        /* 排班表單：工時提示 */
+        .shift-hours-hint { margin: -6px 0 14px; color: #555; font-size: 14px; min-height: 1em; }
+
+        /* 班別設定 */
+        .shift-templates-desc { color: #666; margin-bottom: 16px; line-height: 1.6; }
+        .shift-templates-scroll { overflow-x: auto; }
+        .shift-templates-table { width: 100%; border-collapse: collapse; min-width: 860px; }
+        .shift-templates-table th { background: #1f4e79; color: #fff; padding: 8px; font-weight: 600; white-space: nowrap; }
+        .shift-templates-table td { border-bottom: 1px solid #e5e7eb; padding: 6px; text-align: center; }
+        .shift-templates-table input[type="text"], .shift-templates-table input[type="time"],
+        .shift-templates-table input[type="number"] { width: 100%; min-width: 70px; padding: 6px; border: 1px solid #d1d5db; border-radius: 6px; }
+        .shift-templates-table .tpl-code { max-width: 70px; text-transform: uppercase; }
+        .shift-templates-table .tpl-calc { font-variant-numeric: tabular-nums; color: #374151; white-space: nowrap; }
+        .shift-templates-table tr.inactive td { opacity: 0.5; }
     </style>
 </head>
 <body>
@@ -810,6 +824,7 @@
             <button class="shift-tab" data-tab="add" data-i18n="SHIFT_TAB_ADD">新增排班</button>
             <button class="shift-tab" data-tab="batch" data-i18n="SHIFT_TAB_BATCH">批量排班</button>
             <button class="shift-tab" data-tab="stats" data-i18n="SHIFT_TAB_STATS">統計分析</button>
+            <button class="shift-tab" data-tab="templates" data-i18n="SHIFT_TAB_TEMPLATES" style="display:none;">班別設定</button>
         </div>
 
         <!-- 查看排班 -->
@@ -840,28 +855,8 @@
                         <label data-i18n="SHIFT_TYPE_LABEL">班別</label>
                         <select id="filter-shift-type">
                             <option value="" data-i18n-option="OPTION_ALL">全部</option>
-                            <optgroup label="廚房班別">
-                                <option value="廚房A班">廚房A班 (11:00-20:00)</option>
-                                <option value="廚房B班">廚房B班 (11:30-20:30)</option>
-                                <option value="廚房C班">廚房C班 (12:00-21:00)</option>
-                                <option value="廚房D班">廚房D班 (13:00-22:00)</option>
-                                <option value="廚房E班">廚房E班 (14:00-23:00)</option>
-                                <option value="廚房F班">廚房F班 (15:00-00:00)</option>
-                                <option value="廚房G班">廚房G班 (11:30-15:00)</option>
-                                <option value="廚房H班">廚房H班 (18:00-23:00)</option>
-                                <option value="廚房I班">廚房I班 (18:00-00:00)</option>
-                            </optgroup>
-                            <optgroup label="外場班別">
-                                <option value="外場A1班">外場A1班 (11:00-20:00)</option>
-                                <option value="外場A2班">外場A2班 (11:30-16:30)</option>
-                                <option value="外場A3班">外場A3班 (11:30-17:00)</option>
-                                <option value="外場A4班">外場A4班 (11:30-20:30)</option>
-                                <option value="外場B1班">外場B1班 (16:00-01:00)</option>
-                                <option value="外場B2班">外場B2班 (17:00-01:00)</option>
-                                <option value="外場B3班">外場B3班 (18:00-01:00)</option>
-                                <option value="外場B4班">外場B4班 (19:00-01:00)</option>
-                            </optgroup>
-                            <optgroup label="假別">
+                            <!-- 班別設定的班別由 shift.js 載入後插在這裡 -->
+                            <optgroup label="假別" class="leave-group">
                                 <option value="年假" data-i18n-option="SHIFT_TYPE_ANNUAL_LEAVE">年假(特休)</option>
                                 <option value="過年假" data-i18n-option="SHIFT_TYPE_CNY_LEAVE">過年假</option>
                                 <option value="國定假日">國定假日</option>
@@ -912,28 +907,8 @@
                             <label class="required" data-i18n="SHIFT_TYPE_LABEL">班別</label>
                             <select id="shift-type" required>
                                 <option value="" data-i18n-option="SHIFT_SELECT_TYPE">請選擇班別</option>
-                                <optgroup label="廚房班別">
-                                    <option value="廚房A班">廚房A班 (11:00-20:00)</option>
-                                    <option value="廚房B班">廚房B班 (11:30-20:30)</option>
-                                    <option value="廚房C班">廚房C班 (12:00-21:00)</option>
-                                    <option value="廚房D班">廚房D班 (13:00-22:00)</option>
-                                    <option value="廚房E班">廚房E班 (14:00-23:00)</option>
-                                    <option value="廚房F班">廚房F班 (15:00-00:00)</option>
-                                    <option value="廚房G班">廚房G班 (11:30-15:00)</option>
-                                    <option value="廚房H班">廚房H班 (18:00-23:00)</option>
-                                    <option value="廚房I班">廚房I班 (18:00-00:00)</option>
-                                </optgroup>
-                                <optgroup label="外場班別">
-                                    <option value="外場A1班">外場A1班 (11:00-20:00)</option>
-                                    <option value="外場A2班">外場A2班 (11:30-16:30)</option>
-                                    <option value="外場A3班">外場A3班 (11:30-17:00)</option>
-                                    <option value="外場A4班">外場A4班 (11:30-20:30)</option>
-                                    <option value="外場B1班">外場B1班 (16:00-01:00)</option>
-                                    <option value="外場B2班">外場B2班 (17:00-01:00)</option>
-                                    <option value="外場B3班">外場B3班 (18:00-01:00)</option>
-                                    <option value="外場B4班">外場B4班 (19:00-01:00)</option>
-                                </optgroup>
-                                <optgroup label="假別">
+                                <!-- 班別設定的班別由 shift.js 載入後插在這裡 -->
+                                <optgroup label="假別" class="leave-group">
                                     <option value="年假" data-i18n-option="SHIFT_TYPE_ANNUAL_LEAVE">年假(特休)</option>
                                     <option value="過年假" data-i18n-option="SHIFT_TYPE_CNY_LEAVE">過年假</option>
                                     <option value="國定假日">國定假日</option>
@@ -950,7 +925,12 @@
                             <label class="required" data-i18n="SHIFT_END_TIME">下班時間</label>
                             <input type="time" id="end-time" required>
                         </div>
+                        <div class="form-group">
+                            <label data-i18n="SHIFT_BREAK_LABEL">休息分鐘</label>
+                            <input type="number" id="shift-break" min="0" max="720" step="5" placeholder="0">
+                        </div>
                     </div>
+                    <p id="shift-hours-hint" class="shift-hours-hint"></p>
 
                     <div class="form-group">
                         <label class="required" data-i18n="SHIFT_LOCATION_LABEL">地點</label>
@@ -1000,6 +980,37 @@
 
                 <div style="margin-top: 20px;">
                     <button class="btn btn-secondary" onclick="downloadTemplate()" data-i18n="BTN_DOWNLOAD_TEMPLATE">下載範本檔案</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 班別設定（管理員） -->
+        <div id="templates-tab" class="tab-content">
+            <div class="shift-card">
+                <h2 data-i18n="SHIFT_TEMPLATES_TITLE">班別設定</h2>
+                <p class="shift-templates-desc" data-i18n="SHIFT_TEMPLATES_DESC">兩頭班用「休息分鐘」表示：員工照常只打上班、下班兩次卡，工時會扣掉這個班的休息時間。修改班別不會影響已經排好的班。</p>
+                <div class="shift-templates-scroll">
+                    <table class="shift-templates-table">
+                        <thead>
+                            <tr>
+                                <th data-i18n="SHIFT_TPL_CODE">班別代碼</th>
+                                <th data-i18n="SHIFT_TPL_NAME">班別名稱</th>
+                                <th data-i18n="SHIFT_START_TIME">上班時間</th>
+                                <th data-i18n="SHIFT_END_TIME">下班時間</th>
+                                <th data-i18n="SHIFT_TPL_CROSS_DAY">跨日</th>
+                                <th data-i18n="SHIFT_BREAK_LABEL">休息分鐘</th>
+                                <th data-i18n="SHIFT_TPL_TOTAL">總分鐘</th>
+                                <th data-i18n="SHIFT_TPL_WORK_HOURS">工作時數</th>
+                                <th data-i18n="SHIFT_TPL_ACTIVE">啟用</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="templates-body"></tbody>
+                    </table>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-secondary" id="add-template-btn" data-i18n="SHIFT_TPL_ADD">新增班別</button>
+                    <button type="button" class="btn btn-primary" id="save-templates-btn" data-i18n="SHIFT_TPL_SAVE">儲存班別設定</button>
                 </div>
             </div>
         </div>
