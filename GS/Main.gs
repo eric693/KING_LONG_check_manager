@@ -94,7 +94,7 @@ function doGet(e) {
       case "getProfile":
         return respond1(handleGetProfile(code));
       case "getLoginUrl":
-        return respond1(handleGetLoginUrl());
+        return respond1(handleGetLoginUrl(e.parameter));
       case "checkSession":
         return respond1(handleCheckSession(sessionToken));
       case "exchangeToken":

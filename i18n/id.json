@@ -1175,7 +1175,7 @@
   "KIOSK_PAGE_TITLE": "Kios absen",
   "KIOSK_CHECK_IN": "Masuk",
   "KIOSK_CHECK_OUT": "Pulang",
-  "KIOSK_INSTRUCTION": "Pindai kode QR yang sesuai dengan kamera ponsel untuk absen. Kode berganti setiap 30 detik, jadi foto kode tidak bisa dipakai.",
+  "KIOSK_INSTRUCTION": "Pindai QR yang sesuai dengan ponsel untuk absen (sebaiknya pakai pemindai QR di LINE). Pertama kali memakai browser di ponsel ini, Anda diarahkan ke login LINE dan absen langsung tercatat setelahnya. QR berganti setiap 30 detik, jadi foto yang dibawa pergi tidak berlaku.",
   "KIOSK_FULLSCREEN": "Layar penuh",
   "KIOSK_OFFLINE": "Koneksi terputus, mencoba lagi…",
   "KIOSK_SETUP_TITLE": "Tablet ini belum diatur",
@@ -1349,5 +1349,10 @@
   "PAYROLL_BDAY_TENURE": "Ulang tahun bulan ini, masa kerja kurang dari {months} bulan (masuk {hireDate})",
   "PAYROLL_HIRE_SRC_CONFIG": "pengaturan gaji",
   "PAYROLL_HIRE_SRC_EMPLOYEES": "daftar karyawan",
-  "PAYROLL_HIRE_SRC_ACCOUNT": "tanggal akun dibuat"
+  "PAYROLL_HIRE_SRC_ACCOUNT": "tanggal akun dibuat",
+  "SHIFT_DELETE_THIS": "Hapus jadwal ini",
+  "SHIFT_SAME_DAY_EXISTING": "Karyawan ini sudah punya {count} jadwal di hari ini:",
+  "SHIFT_SAME_DAY_DUPLICATE": "⚠ Karyawan ini punya {count} jadwal di hari ini. Jika ada yang ganda, hapus yang berlebih:",
+  "SHIFT_EDITING_NOW": "sedang diedit",
+  "QR_LOGIN_REDIRECTING": "QR terbaca. Mengarahkan ke login LINE; absen akan tercatat otomatis setelahnya…"
 }

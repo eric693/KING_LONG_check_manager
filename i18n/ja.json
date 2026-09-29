@@ -1175,7 +1175,7 @@
   "KIOSK_PAGE_TITLE": "タブレット打刻",
   "KIOSK_CHECK_IN": "出勤",
   "KIOSK_CHECK_OUT": "退勤",
-  "KIOSK_INSTRUCTION": "スマホのカメラで該当する QR コードを読み取ると打刻できます。QR コードは 30 秒ごとに更新されるため、撮影したものは使えません。",
+  "KIOSK_INSTRUCTION": "スマートフォンで該当する QR コードを読み取ると打刻できます（LINE の「QR コードリーダー」がおすすめ）。その端末のブラウザで初めて使うときは自動で LINE ログインに移動し、ログイン後そのまま打刻されます。QR コードは 30 秒ごとに更新され、撮影して持ち出したものは使えません。",
   "KIOSK_FULLSCREEN": "全画面",
   "KIOSK_OFFLINE": "接続が切れました。再試行中…",
   "KIOSK_SETUP_TITLE": "このタブレットは未設定です",
@@ -1349,5 +1349,10 @@
   "PAYROLL_BDAY_TENURE": "今月誕生日、勤続 {months} か月未満（入社 {hireDate}）",
   "PAYROLL_HIRE_SRC_CONFIG": "給与設定",
   "PAYROLL_HIRE_SRC_EMPLOYEES": "従業員名簿",
-  "PAYROLL_HIRE_SRC_ACCOUNT": "アカウント作成日"
+  "PAYROLL_HIRE_SRC_ACCOUNT": "アカウント作成日",
+  "SHIFT_DELETE_THIS": "このシフトを削除",
+  "SHIFT_SAME_DAY_EXISTING": "この従業員はこの日すでに {count} 件のシフトがあります：",
+  "SHIFT_SAME_DAY_DUPLICATE": "⚠ この従業員はこの日 {count} 件のシフトがあります。重複していれば余分なものを削除してください：",
+  "SHIFT_EDITING_NOW": "編集中",
+  "QR_LOGIN_REDIRECTING": "QR コードを読み取りました。LINE ログインに移動します。ログイン後に自動で打刻されます…"
 }

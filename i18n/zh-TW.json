@@ -1215,7 +1215,7 @@
   "KIOSK_PAGE_TITLE": "平板打卡",
   "KIOSK_CHECK_IN": "上班打卡",
   "KIOSK_CHECK_OUT": "下班打卡",
-  "KIOSK_INSTRUCTION": "用手機相機掃描對應的 QR Code 即可打卡。QR Code 每 30 秒更新，拍照帶走的無法使用。",
+  "KIOSK_INSTRUCTION": "用手機掃描對應的 QR Code 即可打卡（建議用 LINE 的「掃描 QR 碼」）。第一次在這支手機的瀏覽器使用時會自動帶去 LINE 登入，登入後直接完成打卡。QR Code 每 30 秒更新，拍照帶走的無法使用。",
   "KIOSK_FULLSCREEN": "全螢幕",
   "KIOSK_OFFLINE": "連線中斷，正在重試…",
   "KIOSK_SETUP_TITLE": "這台平板還沒設定",
@@ -1389,5 +1389,10 @@
   "PAYROLL_BDAY_TENURE": "當月壽星，到職未滿 {months} 個月（到職 {hireDate}）",
   "PAYROLL_HIRE_SRC_CONFIG": "薪資設定",
   "PAYROLL_HIRE_SRC_EMPLOYEES": "員工名單",
-  "PAYROLL_HIRE_SRC_ACCOUNT": "帳號建立日"
+  "PAYROLL_HIRE_SRC_ACCOUNT": "帳號建立日",
+  "SHIFT_DELETE_THIS": "刪除此排班",
+  "SHIFT_SAME_DAY_EXISTING": "這位員工這天已經有 {count} 筆排班：",
+  "SHIFT_SAME_DAY_DUPLICATE": "⚠ 這位員工這天排了 {count} 筆班，若是重複排班請刪除多餘的：",
+  "SHIFT_EDITING_NOW": "正在編輯",
+  "QR_LOGIN_REDIRECTING": "已掃到 QR Code，正在前往 LINE 登入，登入後會自動完成打卡…"
 }

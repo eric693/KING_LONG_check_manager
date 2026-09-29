@@ -13,7 +13,7 @@
       "steps": [
         "Tap \"Punch In\" when you arrive and \"Punch Out\" before you leave; both the time and your GPS location are recorded.",
         "On a split shift, punch out before your break and punch in when you come back; up to two pairs a day.",
-        "Besides the buttons, you can also punch by typing in LINE, or by scanning the QR code on the company tablet with your phone camera (it opens this system; log in first if asked).",
+        "Besides the buttons, you can punch by typing in LINE or by scanning the QR code on the company tablet (LINE's own QR scanner works best). If you scan with the phone camera and that browser is not logged in yet, you are taken to LINE login and the punch is recorded right after.",
         "If your phone supports fingerprint or face recognition, tap \"Set up biometrics\" once to pair it, then punch with biometrics from then on.",
         "If you forgot to punch or the time is wrong, submit a make-up punch request with a reason and wait for the administrator's approval.",
         "Fill in your ID number, address, phone and birthday under \"My profile\" - payroll and insurance work needs them.",
@@ -231,6 +231,7 @@
         "Choose the employee and date, then a shift. Start, end and break minutes are filled in from the shift settings, and the hours for that shift appear under the form.",
         "For a split shift (e.g. 10:30–21:30), just pick that shift; the gap in the middle is already its break minutes.",
         "To adjust just this one, change the times or break minutes directly.",
+        "After choosing the employee and date, the shifts they already have that day are listed under the form. If you scheduled one twice by mistake, press \"Delete\" on that row, or \"Edit\" and then \"Delete this shift\".",
         "Check the location and submit, then confirm it appears under \"View Shifts\"."
       ],
       "notes": [

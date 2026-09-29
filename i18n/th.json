@@ -1234,7 +1234,7 @@
   "KIOSK_PAGE_TITLE": "จุดลงเวลาแท็บเล็ต",
   "KIOSK_CHECK_IN": "เข้างาน",
   "KIOSK_CHECK_OUT": "ออกงาน",
-  "KIOSK_INSTRUCTION": "สแกน QR Code ที่ตรงกันด้วยกล้องมือถือเพื่อลงเวลา QR Code เปลี่ยนทุก 30 วินาที ภาพถ่ายจึงใช้ไม่ได้",
+  "KIOSK_INSTRUCTION": "สแกน QR ที่ตรงกันด้วยมือถือเพื่อลงเวลา (แนะนำให้ใช้ \"สแกน QR\" ใน LINE) ครั้งแรกที่ใช้เบราว์เซอร์ในมือถือเครื่องนี้ ระบบจะพาไปเข้าสู่ระบบ LINE แล้วลงเวลาให้ทันที QR เปลี่ยนทุก 30 วินาที ภาพที่ถ่ายไปใช้ไม่ได้",
   "KIOSK_FULLSCREEN": "เต็มจอ",
   "KIOSK_OFFLINE": "การเชื่อมต่อขาด กำลังลองใหม่…",
   "KIOSK_SETUP_TITLE": "แท็บเล็ตนี้ยังไม่ได้ตั้งค่า",
@@ -1408,5 +1408,10 @@
   "PAYROLL_BDAY_TENURE": "เกิดเดือนนี้ แต่ทำงานยังไม่ครบ {months} เดือน (เริ่มงาน {hireDate})",
   "PAYROLL_HIRE_SRC_CONFIG": "การตั้งค่าเงินเดือน",
   "PAYROLL_HIRE_SRC_EMPLOYEES": "รายชื่อพนักงาน",
-  "PAYROLL_HIRE_SRC_ACCOUNT": "วันที่สร้างบัญชี"
+  "PAYROLL_HIRE_SRC_ACCOUNT": "วันที่สร้างบัญชี",
+  "SHIFT_DELETE_THIS": "ลบกะนี้",
+  "SHIFT_SAME_DAY_EXISTING": "พนักงานคนนี้มีกะในวันนี้แล้ว {count} รายการ:",
+  "SHIFT_SAME_DAY_DUPLICATE": "⚠ พนักงานคนนี้มี {count} กะในวันนี้ หากซ้ำให้ลบรายการที่เกิน:",
+  "SHIFT_EDITING_NOW": "กำลังแก้ไข",
+  "QR_LOGIN_REDIRECTING": "สแกน QR แล้ว กำลังไปเข้าสู่ระบบ LINE เมื่อเข้าสู่ระบบแล้วจะลงเวลาให้อัตโนมัติ…"
 }

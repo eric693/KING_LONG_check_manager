@@ -357,6 +357,78 @@ function setupEventListeners() {
     };
     const saveTplBtn = document.getElementById('save-templates-btn');
     if (saveTplBtn) saveTplBtn.onclick = saveShiftTemplates;
+
+    // 選了員工和日期，就列出他那天已經排的班（可以直接編輯、刪除）
+    ['employee-select', 'shift-date'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.onchange = refreshSameDayShifts;
+    });
+}
+
+// 目前正在編輯的排班（新增模式是 null）
+let editingShiftId = null;
+// 新增表單下方列出的同一天排班
+let sameDayShifts = [];
+
+/**
+ * 新增排班表單下方：這位員工這一天已經有的班。
+ * 重複排班時系統只會提醒、不一定擋下，排錯了可以在這裡直接刪，不用切回「查看排班」找。
+ */
+async function refreshSameDayShifts() {
+    const box = document.getElementById('same-day-shifts');
+    if (!box) return;
+    const employeeId = document.getElementById('employee-select')?.value;
+    const date = document.getElementById('shift-date')?.value;
+    if (!employeeId || !date) {
+        box.style.display = 'none';
+        box.innerHTML = '';
+        return;
+    }
+
+    try {
+        const queryParams = new URLSearchParams({
+            action: 'getShifts',
+            token: localStorage.getItem('sessionToken'),
+            employeeId: employeeId,
+            startDate: date,
+            endDate: date
+        });
+        const response = await apiRequestParams(queryParams);
+        const data = await response.json();
+        // 使用者在等待期間又換了人或日期，就不要畫舊的結果
+        if (document.getElementById('employee-select')?.value !== employeeId ||
+            document.getElementById('shift-date')?.value !== date) return;
+
+        const shifts = (data.ok ? (data.data || []) : [])
+            .filter(s => String(s.employeeId) === String(employeeId) && String(s.date || '').substring(0, 10) === date);
+        // 編輯要找得到這幾筆（「查看排班」的清單可能沒載入到這一天）
+        sameDayShifts = shifts;
+
+        if (shifts.length === 0) {
+            sameDayShifts = [];
+            box.style.display = 'none';
+            box.innerHTML = '';
+            return;
+        }
+
+        const canManage = isAdmin || isScheduler;
+        box.innerHTML = `
+            <div class="same-day-title">${escapeHtml(t(shifts.length > 1 ? 'SHIFT_SAME_DAY_DUPLICATE' : 'SHIFT_SAME_DAY_EXISTING', { count: shifts.length }))}</div>
+            ${shifts.map(s => `
+                <div class="same-day-row">
+                    <span>${getShiftTypeBadge(s.shiftType)} ${formatTimeOnly(s.startTime)} - ${formatTimeOnly(s.endTime)}${shiftHoursText(s)}${s.location ? '｜' + escapeHtml(s.location) : ''}${s.shiftId === editingShiftId ? '（' + escapeHtml(t('SHIFT_EDITING_NOW')) + '）' : ''}</span>
+                    ${canManage ? `
+                    <span class="shift-actions">
+                        <button type="button" class="btn-icon" data-edit="${escapeHtml(s.shiftId)}">${escapeHtml(t('BTN_EDIT'))}</button>
+                        <button type="button" class="btn-icon btn-danger" data-delete="${escapeHtml(s.shiftId)}">${escapeHtml(t('BTN_DELETE'))}</button>
+                    </span>` : ''}
+                </div>`).join('')}`;
+        box.querySelectorAll('[data-edit]').forEach(btn => { btn.onclick = () => editShift(btn.dataset.edit); });
+        box.querySelectorAll('[data-delete]').forEach(btn => { btn.onclick = () => deleteShift(btn.dataset.delete); });
+        box.style.display = 'block';
+    } catch (error) {
+        console.error('載入同一天的排班失敗:', error);
+    }
 }
 
 
@@ -1010,7 +1082,8 @@ async function addShift() {
 
 async function editShift(shiftId) {
     if (!checkSchedulingPermission('編輯排班')) return; 
-    const shift = currentShifts.find(s => s.shiftId === shiftId);
+    const shift = currentShifts.find(s => s.shiftId === shiftId) ||
+                  sameDayShifts.find(s => s.shiftId === shiftId);
     if (!shift) return;
     
     switchTab('add');
@@ -1041,6 +1114,15 @@ async function editShift(shiftId) {
         e.preventDefault();
         updateShift(shiftId);
     };
+    
+    // 編輯中可以直接刪掉這一筆
+    editingShiftId = shiftId;
+    const deleteBtn = document.getElementById('delete-editing-shift-btn');
+    if (deleteBtn) {
+        deleteBtn.style.display = '';
+        deleteBtn.onclick = () => deleteShift(shiftId);
+    }
+    refreshSameDayShifts();
 }
 
 async function updateShift(shiftId) {
@@ -1100,6 +1182,10 @@ async function deleteShift(shiftId) {
         
         if (data.ok) {
             showMessage(t('SHIFT_DELETE_SUCCESS'), 'success');
+            currentShifts = currentShifts.filter(s => s.shiftId !== shiftId);
+            if (editingShiftId === shiftId) resetForm();
+            sameDayShifts = sameDayShifts.filter(s => s.shiftId !== shiftId);
+            refreshSameDayShifts();
             loadShifts();
         } else {
             showMessage(data.msg || t('SHIFT_DELETE_FAILED'), 'error');
@@ -1228,6 +1314,14 @@ function resetForm() {
     });
     document.querySelectorAll('#shift-type option.legacy-shift').forEach(o => o.remove());
     updateShiftHoursHint();
+    
+    editingShiftId = null;
+    const deleteBtn = document.getElementById('delete-editing-shift-btn');
+    if (deleteBtn) {
+        deleteBtn.style.display = 'none';
+        deleteBtn.onclick = null;
+    }
+    refreshSameDayShifts();
 }
 
 /**

@@ -207,6 +207,42 @@ async function loadAbnormalRecordsInBackground() {
     }
 }
   
+/** 待打的 QR 卡 → 帶過 LINE 登入的字串（base64url 的 JSON） */
+function encodeLoginResume() {
+    const q = sessionStorage.getItem('pendingQRToken');
+    if (!q) return '';
+    const l = sessionStorage.getItem('pendingQRLoc') || '';
+    const json = JSON.stringify(l ? { q: q, l: l } : { q: q });
+    const bytes = new TextEncoder().encode(json);
+    let binary = '';
+    bytes.forEach(b => { binary += String.fromCharCode(b); });
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+/** LINE 登入回來的 state → { q, l }；不是我們放的就回傳 null */
+function decodeLoginResume(state) {
+    const dot = String(state || '').indexOf('.');
+    if (dot === -1) return null;
+    try {
+        const b64 = state.slice(dot + 1).replace(/-/g, '+').replace(/_/g, '/');
+        const binary = atob(b64 + '='.repeat((4 - b64.length % 4) % 4));
+        const json = new TextDecoder().decode(Uint8Array.from(binary, c => c.charCodeAt(0)));
+        const data = JSON.parse(json);
+        return data && typeof data.q === 'string' && /^[IO]_[0-9A-Fa-f]+_[0-9a-f]+$/.test(data.q)
+            ? { q: data.q, l: typeof data.l === 'string' ? data.l : '' }
+            : null;
+    } catch (error) {
+        return null;
+    }
+}
+
+/** 前往 LINE 登入；有待打的 QR 卡就一起帶過去 */
+async function startLineLogin() {
+    const resume = encodeLoginResume();
+    const res = await callApifetch('getLoginUrl' + (resume ? '&resume=' + encodeURIComponent(resume) : ''));
+    if (res.url) window.location.href = res.url;
+}
+
 function showLoginUI() {
     setElementDisplay('login-btn', 'block');
     document.getElementById('user-header').style.display = 'none';
@@ -1898,7 +1934,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         sessionStorage.setItem('pendingQRToken', qrTokenFromUrl);
         const qrLocFromUrl = params.get('loc');
         if (qrLocFromUrl) sessionStorage.setItem('pendingQRLoc', qrLocFromUrl);
+        else sessionStorage.removeItem('pendingQRLoc');
         history.replaceState({}, '', window.location.pathname);
+    }
+    
+    // 從 LINE 登入回來：QR 代碼接在 state 後面帶回來（見 GS 的 handleGetLoginUrl）。
+    // LINE App 常會在另一個分頁或瀏覽器打開回來的網址，sessionStorage 已經沒有了，要從這裡取回。
+    const resumeQr = decodeLoginResume(params.get('state'));
+    if (otoken && resumeQr) {
+        sessionStorage.setItem('pendingQRToken', resumeQr.q);
+        if (resumeQr.l) sessionStorage.setItem('pendingQRLoc', resumeQr.l);
+        else sessionStorage.removeItem('pendingQRLoc');
     }
 
     if (otoken) {
@@ -1960,14 +2006,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (typeof initBiometricPunch === 'function') initBiometricPunch();
         if (loginOk) {
             if (typeof handlePendingQRPunch === 'function') await handlePendingQRPunch();
+        } else if (qrTokenFromUrl) {
+            // 剛掃了 QR Code 但這個瀏覽器還沒登入（手機相機常用 Safari／Chrome 開，
+            // 跟平常登入的 LINE 瀏覽器不共用登入）：直接帶去 LINE 登入，回來自動打卡，不用再按一次
+            setElementText('status', t('QR_LOGIN_REDIRECTING'));
+            showNotification(t('QR_LOGIN_REDIRECTING'), 'info');
+            await startLineLogin();
         }
     }
     
     // 綁定按鈕事件
-    if (loginBtn) loginBtn.onclick = async () => {
-        const res = await callApifetch("getLoginUrl");
-        if (res.url) window.location.href = res.url;
-    };
+    if (loginBtn) loginBtn.onclick = startLineLogin;
     
     if (logoutBtn) logoutBtn.onclick = () => {
         localStorage.removeItem("sessionToken");

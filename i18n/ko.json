@@ -1175,7 +1175,7 @@
   "KIOSK_PAGE_TITLE": "태블릿 출퇴근",
   "KIOSK_CHECK_IN": "출근",
   "KIOSK_CHECK_OUT": "퇴근",
-  "KIOSK_INSTRUCTION": "휴대폰 카메라로 해당 QR 코드를 스캔하면 출퇴근이 기록됩니다. QR 코드는 30초마다 바뀌므로 사진으로 찍어 가도 사용할 수 없습니다.",
+  "KIOSK_INSTRUCTION": "휴대폰으로 해당 QR 코드를 스캔하면 기록됩니다(LINE의 \"QR 코드 스캔\" 권장). 이 휴대폰 브라우저에서 처음 사용할 때는 자동으로 LINE 로그인으로 이동하며, 로그인 후 바로 기록됩니다. QR 코드는 30초마다 바뀌어 사진으로 찍어 간 것은 쓸 수 없습니다.",
   "KIOSK_FULLSCREEN": "전체 화면",
   "KIOSK_OFFLINE": "연결이 끊겼습니다. 다시 시도 중…",
   "KIOSK_SETUP_TITLE": "이 태블릿은 아직 설정되지 않았습니다",
@@ -1349,5 +1349,10 @@
   "PAYROLL_BDAY_TENURE": "이번 달 생일, 근속 {months}개월 미만(입사 {hireDate})",
   "PAYROLL_HIRE_SRC_CONFIG": "급여 설정",
   "PAYROLL_HIRE_SRC_EMPLOYEES": "직원 명단",
-  "PAYROLL_HIRE_SRC_ACCOUNT": "계정 생성일"
+  "PAYROLL_HIRE_SRC_ACCOUNT": "계정 생성일",
+  "SHIFT_DELETE_THIS": "이 근무 삭제",
+  "SHIFT_SAME_DAY_EXISTING": "이 직원은 이날 이미 {count}건의 근무가 있습니다:",
+  "SHIFT_SAME_DAY_DUPLICATE": "⚠ 이 직원은 이날 근무가 {count}건입니다. 중복이면 남는 것을 삭제하세요:",
+  "SHIFT_EDITING_NOW": "편집 중",
+  "QR_LOGIN_REDIRECTING": "QR 코드를 읽었습니다. LINE 로그인으로 이동하며, 로그인 후 자동으로 기록됩니다…"
 }

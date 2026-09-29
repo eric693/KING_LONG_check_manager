@@ -13,7 +13,7 @@
       "steps": [
         "Đến nơi làm việc bấm \"Chấm công vào\", trước khi về bấm \"Chấm công ra\"; hệ thống ghi cả thời gian và vị trí GPS.",
         "Ca gãy: chấm \"ra\" trước khi nghỉ và chấm \"vào\" khi quay lại; tối đa 2 cặp mỗi ngày.",
-        "Ngoài nút bấm, bạn còn có thể chấm công bằng cách nhắn trong LINE, hoặc dùng camera điện thoại quét mã QR trên máy tính bảng của công ty (quét xong hệ thống này sẽ mở ra; nếu chưa đăng nhập thì đăng nhập trước).",
+        "Ngoài nút bấm, có thể chấm công bằng cách nhắn trong LINE hoặc quét mã QR trên máy tính bảng của công ty (nên dùng trình quét QR của LINE). Nếu quét bằng camera điện thoại mà trình duyệt đó chưa đăng nhập, hệ thống sẽ chuyển đến đăng nhập LINE và chấm công ngay sau đó.",
         "Nếu điện thoại hỗ trợ vân tay hoặc khuôn mặt, bấm \"Thiết lập sinh trắc học\" một lần rồi dùng sinh trắc học để chấm công nhanh.",
         "Quên chấm công hoặc sai giờ thì gửi \"Đề nghị bổ sung chấm công\", ghi rõ lý do và chờ quản trị viên duyệt.",
         "Điền đủ số CMND/CCCD, địa chỉ, điện thoại và ngày sinh trong \"Thông tin cá nhân\" vì bộ phận lương và bảo hiểm cần dùng.",
@@ -231,6 +231,7 @@
         "Chọn nhân viên và ngày rồi chọn ca; giờ vào, giờ ra và phút nghỉ được lấy từ cài đặt ca, giờ làm hiển thị bên dưới biểu mẫu.",
         "Ca gãy (ví dụ 10:30–21:30) cũng chỉ cần chọn một ca; khoảng nghỉ ở giữa đã nằm trong \"phút nghỉ\".",
         "Muốn điều chỉnh riêng ca này thì sửa trực tiếp giờ hoặc phút nghỉ.",
+        "Sau khi chọn nhân viên và ngày, các ca đã có trong ngày sẽ hiện bên dưới biểu mẫu. Nếu lỡ xếp trùng, bấm \"Xóa\" ở dòng đó, hoặc \"Sửa\" rồi bấm \"Xóa ca này\".",
         "Kiểm tra địa điểm rồi lưu, sau đó xem ở \"Xem ca làm\"."
       ],
       "notes": [

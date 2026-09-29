@@ -13,7 +13,7 @@
       "steps": [
         "Setibanya di tempat kerja tekan \"Absen masuk\", sebelum pulang tekan \"Absen pulang\"; waktu dan lokasi GPS dicatat bersamaan.",
         "Shift terpisah: absen keluar sebelum istirahat dan absen masuk saat kembali; maksimal dua pasang sehari.",
-        "Selain tombol, Anda juga bisa absen dengan mengetik di LINE, atau memindai kode QR di tablet kantor dengan kamera ponsel (setelah dipindai sistem ini akan terbuka; login dulu jika diminta).",
+        "Selain tombol, Anda bisa absen dengan mengetik di LINE atau memindai QR di tablet kantor (sebaiknya pakai pemindai QR di LINE). Jika memindai dengan kamera ponsel dan browser itu belum login, Anda diarahkan ke login LINE dan absen langsung tercatat setelahnya.",
         "Jika ponsel mendukung sidik jari atau wajah, tekan \"Atur biometrik\" sekali, lalu absen cukup dengan biometrik.",
         "Jika lupa absen atau waktunya salah, ajukan \"Perbaikan absensi\" dengan alasannya dan tunggu persetujuan admin.",
         "Lengkapi nomor identitas, alamat, telepon, dan tanggal lahir di \"Data pribadi saya\" karena dibutuhkan untuk penggajian dan jaminan sosial.",
@@ -231,6 +231,7 @@
         "Pilih karyawan dan tanggal, lalu pilih shift; jam masuk, pulang, dan menit istirahat diisi dari pengaturan shift, dan jam kerja tampil di bawah formulir.",
         "Shift terpisah (mis. 10:30–21:30) cukup pilih satu shift; jeda di tengah sudah tercatat di \"menit istirahat\".",
         "Untuk menyesuaikan jadwal ini saja, ubah langsung jam atau menit istirahatnya.",
+        "Setelah memilih karyawan dan tanggal, jadwal yang sudah ada di hari itu tampil di bawah formulir. Jika tidak sengaja terjadwal ganda, tekan \"Hapus\" pada baris itu, atau \"Edit\" lalu \"Hapus jadwal ini\".",
         "Periksa lokasi lalu simpan, kemudian cek di \"Lihat Shift\"."
       ],
       "notes": [

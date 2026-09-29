@@ -145,6 +145,21 @@
             background: #d0d0d0;
         }
 
+        .same-day-shifts {
+            margin: 12px 0 16px;
+            padding: 12px 14px;
+            border: 1px solid #f5c26b;
+            background: #fff8e6;
+            border-radius: 8px;
+            color: #7a4b00;
+        }
+        .same-day-shifts .same-day-title { font-weight: 600; margin-bottom: 8px; }
+        .same-day-shifts .same-day-row {
+            display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+            gap: 8px; padding: 6px 0; border-top: 1px dashed #f0d9a8;
+        }
+        .same-day-shifts .same-day-row:first-of-type { border-top: 0; }
+        .same-day-shifts .same-day-row .shift-actions { display: flex; gap: 6px; }
         .btn-danger {
             background: #ea4335;
             color: white;
@@ -944,9 +959,13 @@
                         <textarea id="shift-note" data-i18n="SHIFT_NOTE_PLACEHOLDER" placeholder="輸入備註資訊..."></textarea>
                     </div>
 
+                    <!-- 這位員工這一天已經排的班：重複排了可以直接在這裡刪 -->
+                    <div id="same-day-shifts" class="same-day-shifts" style="display:none;"></div>
+
                     <div class="btn-group">
                         <button type="submit" class="btn btn-primary" data-i18n="BTN_ADD_SHIFT">新增排班</button>
                         <button type="button" class="btn btn-secondary" onclick="resetForm()" data-i18n="BTN_RESET">重置</button>
+                        <button type="button" class="btn btn-danger" id="delete-editing-shift-btn" style="display:none;" data-i18n="SHIFT_DELETE_THIS">刪除此排班</button>
                     </div>
                 </form>
             </div>

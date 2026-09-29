@@ -168,9 +168,14 @@ function handleGetProfile(code) {
 //   };
 // }
 
-function handleGetLoginUrl() {
+function handleGetLoginUrl(params) {
   const baseUrl = LINE_REDIRECT_URL;
-  const state   = Utilities.getUuid();
+  // 掃 QR Code 打卡時還沒登入：把要接著做的事（QR 代碼）接在 state 後面帶過 LINE 登入，
+  // 登入回來時就算換了分頁或瀏覽器（LINE App 常會這樣），前端也拿得回來、直接完成打卡。
+  // QR 代碼本身有簽章和 3 分鐘期限，放在網址上不會多洩漏什麼。
+  const resume  = String((params && params.resume) || '');
+  const state   = Utilities.getUuid() +
+                  (/^[A-Za-z0-9_-]{1,400}$/.test(resume) ? '.' + resume : '');
   const scope   = encodeURIComponent('openid profile email');
   const redirect= encodeURIComponent(baseUrl);
   const url     = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${encodeURIComponent(LINE_CHANNEL_ID)}&redirect_uri=${redirect}&state=${state}&scope=${scope}`;

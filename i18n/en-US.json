@@ -1196,7 +1196,7 @@
   "KIOSK_PAGE_TITLE": "Punch kiosk",
   "KIOSK_CHECK_IN": "Clock in",
   "KIOSK_CHECK_OUT": "Clock out",
-  "KIOSK_INSTRUCTION": "Scan the matching QR code with your phone camera to punch. The codes change every 30 seconds, so photos of them stop working.",
+  "KIOSK_INSTRUCTION": "Scan the matching QR code with your phone to punch (LINE's own QR scanner works best). The first time you use a browser on your phone you are taken to LINE login, and the punch is recorded right after. The codes change every 30 seconds, so photos taken away will not work.",
   "KIOSK_FULLSCREEN": "Full screen",
   "KIOSK_OFFLINE": "Connection lost, retrying…",
   "KIOSK_SETUP_TITLE": "This tablet is not set up",
@@ -1370,5 +1370,10 @@
   "PAYROLL_BDAY_TENURE": "Birthday this month, but employed less than {months} months (hired {hireDate})",
   "PAYROLL_HIRE_SRC_CONFIG": "salary settings",
   "PAYROLL_HIRE_SRC_EMPLOYEES": "employee list",
-  "PAYROLL_HIRE_SRC_ACCOUNT": "account creation date"
+  "PAYROLL_HIRE_SRC_ACCOUNT": "account creation date",
+  "SHIFT_DELETE_THIS": "Delete this shift",
+  "SHIFT_SAME_DAY_EXISTING": "This employee already has {count} shift(s) on this day:",
+  "SHIFT_SAME_DAY_DUPLICATE": "⚠ This employee has {count} shifts on this day. If any are duplicates, delete the extra ones:",
+  "SHIFT_EDITING_NOW": "editing",
+  "QR_LOGIN_REDIRECTING": "QR code scanned. Taking you to LINE login; your punch will be recorded automatically afterwards…"
 }

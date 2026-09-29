@@ -1231,7 +1231,7 @@
   "KIOSK_PAGE_TITLE": "Máy chấm công",
   "KIOSK_CHECK_IN": "Vào ca",
   "KIOSK_CHECK_OUT": "Tan ca",
-  "KIOSK_INSTRUCTION": "Quét mã QR tương ứng bằng camera điện thoại để chấm công. Mã đổi mỗi 30 giây nên ảnh chụp sẽ không dùng được.",
+  "KIOSK_INSTRUCTION": "Quét mã QR tương ứng bằng điện thoại để chấm công (nên dùng trình quét QR của LINE). Lần đầu dùng trình duyệt trên điện thoại này sẽ tự chuyển đến đăng nhập LINE, đăng nhập xong sẽ chấm công ngay. Mã QR đổi mỗi 30 giây nên ảnh chụp mang đi không dùng được.",
   "KIOSK_FULLSCREEN": "Toàn màn hình",
   "KIOSK_OFFLINE": "Mất kết nối, đang thử lại…",
   "KIOSK_SETUP_TITLE": "Máy tính bảng này chưa được thiết lập",
@@ -1405,5 +1405,10 @@
   "PAYROLL_BDAY_TENURE": "Sinh nhật tháng này, làm chưa đủ {months} tháng (vào làm {hireDate})",
   "PAYROLL_HIRE_SRC_CONFIG": "cài đặt lương",
   "PAYROLL_HIRE_SRC_EMPLOYEES": "danh sách nhân viên",
-  "PAYROLL_HIRE_SRC_ACCOUNT": "ngày tạo tài khoản"
+  "PAYROLL_HIRE_SRC_ACCOUNT": "ngày tạo tài khoản",
+  "SHIFT_DELETE_THIS": "Xóa ca này",
+  "SHIFT_SAME_DAY_EXISTING": "Nhân viên này đã có {count} ca trong ngày:",
+  "SHIFT_SAME_DAY_DUPLICATE": "⚠ Nhân viên này có {count} ca trong ngày. Nếu bị trùng, hãy xóa ca thừa:",
+  "SHIFT_EDITING_NOW": "đang sửa",
+  "QR_LOGIN_REDIRECTING": "Đã quét mã QR. Đang chuyển đến đăng nhập LINE, sau khi đăng nhập sẽ tự động chấm công…"
 }
