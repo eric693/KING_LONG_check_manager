@@ -24,7 +24,8 @@
         "\"Attendance exceptions\" are detected automatically (missing punch, late, early leave). An approved make-up punch clears the exception.",
         "Announcements are sorted by importance; red ones are important, please read them.",
         "The QR codes on the tablet change every 30 seconds, so photos of them or copies sent to others stop working. Scan them in person.",
-        "You cannot do the same punch twice in a row; if the order is wrong, the system tells you which punch comes next. If you forget the break punches, attendance issues shows \"Add break start / Add break end\" buttons."
+        "You cannot do the same punch twice in a row; if the order is wrong, the system tells you which punch comes next. If you forget the break punches, attendance issues shows \"Add break start / Add break end\" buttons.",
+        "If LINE is not available, ask an admin for a login link and open it on your own phone. After that you can punch and scan the tablet QR code without LINE."
       ],
       "terms": [
         [
@@ -186,7 +187,8 @@
         "\"Pending expense requests\" is where you review employees' advances and reimbursements; open the attachments to see receipt photos.",
         "Under \"Punch kiosk\", enter a location name and create a link. Open it on a company tablet and leave it on — it keeps showing refreshing clock-in and clock-out QR codes. \"QR code punch\" creates a one-off QR code instead.",
         "\"Activity log\" lets you search by month, action and keyword to see who changed reviews, roles, employees, shifts or salary settings, and when.",
-        "\"Edit name\" under employee management changes an employee's LINE name to their real name."
+        "\"Edit name\" under employee management changes an employee's LINE name to their real name.",
+        "\"Employee management\": for staff who cannot use LINE, press \"Login link\" to create a link or QR code they open on their own phone to log in; add new staff without LINE with \"Add employee (no LINE)\". Each link works once; if it goes to the wrong person, create a new one and the old one stops working."
       ],
       "notes": [
         "Approvals affect attendance and payroll immediately; when rejecting, state the reason so the employee knows how to fix it.",

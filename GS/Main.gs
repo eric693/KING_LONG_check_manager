@@ -30,7 +30,9 @@ const ROUTE_ACCESS = {
   disableKiosk: 'admin',
   getKioskStatus: 'admin',
   saveShiftTemplates: 'admin',
-  savePayrollAdjustments: 'admin'
+  savePayrollAdjustments: 'admin',
+  createNoLineEmployee: 'admin',
+  createLoginLink: 'admin'
 };
 
 /**
@@ -99,6 +101,13 @@ function doGet(e) {
         return respond1(handleCheckSession(sessionToken));
       case "exchangeToken":
         return respond1(handleExchangeToken(e.parameter.otoken));
+      // 不透過 LINE 登入（見 LoginLinks.gs）
+      case "redeemLoginLink":
+        return respond1(handleRedeemLoginLink(e.parameter));
+      case "createLoginLink":
+        return respond1(handleCreateLoginLink(e.parameter));
+      case "createNoLineEmployee":
+        return respond1(handleCreateNoLineEmployee(e.parameter));
       
       // ==================== 打卡系統 ====================
       case "punch":

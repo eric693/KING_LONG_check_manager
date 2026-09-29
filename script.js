@@ -236,6 +236,41 @@ function decodeLoginResume(state) {
     }
 }
 
+/**
+ * 登入成功（LINE 或登入連結）：存 session、顯示主畫面，再處理登入前掃的 QR 卡
+ */
+async function applyLoginResult(res) {
+    localStorage.setItem("sessionToken", res.sToken);
+    localStorage.setItem("cachedUser", JSON.stringify(res.user));
+    localStorage.setItem("cacheTime", Date.now().toString());
+    localStorage.setItem("sessionUserId", res.user.userId);
+
+    if (res.user.dept === "管理員") {
+        setElementDisplay('tab-admin-btn', 'block');
+    }
+    setElementText("user-name", res.user.name);
+    setElementSrc("profile-img", res.user.picture);
+
+    setElementDisplay('login-section', 'none');
+    setElementDisplay('user-header', 'flex');
+    setElementDisplay('main-app', 'block');
+
+    if (res.abnormalRecords) {
+        renderAbnormalRecords(res.abnormalRecords);
+    }
+
+    showNotification(t("LOGIN_SUCCESS"), "success");
+
+    // UI 顯示後才載入異常記錄（不阻塞登入）
+    loadAbnormalRecordsInBackground();
+
+    // 初始化生物辨識（背景執行；薪資頁沒有載入 biometric.js）
+    if (typeof initBiometricPunch === 'function') initBiometricPunch();
+
+    // 登入後處理待執行的 QR 打卡
+    if (typeof handlePendingQRPunch === 'function') await handlePendingQRPunch();
+}
+
 /** 前往 LINE 登入；有待打的 QR 卡就一起帶過去 */
 async function startLineLogin() {
     const resume = encodeLoginResume();
@@ -1947,66 +1982,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         else sessionStorage.removeItem('pendingQRLoc');
     }
 
-    if (otoken) {
+    const loginCode = params.get('loginCode');
+
+    if (otoken || loginCode) {
         try {
-            const res = await callApifetch(`getProfile&otoken=${otoken}`);
+            // LINE 登入回來帶 code；管理員給的登入連結帶 loginCode（不經過 LINE，見 GS/LoginLinks.gs）
+            const res = otoken
+                ? await callApifetch(`getProfile&otoken=${otoken}`)
+                : await callApifetch(`redeemLoginLink&loginCode=${encodeURIComponent(loginCode)}`);
+            // 清除 URL 參數（登入代碼不留在網址列與瀏覽紀錄）
+            history.replaceState({}, '', window.location.pathname);
             if (res.ok && res.sToken) {
-                // 儲存 Session Token
-                localStorage.setItem("sessionToken", res.sToken);
-
-                //  新增：儲存使用者快取
-                localStorage.setItem("cachedUser", JSON.stringify(res.user));
-                localStorage.setItem("cacheTime", Date.now().toString());
-                localStorage.setItem("sessionUserId", res.user.userId);
-
-                // 清除 URL 參數
-                history.replaceState({}, '', window.location.pathname);
-
-                //  關鍵：不需要再呼叫 ensureLogin 或 initApp
-                // 直接顯示介面
-
-                if (res.user.dept === "管理員") {
-                  setElementDisplay('tab-admin-btn', 'block');
+                if (loginCode) {
+                    // 記住這個瀏覽器是用連結登入的：之後就算登出，掃 QR Code 也不要自動帶去 LINE
+                    try { localStorage.setItem('loginByLink', '1'); } catch (e) { /* 私密模式等 */ }
                 }
-
-                setElementText("user-name", res.user.name);
-                setElementSrc("profile-img", res.user.picture);
-
-                setElementDisplay('login-section', 'none');
-                setElementDisplay('user-header', 'flex');
-                setElementDisplay('main-app', 'block');
-
-                //  直接渲染異常記錄（資料已經在 res 裡）
-                if (res.abnormalRecords) {
-                  renderAbnormalRecords(res.abnormalRecords);
-                }
-
-                showNotification(t("LOGIN_SUCCESS"), "success");
-
-                //  關鍵：UI 顯示後才載入異常記錄（不阻塞登入）
-                loadAbnormalRecordsInBackground();
-
-                // 初始化生物辨識（背景執行；薪資頁沒有載入 biometric.js）
-                if (typeof initBiometricPunch === 'function') initBiometricPunch();
-
-                // 登入後處理待執行的 QR 打卡
-                if (typeof handlePendingQRPunch === 'function') await handlePendingQRPunch();
-
+                await applyLoginResult(res);
             } else {
-                showNotification(t("ERROR_LOGIN_FAILED", { msg: res.msg || t("UNKNOWN_ERROR") }), "error");
-                loginBtn.style.display = 'block';
+                const failMsg = loginCode
+                    ? (res.code && t(res.code) !== res.code ? t(res.code) : (res.msg || t('LOGIN_LINK_INVALID')))
+                    : t("ERROR_LOGIN_FAILED", { msg: res.msg || t("UNKNOWN_ERROR") });
+                showNotification(failMsg, "error");
+                if (loginCode) setElementText('status', failMsg);
+                showLoginUI();
             }
 
         } catch (err) {
             console.error(err);
-            loginBtn.style.display = 'block';
+            showLoginUI();
         }
     } else {
         const loginOk = await ensureLogin();
         if (typeof initBiometricPunch === 'function') initBiometricPunch();
         if (loginOk) {
             if (typeof handlePendingQRPunch === 'function') await handlePendingQRPunch();
-        } else if (qrTokenFromUrl) {
+        } else if (qrTokenFromUrl && !localStorage.getItem('loginByLink')) {
             // 剛掃了 QR Code 但這個瀏覽器還沒登入（手機相機常用 Safari／Chrome 開，
             // 跟平常登入的 LINE 瀏覽器不共用登入）：直接帶去 LINE 登入，回來自動打卡，不用再按一次
             setElementText('status', t('QR_LOGIN_REDIRECTING'));

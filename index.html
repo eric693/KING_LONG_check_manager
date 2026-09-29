@@ -155,6 +155,7 @@
                 <p class="text-gray-600 mb-6" data-i18n="LOGIN_INFO" id="status">請點擊登入以繼續。</p>
                 <div id="login" class="space-y-4">
                     <button id="login-btn" data-i18n="BTN_LOGOIN" class="w-full py-3 px-4 rounded-lg font-bold btn-primary" style="display: none;">使用LINE登入</button>
+                    <p class="text-sm text-gray-500 dark:text-gray-400" data-i18n="LOGIN_NO_LINE_HINT">LINE 無法使用？請向管理員索取「登入連結」，用手機打開就能登入。</p>
                 </div>
             </section>
             
@@ -1530,11 +1531,18 @@
                             <h2 class="text-2xl font-bold text-gray-800 dark:text-white">
                                  用戶管理
                             </h2>
-                            <button id="refresh-users-btn" 
-                                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition-colors">
-                                 重新整理
-                            </button>
+                            <div class="flex flex-wrap gap-2 justify-end">
+                                <button type="button" onclick="openNoLineEmployeeDialog()" data-i18n="NO_LINE_ADD_BTN"
+                                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition-colors">
+                                    新增員工（不用 LINE）
+                                </button>
+                                <button id="refresh-users-btn" 
+                                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition-colors">
+                                     重新整理
+                                </button>
+                            </div>
                         </div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-4" data-i18n="LOGIN_LINK_ADMIN_HINT">LINE 不能用的員工：按他的「登入連結」產生連結或 QR Code，讓他用自己的手機打開就能登入。沒有 LINE 的新員工請按「新增員工（不用 LINE）」。</p>
 
                         <!-- 統計卡片 -->
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

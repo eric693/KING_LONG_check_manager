@@ -292,20 +292,10 @@ function validateSession(sessionToken) {
  * 建立 Session
  */
 function writeSession_(userId) {
-  const sheet = SpreadsheetApp.getActive().getSheetByName(SHEET_SESSION);
-  const oneTimeToken = Utilities.getUuid();
-  const now = new Date();
-  const expiredAt = new Date(now.getTime() + SESSION_TTL_MS);
-
-  const range = sheet.getRange("B:B").createTextFinder(userId).findNext();
-
-  if (range) {
-    const row = range.getRow();
-    sheet.getRange(row, 1, 1, 4).setValues([[oneTimeToken, userId, now, expiredAt]]);
-  } else {
-    sheet.appendRow([oneTimeToken, userId, now, expiredAt]);
-  }
-  return oneTimeToken;
+  // 每次登入各自一個 session，不再覆蓋同一個人的舊 session：
+  // 以前在手機相機開的 Safari 登入（掃 QR Code 打卡），會把 LINE 裡的登入踢掉，
+  // 回 LINE 又要再登入一次。每人最多保留幾個裝置見 LoginLinks.gs 的 SESSION_MAX_PER_USER。
+  return createSessionForUser_(userId);
 }
 
 /**

@@ -235,11 +235,13 @@ const ADMIN_AUDIT_ACTIONS = {
   resetKioskKey: '重設平板打卡連結',
   disableKiosk: '停用平板打卡',
   saveShiftTemplates: '修改班別設定',
-  savePayrollAdjustments: '調整薪資單（銷售獎金、預支、手動項目）'
+  savePayrollAdjustments: '調整薪資單（銷售獎金、預支、手動項目）',
+  createNoLineEmployee: '新增員工（不使用 LINE）',
+  createLoginLink: '產生員工登入連結'
 };
 
 // 這些參數不寫進記錄：路由用的、登入憑證、個資
-const ADMIN_AUDIT_SKIP_PARAMS = ['action', 'token', 'callback', 'otoken', 'sessionToken'];
+const ADMIN_AUDIT_SKIP_PARAMS = ['action', 'token', 'callback', 'otoken', 'sessionToken', 'loginCode'];
 const ADMIN_AUDIT_MASK_PATTERN = /idNumber|bankAccount|account|password|secret/i;
 const ADMIN_AUDIT_MAX_VALUE = 120;
 const ADMIN_AUDIT_MAX_DETAIL = 1000;

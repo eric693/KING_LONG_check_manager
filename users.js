@@ -124,6 +124,11 @@ function renderUsersList(users) {
                             </button>
                         `}
                         
+                        <button onclick="openLoginLinkDialog('${escapeJsAttr(user.userId)}', '${escapeJsAttr(user.name)}')"
+                                class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-md transition-colors">
+                            ${escapeHtml(t('LOGIN_LINK_BTN'))}
+                        </button>
+                        
                         <button onclick="offboardEmployee('${escapeJsAttr(user.userId)}', '${escapeJsAttr(user.name)}')"
                                 class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold rounded-md transition-colors">
                             ${escapeHtml(t('AUDIT_ACTION_OFFBOARD_EMPLOYEE'))}
@@ -633,5 +638,119 @@ async function reinstateEmployee(userId, userName) {
     } catch (error) {
         console.error('辦理復職失敗:', error);
         showNotification(t('REINSTATE_FAILED'), 'error');
+    }
+}
+
+
+// ==================== 不透過 LINE 登入（GS/LoginLinks.gs） ====================
+
+function closeUsersDialog(id) {
+    const dialog = document.getElementById(id);
+    if (dialog) dialog.remove();
+}
+
+function openUsersDialog(id, innerHtml) {
+    closeUsersDialog(id);
+    const dialog = document.createElement('div');
+    dialog.id = id;
+    dialog.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    dialog.innerHTML = `<div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">${innerHtml}</div>`;
+    dialog.addEventListener('click', e => { if (e.target === dialog) closeUsersDialog(id); });
+    document.body.appendChild(dialog);
+    return dialog;
+}
+
+/** 管理員：建立沒有 LINE 的員工，建立後直接產生他的登入連結 */
+function openNoLineEmployeeDialog() {
+    const dialog = openUsersDialog('no-line-employee-dialog', `
+        <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">${escapeHtml(t('NO_LINE_ADD_TITLE'))}</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">${escapeHtml(t('NO_LINE_ADD_DESC'))}</p>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">${escapeHtml(t('NO_LINE_NAME_LABEL'))} <span class="text-red-500">*</span></label>
+        <input type="text" id="no-line-name" maxlength="50" placeholder="${escapeHtml(t('EDIT_NAME_PLACEHOLDER'))}"
+               class="w-full p-3 mb-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">${escapeHtml(t('NO_LINE_ROLE_LABEL'))}</label>
+        <select id="no-line-role" class="w-full p-3 mb-5 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+            <option value="員工">${escapeHtml(t('ROLE_EMPLOYEE'))}</option>
+            <option value="排班人員">${escapeHtml(t('ROLE_SCHEDULER'))}</option>
+        </select>
+        <div class="flex gap-3">
+            <button type="button" class="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg font-semibold" data-close>${escapeHtml(t('BTN_CANCEL'))}</button>
+            <button type="button" class="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold" data-submit>${escapeHtml(t('NO_LINE_CREATE_BTN'))}</button>
+        </div>`);
+    dialog.querySelector('[data-close]').onclick = () => closeUsersDialog('no-line-employee-dialog');
+    const submit = dialog.querySelector('[data-submit]');
+    submit.onclick = async () => {
+        const name = dialog.querySelector('#no-line-name').value.trim();
+        if (name.length < 2) {
+            showNotification(t('NOTIF_NAME_TOO_SHORT'), 'error');
+            return;
+        }
+        submit.disabled = true;
+        try {
+            const res = await callApifetch(`createNoLineEmployee&name=${encodeURIComponent(name)}` +
+                                           `&role=${encodeURIComponent(dialog.querySelector('#no-line-role').value)}`);
+            if (!res.ok) {
+                showNotification(res.msg || t('NO_LINE_CREATE_FAILED'), 'error');
+                submit.disabled = false;
+                return;
+            }
+            closeUsersDialog('no-line-employee-dialog');
+            showNotification(t('NO_LINE_CREATED', { name: res.name }), 'success');
+            if (typeof loadAllUsers === 'function') loadAllUsers();
+            openLoginLinkDialog(res.userId, res.name);
+        } catch (error) {
+            console.error('建立員工失敗:', error);
+            showNotification(t('NO_LINE_CREATE_FAILED'), 'error');
+            submit.disabled = false;
+        }
+    };
+    setTimeout(() => dialog.querySelector('#no-line-name').focus(), 50);
+}
+
+/** 管理員：替員工產生一次性登入連結，顯示連結與 QR Code */
+async function openLoginLinkDialog(userId, userName) {
+    const dialog = openUsersDialog('login-link-dialog', `
+        <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">${escapeHtml(t('LOGIN_LINK_TITLE', { name: userName }))}</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-300" data-body>${escapeHtml(t('LOADING'))}</p>`);
+    try {
+        const res = await callApifetch(`createLoginLink&userId=${encodeURIComponent(userId)}`);
+        if (!document.body.contains(dialog)) return;
+        if (!res.ok) {
+            dialog.querySelector('[data-body]').textContent = res.msg || t('LOGIN_LINK_FAILED');
+            return;
+        }
+        const base = API_CONFIG.redirectUrl.replace(/\/?$/, '/');
+        const url = `${base}?loginCode=${encodeURIComponent(res.code)}`;
+        const expires = new Date(res.expiresAt).toLocaleString();
+        dialog.firstElementChild.innerHTML = `
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">${escapeHtml(t('LOGIN_LINK_TITLE', { name: userName }))}</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">${escapeHtml(t('LOGIN_LINK_DESC'))}</p>
+            <div class="flex justify-center bg-white p-3 rounded-lg mb-3" data-qr></div>
+            <div class="flex gap-2 mb-2">
+                <input type="text" readonly value="${escapeHtml(url)}" data-url
+                       class="flex-1 min-w-0 p-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                <button type="button" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-lg" data-copy>${escapeHtml(t('KIOSK_COPY_BTN'))}</button>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">${escapeHtml(t('LOGIN_LINK_EXPIRES', { time: expires }))}</p>
+            <p class="text-xs text-amber-600 dark:text-amber-400 mb-4">${escapeHtml(t('LOGIN_LINK_WARNING'))}</p>
+            <button type="button" class="w-full px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg font-semibold" data-close>${escapeHtml(t('BTN_CLOSE'))}</button>`;
+        if (typeof QRCode === 'function') {
+            new QRCode(dialog.querySelector('[data-qr]'), { text: url, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.M });
+        }
+        dialog.querySelector('[data-copy]').onclick = async () => {
+            const input = dialog.querySelector('[data-url]');
+            try {
+                await navigator.clipboard.writeText(input.value);
+            } catch (error) {
+                input.select();
+                document.execCommand('copy');
+            }
+            showNotification(t('KIOSK_COPIED'), 'success');
+        };
+        dialog.querySelector('[data-close]').onclick = () => closeUsersDialog('login-link-dialog');
+    } catch (error) {
+        console.error('產生登入連結失敗:', error);
+        const body = dialog.querySelector('[data-body]');
+        if (body) body.textContent = t('LOGIN_LINK_FAILED');
     }
 }

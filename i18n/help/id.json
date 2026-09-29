@@ -24,7 +24,8 @@
         "\"Kejanggalan absensi\" ditentukan otomatis (absen kurang, terlambat, pulang cepat); setelah perbaikan disetujui, catatan itu hilang sendiri.",
         "Pengumuman diurutkan menurut tingkat kepentingan; tanda merah berarti penting, harap dibaca.",
         "Kode QR di tablet berganti setiap 30 detik, jadi foto atau kode yang dikirim ke orang lain tidak bisa dipakai. Pindai langsung di tempat.",
-        "Absen yang sama tidak bisa dua kali berturut-turut; jika urutannya salah, sistem memberi tahu absen berikutnya. Jika lupa absen istirahat, masalah kehadiran menampilkan tombol \"Tambah mulai / selesai istirahat\"."
+        "Absen yang sama tidak bisa dua kali berturut-turut; jika urutannya salah, sistem memberi tahu absen berikutnya. Jika lupa absen istirahat, masalah kehadiran menampilkan tombol \"Tambah mulai / selesai istirahat\".",
+        "Jika tidak bisa memakai LINE, minta \"tautan login\" ke admin dan buka di ponsel Anda. Setelah itu absen dan pindai QR tablet tanpa LINE."
       ],
       "terms": [
         [
@@ -186,7 +187,8 @@
         "「Pengajuan biaya menunggu」untuk meninjau uang muka dan penggantian karyawan; untuk penggantian, buka lampiran untuk melihat foto bukti.",
         "Di「Kios absen」, isi nama lokasi lalu buat tautan. Buka di tablet kantor dan biarkan menyala; layar terus menampilkan kode QR masuk/pulang yang berganti otomatis.「Absen kode QR」digunakan untuk membuat kode QR sementara.",
         "「Log aktivitas」bisa dicari per bulan, tindakan, dan kata kunci untuk melihat siapa mengubah persetujuan, peran, karyawan, jadwal, atau pengaturan gaji, dan kapan.",
-        "Tombol「Ubah nama」di manajemen karyawan mengubah nama LINE karyawan menjadi nama asli."
+        "Tombol「Ubah nama」di manajemen karyawan mengubah nama LINE karyawan menjadi nama asli.",
+        "\"Manajemen karyawan\": untuk karyawan yang tidak bisa memakai LINE, tekan \"Tautan login\" untuk membuat tautan atau QR yang dibuka di ponselnya sendiri; karyawan baru tanpa LINE dibuat dengan \"Tambah karyawan (tanpa LINE)\". Tautan hanya sekali pakai; jika salah kirim, buat yang baru dan yang lama tidak berlaku."
       ],
       "notes": [
         "Persetujuan langsung memengaruhi absensi dan perhitungan gaji; saat menolak, tulis alasannya dengan jelas.",

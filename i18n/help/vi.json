@@ -24,7 +24,8 @@
         "\"Bất thường chấm công\" do hệ thống tự nhận định (thiếu chấm công, đi muộn, về sớm); khi đề nghị bổ sung được duyệt, mục này tự mất.",
         "Thông báo sắp theo mức quan trọng; mục màu đỏ là thông báo quan trọng, hãy đọc kỹ.",
         "Mã QR trên máy tính bảng đổi mỗi 30 giây, ảnh chụp hoặc mã gửi cho người khác sẽ không dùng được. Hãy quét tại chỗ.",
-        "Không thể chấm cùng một loại hai lần liên tiếp; nếu sai thứ tự, hệ thống sẽ cho biết lần tiếp theo cần chấm loại nào. Quên chấm giờ nghỉ thì mục bất thường sẽ có nút \"Bổ sung bắt đầu / kết thúc nghỉ\"."
+        "Không thể chấm cùng một loại hai lần liên tiếp; nếu sai thứ tự, hệ thống sẽ cho biết lần tiếp theo cần chấm loại nào. Quên chấm giờ nghỉ thì mục bất thường sẽ có nút \"Bổ sung bắt đầu / kết thúc nghỉ\".",
+        "Nếu không dùng được LINE, hãy xin quản trị viên \"liên kết đăng nhập\" và mở bằng điện thoại của bạn. Sau đó chấm công và quét QR trên máy tính bảng không cần LINE."
       ],
       "terms": [
         [
@@ -186,7 +187,8 @@
         "「Đề nghị chi phí chờ duyệt」dùng để duyệt tạm ứng và hoàn ứng của nhân viên; với hoàn ứng có thể mở tệp đính kèm để xem ảnh hóa đơn.",
         "Trong「Máy chấm công」, nhập tên địa điểm rồi tạo liên kết. Mở trên máy tính bảng của công ty và để đó, màn hình sẽ liên tục hiển thị mã QR vào ca/tan ca tự đổi. 「Chấm công bằng mã QR」dùng để tạo mã QR dùng tạm thời.",
         "「Nhật ký thao tác」cho phép tìm theo tháng, thao tác và từ khóa để biết ai đã thay đổi phê duyệt, quyền, nhân viên, ca làm hay cài đặt lương vào lúc nào.",
-        "Nút「Sửa tên」trong quản lý nhân viên dùng để đổi tên LINE của nhân viên thành tên thật."
+        "Nút「Sửa tên」trong quản lý nhân viên dùng để đổi tên LINE của nhân viên thành tên thật.",
+        "\"Quản lý nhân viên\": nhân viên không dùng được LINE, bấm \"Liên kết đăng nhập\" để tạo liên kết hoặc mã QR cho họ mở bằng điện thoại của mình; nhân viên mới không có LINE thì tạo bằng \"Thêm nhân viên (không dùng LINE)\". Mỗi liên kết chỉ dùng một lần; gửi nhầm thì tạo lại, liên kết cũ mất hiệu lực."
       ],
       "notes": [
         "Duyệt xong là ảnh hưởng ngay tới chấm công và tính lương; khi từ chối hãy ghi rõ lý do.",

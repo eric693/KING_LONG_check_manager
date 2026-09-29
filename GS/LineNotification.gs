@@ -10,6 +10,10 @@ const LINE_MESSAGING_API_URL = "https://api.line.me/v2/bot/message/push";
  * @param {Object} flexMessage - Flex Message 物件
  */
 function sendLineNotification_(userId, flexMessage) {
+  // 管理員建立、沒有 LINE 的員工（ID 以 M 開頭）收不到 LINE 通知，直接略過
+  if (typeof isLineUserId_ === 'function' && !isLineUserId_(userId)) {
+    return { ok: false, error: 'NOT_A_LINE_USER' };
+  }
   const payload = {
     to: userId,
     messages: [flexMessage]
