@@ -95,10 +95,9 @@ function isEmployeeRowMisaligned_(row) {
   const name = String(row[2] || '').trim();
   const picture = row[3];
   const pictureIsDate = picture instanceof Date || Object.prototype.toString.call(picture) === '[object Date]';
-  // 刪欄之後又登入過的人：C、D 被寫回正確位置，但權限跑到 E 欄（E 應該是建立時間）
-  const createdText = String(row[4] || '').trim();
-  const roleInCreated = !(row[4] instanceof Date) && ['管理員', '員工', '排班人員'].indexOf(createdText) !== -1 &&
-                        ['管理員', '員工', '排班人員'].indexOf(String(row[5] || '').trim()) === -1;
+  // E 應該是建立時間；權限文字跑到 E 就是錯位了（正確的列不會有這種情況）
+  const roleInCreated = !(row[4] instanceof Date) &&
+                        ['管理員', '員工', '排班人員'].indexOf(String(row[4] || '').trim()) !== -1;
   return /^https?:\/\//i.test(name) || pictureIsDate || roleInCreated;
 }
 

@@ -4,7 +4,7 @@
 //
 // 正確的欄位：A 員工ID、B email、C 姓名、D 大頭照網址、E 建立時間、F 權限、G 到職日期、H 狀態、I 鎖定姓名
 //
-// 刪欄之後會出現兩種壞掉的列：
+// 刪欄之後會出現好幾種壞掉的列（見 planEmployeeRowRepair_ 的說明），例如：
 //   1. 刪欄後沒再登入過的人：整列往左移一格 → C 是大頭照網址
 //      刪的是 B：[ID, 姓名, 大頭照, 建立時間, 權限, 到職日, 狀態, 鎖定姓名]
 //      刪的是 C：[ID, email, 大頭照, 建立時間, 權限, 到職日, 狀態, 鎖定姓名]（姓名只剩鎖定姓名那一份）
@@ -28,38 +28,74 @@ function repairIsDate_(value) {
   return value instanceof Date || Object.prototype.toString.call(value) === '[object Date]';
 }
 
+const EMPLOYEE_STATUS_VALUES = ['啟用', '離職', '停用'];
+
+function repairText_(value) {
+  return repairIsDate_(value) ? '' : String(value === null || value === undefined ? '' : value).trim();
+}
+
+function repairLooksLikeDate_(value) {
+  return repairIsDate_(value) || /^\d{4}[\/-]\d{1,2}[\/-]\d{1,2}/.test(repairText_(value));
+}
+
+function repairIsRole_(value) {
+  return EMPLOYEE_ROLE_VALUES.indexOf(repairText_(value)) !== -1;
+}
+
+function repairIsStatus_(value) {
+  return EMPLOYEE_STATUS_VALUES.indexOf(repairText_(value)) !== -1;
+}
+
+/**
+ * 這一列是不是正確的新格式：E 是建立時間（或空白）、權限不在 E、C 不是網址、D 不是時間
+ */
+function isEmployeeRowAligned_(r) {
+  return !repairIsRole_(r[4]) && !repairIsUrl_(r[2]) && !repairLooksLikeDate_(r[3]);
+}
+
 /**
  * 判斷一列要怎麼修。回傳 null 代表這列是正常的
+ *
+ * 刪欄後，舊程式還是照「原本的位置」寫入，所以一列可能混著好幾種狀況：
+ *   沒動過的欄位   → 往左移了一格（B 姓名、C 大頭照、D 建立時間、E 權限、F 到職日、G 狀態、H 鎖定姓名）
+ *   LINE 登入寫回  → B email、C 姓名、D 大頭照、H「啟用」
+ *   改真實姓名寫回 → C 姓名、I 鎖定姓名（原本的大頭照被蓋掉）
+ *   調整權限寫回   → F 權限（比 E 新）
+ *   離職／復職     → H 狀態（比 G 新）
+ * 所以不照「哪一種情況」整列搬，而是逐項找出每個值最可能在哪一格。
+ *
  * @returns {{ kind: string, fixed: Array }|null}
  */
 function planEmployeeRowRepair_(row) {
   const r = row.slice(0, 9);
   while (r.length < 9) r.push('');
+  if (isEmployeeRowAligned_(r)) return null;
 
-  // 情況 1：整列左移一格（C 是大頭照網址）
-  if (repairIsUrl_(r[2])) {
-    const b = String(r[1] || '').trim();
-    const bIsEmail = b === '' || b.indexOf('@') !== -1;
-    const email = bIsEmail ? b : '';
-    const name = bIsEmail ? String(r[7] || '').trim() : b;   // 刪的是姓名欄時，只剩鎖定姓名
-    return {
-      kind: bIsEmail ? '左移一格（C 姓名欄被刪）' : '左移一格（B email 欄被刪）',
-      fixed: [r[0], email, name, r[2], r[3], r[4], r[5], r[6] || '啟用', r[7] || '']
-    };
-  }
+  const t = i => repairText_(r[i]);
 
-  // 情況 2：刪欄後登入過（E 是權限文字、H 被寫成「啟用」）
-  const eText = String(r[4] || '').trim();
-  const eIsRole = !repairIsDate_(r[4]) && EMPLOYEE_ROLE_VALUES.indexOf(eText) !== -1;
-  const fIsRole = EMPLOYEE_ROLE_VALUES.indexOf(String(r[5] || '').trim()) !== -1;
-  if (eIsRole && !fIsRole) {
-    return {
-      kind: '刪欄後登入過（權限在 E 欄）',
-      fixed: [r[0], r[1], r[2], r[3], '', eText, r[5], String(r[6] || '').trim() || '啟用', '']
-    };
-  }
+  // 大頭照：C 或 D 裡的網址（改過真實姓名的人已經被蓋掉，只能留空，下次 LINE 登入會補回）
+  const picture = repairIsUrl_(r[2]) ? t(2) : (repairIsUrl_(r[3]) ? t(3) : '');
+  // 建立時間：D 如果是時間
+  const created = repairLooksLikeDate_(r[3]) ? r[3] : '';
+  // 權限：F 是權限（刪欄後在後台改過）優先，否則 E
+  const role = repairIsRole_(r[5]) ? t(5) : (repairIsRole_(r[4]) ? t(4) : '員工');
+  // 到職日：F 不是權限時就是到職日
+  const hireDate = repairIsRole_(r[5]) ? '' : r[5];
+  // 狀態：H 是狀態字（登入或離職寫回的，比較新）優先，否則 G
+  const status = repairIsStatus_(r[7]) ? t(7) : (repairIsStatus_(r[6]) ? t(6) : '啟用');
+  // 鎖定姓名：I（刪欄後改真實姓名寫的）優先，否則 H（原本的鎖定姓名，左移過來的）
+  const override = t(8) || (repairIsStatus_(r[7]) ? '' : t(7));
+  // 姓名：鎖定姓名 > C（登入或改名寫回的，不是網址、不是時間）> B（左移過來的 LINE 名稱，不是 email）
+  const cName = (!repairIsUrl_(r[2]) && !repairLooksLikeDate_(r[2])) ? t(2) : '';
+  const bName = t(1).indexOf('@') === -1 ? t(1) : '';
+  const name = override || cName || bName;
+  // email：B 如果是 email
+  const email = t(1).indexOf('@') !== -1 ? t(1) : '';
 
-  return null;
+  return {
+    kind: '欄位錯位',
+    fixed: [r[0], email, name, picture, created, role, hireDate, status, override]
+  };
 }
 
 function runEmployeeSheetRepair_(apply) {
