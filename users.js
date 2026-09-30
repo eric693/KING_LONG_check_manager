@@ -28,6 +28,8 @@ async function loadAllUsers() {
         
         if (loadingEl) loadingEl.style.display = 'none';
         
+        renderEmployeeSheetWarning(res.layoutWarning);
+        
         if (res.ok && res.users && res.users.length > 0) {
             allUsersCache = res.users;
             renderUsersList(allUsersCache);
@@ -148,6 +150,27 @@ function renderUsersList(users) {
         
         listEl.appendChild(div);
     });
+}
+
+/**
+ * 「員工名單」試算表欄位錯位時的警告（後端 getAllUsers 的 layoutWarning）
+ */
+function renderEmployeeSheetWarning(warning) {
+    const listEl = document.getElementById('users-list');
+    if (!listEl) return;
+    let box = document.getElementById('employee-sheet-warning');
+    if (!warning) {
+        if (box) box.remove();
+        return;
+    }
+    if (!box) {
+        box = document.createElement('div');
+        box.id = 'employee-sheet-warning';
+        box.className = 'mb-4 p-4 rounded-lg border-2 border-red-400 bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-200 text-sm';
+        listEl.parentElement.insertBefore(box, listEl);
+    }
+    box.innerHTML = `<p class="font-bold mb-1">${escapeHtml(t('EMPLOYEE_SHEET_MISALIGNED_TITLE'))}</p>
+        <p>${escapeHtml(t('EMPLOYEE_SHEET_MISALIGNED', warning.params || {}))}</p>`;
 }
 
 /**

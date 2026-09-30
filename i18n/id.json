@@ -1377,5 +1377,7 @@
   "LOGIN_LINK_INACTIVE": "Akun ini dinonaktifkan. Hubungi admin.",
   "BTN_CLOSE": "Tutup",
   "AUDIT_ACTION_CREATE_NO_LINE_EMPLOYEE": "Tambah karyawan (tanpa LINE)",
-  "AUDIT_ACTION_CREATE_LOGIN_LINK": "Buat tautan login karyawan"
+  "AUDIT_ACTION_CREATE_LOGIN_LINK": "Buat tautan login karyawan",
+  "EMPLOYEE_SHEET_MISALIGNED_TITLE": "⚠ Kolom sheet \"員工名單\" bergeser",
+  "EMPLOYEE_SHEET_MISALIGNED": "{count} baris memiliki nama, foto, dan peran di kolom yang salah (baris {rows}), biasanya karena satu kolom dihapus atau disisipkan di Google Sheets. Gunakan File → Histori versi untuk menemukan kolom yang hilang dan kembalikan, dan jangan ubah peran di sini sampai diperbaiki."
 }

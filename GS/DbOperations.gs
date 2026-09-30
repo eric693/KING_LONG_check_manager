@@ -35,6 +35,11 @@ function writeEmployee_(profile) {
   // 檢查是否已存在
   for (let i = 1; i < values.length; i++) {
     if (values[i][0] === employeeId) {
+      // 這一列的欄位已經錯位（有人在試算表刪了欄）：照位置寫只會越寫越亂，先不動，等管理員修好
+      if (isEmployeeRowMisaligned_(values[i])) {
+        Logger.log(` 員工名單第 ${i + 1} 列欄位錯位，登入時不更新這一列`);
+        return values[i];
+      }
       
       // ⭐⭐⭐ 關鍵修正：檢查是否有手動設定的姓名
       const currentName = values[i][2];           // C 欄：displayName（目前顯示的姓名）
@@ -82,6 +87,22 @@ function writeEmployee_(profile) {
 // DbOperations.gs - 修正後的 findEmployeeByLineUserId_ 函數
 
 /**
+ * 員工名單一列的欄位是不是錯位了。
+ * 正確的樣子：C 姓名、D 大頭照網址（或空白）、E 建立時間。
+ * 有人在試算表刪掉一整欄時，大頭照網址會跑到 C、建立時間跑到 D。
+ */
+function isEmployeeRowMisaligned_(row) {
+  const name = String(row[2] || '').trim();
+  const picture = row[3];
+  const pictureIsDate = picture instanceof Date || Object.prototype.toString.call(picture) === '[object Date]';
+  // 刪欄之後又登入過的人：C、D 被寫回正確位置，但權限跑到 E 欄（E 應該是建立時間）
+  const createdText = String(row[4] || '').trim();
+  const roleInCreated = !(row[4] instanceof Date) && ['管理員', '員工', '排班人員'].indexOf(createdText) !== -1 &&
+                        ['管理員', '員工', '排班人員'].indexOf(String(row[5] || '').trim()) === -1;
+  return /^https?:\/\//i.test(name) || pictureIsDate || roleInCreated;
+}
+
+/**
  *  修正版：優先使用手動設定的姓名
  */
 function findEmployeeByLineUserId_(userId) {
@@ -109,7 +130,9 @@ function findEmployeeByLineUserId_(userId) {
         email: values[i][1] || "",
         name: finalName,             // ⭐ 使用最終姓名
         picture: values[i][3],
-        dept: values[i][5] || "管理員",
+        // 權限欄空白時不能當成管理員：欄位被刪、錯位時整間公司都會變成管理員。
+        // 只有最早設定的 ADMIN_LIST 在空白時仍視為管理員（讓老闆不會被鎖在外面）
+        dept: values[i][5] || (ADMIN_LIST.includes(String(values[i][0]).trim()) ? "管理員" : "員工"),
         status: values[i][7] || "啟用"
       };
     }
@@ -207,6 +230,13 @@ function getAllUsers() {
       };
     }
     
+    // 欄位錯位（有人在試算表刪了欄）：清單照樣回傳（排班、薪資頁還要用員工ID），
+    // 但附上警告，員工管理畫面會提醒管理員去修試算表
+    const misaligned = [];
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] && isEmployeeRowMisaligned_(data[i])) misaligned.push(i + 1);
+    }
+    
     const users = [];
     
     Logger.log(' 開始解析員工資料...');
@@ -257,7 +287,10 @@ function getAllUsers() {
       ok: true,
       users: users,
       count: users.length,
-      msg: `成功取得 ${users.length} 筆員工資料`
+      msg: `成功取得 ${users.length} 筆員工資料`,
+      layoutWarning: misaligned.length > 0
+        ? { code: 'EMPLOYEE_SHEET_MISALIGNED', params: { rows: misaligned.slice(0, 20).join(', '), count: misaligned.length } }
+        : null
     };
     
   } catch (error) {

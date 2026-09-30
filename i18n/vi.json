@@ -1433,5 +1433,7 @@
   "LOGIN_LINK_INACTIVE": "Tài khoản này đã bị vô hiệu, hãy liên hệ quản trị viên.",
   "BTN_CLOSE": "Đóng",
   "AUDIT_ACTION_CREATE_NO_LINE_EMPLOYEE": "Thêm nhân viên (không dùng LINE)",
-  "AUDIT_ACTION_CREATE_LOGIN_LINK": "Tạo liên kết đăng nhập cho nhân viên"
+  "AUDIT_ACTION_CREATE_LOGIN_LINK": "Tạo liên kết đăng nhập cho nhân viên",
+  "EMPLOYEE_SHEET_MISALIGNED_TITLE": "⚠ Các cột của trang \"員工名單\" bị lệch",
+  "EMPLOYEE_SHEET_MISALIGNED": "{count} dòng có tên, ảnh và quyền nằm sai cột (dòng {rows}), thường do ai đó xóa hoặc chèn nguyên một cột trong Google Sheets. Dùng \"Tệp → Lịch sử phiên bản\" để tìm cột bị xóa và thêm lại, và đừng đổi quyền ở đây cho đến khi sửa xong."
 }

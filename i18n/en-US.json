@@ -1398,5 +1398,7 @@
   "LOGIN_LINK_INACTIVE": "This account is disabled. Please contact an admin.",
   "BTN_CLOSE": "Close",
   "AUDIT_ACTION_CREATE_NO_LINE_EMPLOYEE": "Add employee (no LINE)",
-  "AUDIT_ACTION_CREATE_LOGIN_LINK": "Create employee login link"
+  "AUDIT_ACTION_CREATE_LOGIN_LINK": "Create employee login link",
+  "EMPLOYEE_SHEET_MISALIGNED_TITLE": "⚠ The 員工名單 (employee list) sheet columns are misaligned",
+  "EMPLOYEE_SHEET_MISALIGNED": "{count} rows have their name, picture and role in the wrong columns (rows {rows}), usually because a whole column was deleted or inserted in the Google Sheet. Use File → Version history in the sheet to find the missing column and put it back, and do not change roles here until it is fixed."
 }

@@ -1417,5 +1417,7 @@
   "LOGIN_LINK_INACTIVE": "這個帳號已停用，請聯絡管理員",
   "BTN_CLOSE": "關閉",
   "AUDIT_ACTION_CREATE_NO_LINE_EMPLOYEE": "新增員工（不使用 LINE）",
-  "AUDIT_ACTION_CREATE_LOGIN_LINK": "產生員工登入連結"
+  "AUDIT_ACTION_CREATE_LOGIN_LINK": "產生員工登入連結",
+  "EMPLOYEE_SHEET_MISALIGNED_TITLE": "⚠ 「員工名單」試算表的欄位錯位了",
+  "EMPLOYEE_SHEET_MISALIGNED": "有 {count} 列的姓名、大頭照、權限跑到錯的欄位（第 {rows} 列），通常是有人在 Google 試算表刪除或插入了一整欄。請到試算表的「檔案 → 版本記錄」找出被刪的欄並補回，修好之前請先不要在這裡調整員工權限。"
 }

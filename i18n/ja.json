@@ -1377,5 +1377,7 @@
   "LOGIN_LINK_INACTIVE": "このアカウントは停止されています。管理者に連絡してください。",
   "BTN_CLOSE": "閉じる",
   "AUDIT_ACTION_CREATE_NO_LINE_EMPLOYEE": "従業員を追加（LINE なし）",
-  "AUDIT_ACTION_CREATE_LOGIN_LINK": "従業員のログインリンクを発行"
+  "AUDIT_ACTION_CREATE_LOGIN_LINK": "従業員のログインリンクを発行",
+  "EMPLOYEE_SHEET_MISALIGNED_TITLE": "⚠ 「員工名單」シートの列がずれています",
+  "EMPLOYEE_SHEET_MISALIGNED": "{count} 行で氏名・写真・権限が別の列に入っています（{rows} 行目）。Google スプレッドシートで列ごと削除・挿入された可能性があります。シートの「ファイル → 変更履歴」で削除された列を探して戻し、直るまでここで権限を変更しないでください。"
 }

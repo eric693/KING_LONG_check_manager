@@ -1377,5 +1377,7 @@
   "LOGIN_LINK_INACTIVE": "비활성화된 계정입니다. 관리자에게 문의하세요.",
   "BTN_CLOSE": "닫기",
   "AUDIT_ACTION_CREATE_NO_LINE_EMPLOYEE": "직원 추가(LINE 없이)",
-  "AUDIT_ACTION_CREATE_LOGIN_LINK": "직원 로그인 링크 생성"
+  "AUDIT_ACTION_CREATE_LOGIN_LINK": "직원 로그인 링크 생성",
+  "EMPLOYEE_SHEET_MISALIGNED_TITLE": "⚠ \"員工名單\" 시트의 열이 어긋났습니다",
+  "EMPLOYEE_SHEET_MISALIGNED": "{count}개 행의 이름·사진·권한이 다른 열에 들어가 있습니다({rows}행). 보통 Google 시트에서 열 전체를 삭제하거나 삽입했을 때 생깁니다. 시트의 \"파일 → 버전 기록\"에서 빠진 열을 찾아 되돌리고, 고치기 전까지는 여기서 권한을 바꾸지 마세요."
 }
