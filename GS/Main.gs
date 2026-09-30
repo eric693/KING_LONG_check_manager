@@ -36,6 +36,62 @@ const ROUTE_ACCESS = {
 };
 
 /**
+ * 健康檢查（不需登入）：確認 Apps Script 上每個 .gs 檔都在、而且是最新版。
+ *
+ * 部署是手動複製貼上的，漏了一個檔、或貼到錯的檔，某些功能就會整個壞掉
+ * （例如少了 PunchRules.gs，所有打卡都會出現「系統錯誤」）。
+ * 每個檔挑一個「最新版才有」的標記來檢查；只回報缺了什麼，不含任何資料。
+ */
+const DEPLOY_CHECKS = [
+  ['AdminTools.gs', () => typeof batchInitializeAllEmployeesLeave === 'function'],
+  ['Attachments.gs', () => typeof getAttachmentSheet_ === 'function'],
+  ['AuditLog.gs', () => typeof logAdminAction_ === 'function' && typeof getSalaryAuditSheet_ === 'function'],
+  ['Constants.gs', () => typeof getLeaveTypeInfo === 'function'],
+  ['Dailysalary.gs', () => typeof calculateDailySalary === 'function'],
+  ['DatabaseSetup.gs', () => typeof setupLeaveSystemDatabase === 'function'],
+  ['DbOperations.gs', () => typeof isEmployeeRowMisaligned_ === 'function' && typeof writeSession_ === 'function' &&
+                            String(writeSession_).indexOf('createSessionForUser_') !== -1],
+  ['EmployeeSheetRepair.gs', () => typeof readOriginalLockedNames_ === 'function'],
+  ['Expense.gs', () => typeof handleReviewExpense === 'function'],
+  ['Handlers.gs', () => typeof handleGetLoginUrl === 'function' && handleGetLoginUrl.length >= 1 &&
+                         String(handleLinePunchWithToken).indexOf('checkPunchSequence_') !== -1],
+  ['LeaveManagement.gs', () => typeof submitLeaveRequest === 'function'],
+  ['LineApi.gs', () => typeof getLineUserInfo_ === 'function'],
+  ['LineBotPunch.gs', () => typeof executePunch === 'function' && String(determinePunchType).indexOf('nextPunchType_') !== -1],
+  ['LineNotification.gs', () => typeof sendLineNotification_ === 'function' &&
+                                 String(sendLineNotification_).indexOf('isLineUserId_') !== -1],
+  ['LoginLinks.gs', () => typeof handleRedeemLoginLink === 'function' && typeof createSessionForUser_ === 'function'],
+  ['Offboarding.gs', () => typeof handleOffboardEmployee === 'function'],
+  ['OvertimeOperations.gs', () => typeof initOvertimeSheet === 'function'],
+  ['PayrollRules.gs', () => typeof applyPayrollRules_ === 'function' && typeof payrollAttendanceZh_ === 'function'],
+  ['PunchRules.gs', () => typeof checkPunchSequence_ === 'function' && typeof computeDayWorkFromPunches_ === 'function'],
+  ['QrPunch.gs', () => typeof qrPunch === 'function' && String(qrPunch).indexOf('checkPunchSequence_') !== -1],
+  ['SalaryManagement.gs', () => typeof calculateMonthlySalary === 'function' && calculateMonthlySalary.length >= 3],
+  ['SalaryTools.gs', () => typeof listPayableEmployees_ === 'function'],
+  ['ShiftManagement.gs', () => typeof shiftRowBreakMinutes_ === 'function'],
+  ['ShiftTemplates.gs', () => typeof computeNetWorkMinutes_ === 'function' && typeof handleSaveShiftTemplates === 'function'],
+  ['SystemSettings.gs', () => typeof validatePayrollRules_ === 'function'],
+  ['Utils.gs', () => typeof getParam === 'function' && typeof getSheetValues_ === 'function'],
+  ['WorklogHandlers.gs', () => typeof handleSubmitWorklog === 'function'],
+  ['WorklogOperations.gs', () => typeof getWorklogSheet === 'function']
+];
+
+function handleHealthCheck() {
+  const problems = [];
+  DEPLOY_CHECKS.forEach(([file, check]) => {
+    let ok = false;
+    try { ok = check(); } catch (error) { ok = false; }
+    if (!ok) problems.push(file);
+  });
+  return {
+    ok: problems.length === 0,
+    checked: DEPLOY_CHECKS.length,
+    // 這些檔不存在、或還是舊版：請從 GitHub 複製最新的內容覆蓋
+    missingOrOutdated: problems
+  };
+}
+
+/**
  * 檢查這次請求有沒有權限。通過時回傳 { ok: true, user }（不需檢查的 action，user 為 null）
  */
 function checkRouteAccess_(action, params) {
@@ -490,6 +546,8 @@ function doGet(e) {
         return respond1(handleInitApp(e.parameter));
       case "testEndpoint":
         return respond1({ ok: true, msg: "CORS 測試成功!" });
+      case "healthCheck":
+        return respond1(handleHealthCheck());
       
       // ==================== 預設：返回 HTML 頁面 ====================
       default:

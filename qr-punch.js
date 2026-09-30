@@ -107,7 +107,9 @@ async function handleLinePunchFromUrl() {
                 ERR_PUNCH_SAME_TYPE: t('ERR_PUNCH_SAME_TYPE', res.params || {}),
                 ERR_PUNCH_LIMIT: t('ERR_PUNCH_LIMIT', res.params || {})
             };
-            setResult('❌', t('LPT_FAILED'), msgMap[res.code] || punchServerMessage(res, 'LPT_TRY_LATER'), '#f44336');
+            const failText = msgMap[res.code] || punchServerMessage(res, 'LPT_TRY_LATER');
+            // 系統錯誤時附上原因，截圖給管理員就知道是哪裡壞了
+            setResult('❌', t('LPT_FAILED'), res.detail ? `${failText}（${res.detail}）` : failText, '#f44336');
         }
     } catch (err) {
         const geoErrors = { 1: t('LPT_GEO_DENIED'), 3: t('LPT_GEO_TIMEOUT') };

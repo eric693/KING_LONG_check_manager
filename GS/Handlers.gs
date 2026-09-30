@@ -299,7 +299,8 @@ function handleLinePunchWithToken(params) {
 
   } catch (err) {
     Logger.log('handleLinePunchWithToken 錯誤: ' + err.message);
-    return { ok: false, code: 'ERR_INTERNAL', msg: '系統錯誤，請稍後再試' };
+    // 附上原因：部署漏了檔案時（例如沒有 PunchRules.gs）畫面上就看得出是哪裡壞了
+    return { ok: false, code: 'ERR_INTERNAL', msg: '系統錯誤，請稍後再試', detail: String(err.message || err).slice(0, 200) };
   }
 }
 
