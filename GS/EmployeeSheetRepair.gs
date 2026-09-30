@@ -98,6 +98,31 @@ function planEmployeeRowRepair_(row) {
   };
 }
 
+/**
+ * 最早那份「員工名單_備份_…」（第一次修復前的原始資料）裡每個人的鎖定姓名
+ * @returns {Object<string, string>} userId → 鎖定姓名
+ */
+function readOriginalLockedNames_(ss) {
+  const backups = ss.getSheets()
+    .map(sh => sh.getName())
+    .filter(name => name.indexOf('員工名單_備份_') === 0)
+    .sort();
+  if (backups.length === 0) return {};
+
+  const data = ss.getSheetByName(backups[0]).getDataRange().getValues();
+  const locks = {};
+  for (let i = 1; i < data.length; i++) {
+    const id = String(data[i][0] || '').trim();
+    if (!id) continue;
+    const row = data[i].slice(0, 9);
+    while (row.length < 9) row.push('');
+    const plan = planEmployeeRowRepair_(row);
+    const lock = repairText_((plan ? plan.fixed : row)[8]);
+    if (lock) locks[id] = lock;
+  }
+  return locks;
+}
+
 function runEmployeeSheetRepair_(apply) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_EMPLOYEES);
@@ -107,13 +132,29 @@ function runEmployeeSheetRepair_(apply) {
   }
 
   const data = sheet.getDataRange().getValues();
+  const originalLocks = readOriginalLockedNames_(ss);
   const plans = [];
   for (let i = 1; i < data.length; i++) {
-    if (!String(data[i][0] || '').trim()) continue;
-    const plan = planEmployeeRowRepair_(data[i]);
+    const id = String(data[i][0] || '').trim();
+    if (!id) continue;
+    let plan = planEmployeeRowRepair_(data[i]);
+
+    // 鎖定姓名被清掉的（舊版修復程式會這樣）：從最早的備份補回來，
+    // 不然下次 LINE 登入，姓名就會被 LINE 名稱蓋掉
+    const lock = originalLocks[id];
+    const current = plan ? plan.fixed : data[i].slice(0, 9);
+    while (current.length < 9) current.push('');
+    if (lock && !repairText_(current[8])) {
+      const fixed = current.slice();
+      fixed[8] = lock;
+      fixed[2] = lock;
+      plan = { kind: plan ? plan.kind + '＋補回鎖定姓名' : '補回鎖定姓名', fixed: fixed };
+    }
+
     if (plan) plans.push({ row: i + 1, before: data[i].slice(0, 9), plan: plan });
   }
 
+  Logger.log('員工名單修復程式 第 3 版（逐欄判斷、從最早的備份補回鎖定姓名）');
   const show = v => repairIsDate_(v) ? Utilities.formatDate(v, 'Asia/Taipei', 'yyyy-MM-dd HH:mm') : String(v);
   Logger.log(`「員工名單」共 ${data.length - 1} 列，需要修正 ${plans.length} 列`);
   plans.forEach(p => {
