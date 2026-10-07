@@ -13,7 +13,8 @@ const AUDIT_ACTION_KEYS = [
   'updateSalaryRules', 'resetSalaryRules', 'saveSalaryItems', 'updateWorkSchedule', 'resetWorkSchedule',
   'addAnnouncement', 'deleteAnnouncement', 'deleteAttachment', 'reviewExpense',
   'createQrToken', 'resetKioskKey', 'disableKiosk', 'saveShiftTemplates',
-  'savePayrollAdjustments', 'createNoLineEmployee', 'createLoginLink'
+  'savePayrollAdjustments', 'createNoLineEmployee', 'createLoginLink',
+  'saveManualPayslip', 'deleteManualPayslip'
 ];
 
 let auditLogInitialized = false;

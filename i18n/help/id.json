@@ -298,7 +298,8 @@
       ],
       "notes": [
         "Data gaji rahasia; hindari membuka atau memotret layarnya di perangkat bersama.",
-        "Bagian bawah slip menunjukkan apakah Anda mendapat bonus kehadiran bulan ini dan alasannya, serta catatan dari admin."
+        "Bagian bawah slip menunjukkan apakah Anda mendapat bonus kehadiran bulan ini dan alasannya, serta catatan dari admin.",
+        "Untuk bulan sebelum sistem dipakai, slip Anda mungkin diisi manual oleh admin; jumlah yang tampil adalah yang mereka isi."
       ]
     },
     "salary-setting": {
@@ -360,7 +361,8 @@
         "Menghitung ulang bulan yang sama akan menimpa hasil sebelumnya.",
         "Absensi yang hilang membuat jam karyawan per jam jadi kurang, jadi bereskan dulu antrean koreksi absensi.",
         "Kosongkan potongan kasbon untuk memakai kasbon yang disetujui bulan ini; kosongkan bonus kehadiran untuk mengikuti aturan, atau isi jumlah untuk menimpanya.",
-        "Penyesuaian disimpan di slip dan dipakai lagi setiap dihitung ulang, termasuk saat karyawan membuka slipnya sendiri."
+        "Penyesuaian disimpan di slip dan dipakai lagi setiap dihitung ulang, termasuk saat karyawan membuka slipnya sendiri.",
+        "Jika bulan itu slip manual, layar ini hanya menampilkannya dan mengarahkan ke \"Slip gaji manual\" di bawah; tidak dihitung ulang."
       ],
       "terms": [
         [
@@ -370,6 +372,34 @@
         [
           "Gaji per jam",
           "Dibayar sesuai jam kerja nyata, diambil dari catatan absensi."
+        ]
+      ]
+    },
+    "manual-payslip": {
+      "intro": "Isi sendiri setiap jumlah yang akan dibayar ke karyawan untuk satu bulan; sistem hanya menjumlahkan menjadi gaji bersih. Untuk bulan sebelum sistem dipakai (mis. gaji bulan sebelum peluncuran) atau kasus khusus.",
+      "steps": [
+        "Pilih karyawan dan bulan (bawaan: bulan lalu), lalu tekan \"Mulai isi\".",
+        "Jika belum ada slip manual, jumlah tetap dari pengaturan gaji (gaji pokok, tunjangan, asuransi) sudah terisi; ubah menjadi jumlah yang benar-benar dibayar bulan ini.",
+        "Isi pendapatan (gaji pokok, tunjangan, bonus kehadiran, lembur, uang makan, bonus penjualan, hadiah ulang tahun…) dan potongan (asuransi, pajak, cuti, kasbon…). Untuk karyawan per jam bisa diisi juga tarif per jam dan jam kerja, yang tampil di slip.",
+        "Tambahkan hal lain dengan \"Tambah item\": pilih tambah atau kurang, isi nama dan jumlah. Penjelasan ditulis di \"Catatan\"; karyawan melihatnya di slip.",
+        "Total pendapatan, total potongan, dan gaji bersih langsung terlihat. Tekan \"Pratinjau slip\" untuk melihat tampilan bagi karyawan.",
+        "Jika sudah benar, tekan \"Simpan slip manual\". Karyawan memilih bulan itu di \"Gaji saya\" untuk melihat, mencetak, dan mengonfirmasi."
+      ],
+      "notes": [
+        "Setelah disimpan, tidak ada perhitungan otomatis (karyawan membuka slip, hitung massal, ubah pengaturan gaji, persetujuan lembur) yang menimpa slip manual; untuk mengubah, ubah di sini lalu simpan lagi.",
+        "Jika bulan itu sudah ada slip hasil hitung otomatis, menyimpan slip manual akan menggantinya (ada konfirmasi dulu).",
+        "\"Hapus (kembali ke otomatis)\" menghapus slip manual dan bulan itu dihitung ulang dari absensi dan jadwal.",
+        "Slip manual tidak menilai bonus kehadiran, uang makan, atau hadiah ulang tahun, dan tidak memotong asuransi otomatis; semua jumlah sesuai yang Anda isi.",
+        "Setiap simpan dan hapus tercatat di \"Log tindakan\" pada tab admin."
+      ],
+      "terms": [
+        [
+          "Slip gaji manual",
+          "Slip yang jumlahnya diisi admin per item. Statusnya \"手動輸入\" dan tidak pernah dihitung ulang."
+        ],
+        [
+          "Gaji bersih",
+          "Total pendapatan (termasuk item tambah) dikurangi total potongan (termasuk item kurang)."
         ]
       ]
     },
@@ -384,7 +414,8 @@
         "Jangan hapus slip gaji yang sudah dibayarkan; buat penyesuaian dan tinggalkan catatannya.",
         "Hitung massal menimpa slip yang sudah ada untuk bulan itu, jadi selesaikan semua persetujuan lebih dulu.",
         "Menyalin pengaturan hanya membawa kondisi gaji; data pribadi seperti nomor identitas, rekening, dan tanggal masuk tidak ikut.",
-        "Berkas hasil ekspor memuat data pribadi dan gaji — jangan dikirim ke luar perusahaan."
+        "Berkas hasil ekspor memuat data pribadi dan gaji — jangan dikirim ke luar perusahaan.",
+        "Hitung massal melewati karyawan yang bulannya slip manual dan menandai \"手動薪資單，略過\" di hasil."
       ]
     }
   }

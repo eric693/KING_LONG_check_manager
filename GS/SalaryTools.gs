@@ -130,6 +130,18 @@ function handleBatchCalculateSalary(params) {
 
         // 單一員工失敗不能拖垮整批，記下原因繼續跑下一個
         try {
+          // 手動薪資單不重算（例如系統上線前的月份）
+          if (typeof readManualPayslip_ === 'function' && readManualPayslip_(employee.employeeId, yearMonth)) {
+            results.push({
+              employeeId: employee.employeeId,
+              employeeName: employee.employeeName,
+              ok: true,
+              skipped: true,
+              msg: '手動薪資單，略過'
+            });
+            continue;
+          }
+
           const calculated = calculateMonthlySalary(employee.employeeId, yearMonth);
 
           if (!calculated.success) {

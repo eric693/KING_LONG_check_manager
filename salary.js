@@ -1509,6 +1509,15 @@ function displaySalaryCalculation(data, container) {
         </div>
     `;
     
+    // 手動薪資單：提醒要到下方「手動薪資單」修改，不顯示計薪調整
+    if (data.manualPayslip) {
+        const notice = document.createElement('p');
+        notice.className = 'mt-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 text-sm';
+        notice.textContent = t('MANUAL_PAYSLIP_CALC_NOTICE');
+        container.querySelector('.calculation-card').appendChild(notice);
+        return;
+    }
+    
     // 計薪規則只套在月薪、時薪；週薪沒有這些項目
     if (data.payrollAdjustments) {
         renderPayrollAdjustPanel(data, container.querySelector('.payroll-adjust-panel'), container);
@@ -1629,6 +1638,8 @@ function renderPayrollAdjustPanel(data, panel, container) {
  *  儲存薪資記錄（修正版 - 包含所有必要欄位）
  */
 async function saveSalaryRecord(data) {
+    // 手動薪資單不由試算存檔（後端也會擋）
+    if (data && data.manualPayslip) return;
     try {
         showNotification(t('SALARY_SAVING_RECORD'), 'info');
         

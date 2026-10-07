@@ -298,7 +298,8 @@
       ],
       "notes": [
         "Lương là thông tin mật, tránh mở hoặc chụp màn hình trên thiết bị dùng chung.",
-        "Cuối phiếu lương cho biết tháng này có thưởng chuyên cần không và lý do, cùng ghi chú của quản trị viên."
+        "Cuối phiếu lương cho biết tháng này có thưởng chuyên cần không và lý do, cùng ghi chú của quản trị viên.",
+        "Với các tháng trước khi dùng hệ thống, phiếu lương có thể do quản trị viên nhập tay; số tiền là số họ đã nhập."
       ]
     },
     "salary-setting": {
@@ -360,7 +361,8 @@
         "Tính lại cùng một tháng sẽ ghi đè kết quả trước đó.",
         "Thiếu dữ liệu chấm công làm giờ của nhân viên lương giờ bị hụt, nên xử lý hết đơn bổ sung trước.",
         "Để trống khấu trừ tạm ứng thì tự lấy các tạm ứng đã duyệt trong tháng; để trống thưởng chuyên cần thì theo quy tắc, điền số tiền để ghi đè.",
-        "Điều chỉnh được lưu trên phiếu lương và giữ lại mỗi lần tính lại, kể cả khi nhân viên tự mở phiếu lương."
+        "Điều chỉnh được lưu trên phiếu lương và giữ lại mỗi lần tính lại, kể cả khi nhân viên tự mở phiếu lương.",
+        "Nếu tháng đó là phiếu nhập tay, màn hình này chỉ hiển thị nội dung và hướng dẫn sửa ở mục \"Phiếu lương nhập tay\" bên dưới, không tính lại."
       ],
       "terms": [
         [
@@ -370,6 +372,34 @@
         [
           "Lương giờ",
           "Trả theo số giờ làm thực tế, lấy từ dữ liệu chấm công."
+        ]
+      ]
+    },
+    "manual-payslip": {
+      "intro": "Tự nhập từng khoản nhân viên sẽ được nhận trong tháng; hệ thống chỉ cộng ra thực lĩnh. Dùng cho các tháng trước khi hệ thống chạy (như lương tháng trước khi triển khai) hoặc trường hợp đặc biệt.",
+      "steps": [
+        "Chọn nhân viên và tháng (mặc định tháng trước), bấm \"Bắt đầu nhập\".",
+        "Nếu chưa có phiếu nhập tay, các khoản cố định trong cài đặt lương (lương cơ bản, phụ cấp, bảo hiểm) được điền sẵn; hãy sửa thành số tiền thực trả tháng này.",
+        "Điền các khoản được nhận (lương cơ bản, phụ cấp, chuyên cần, tăng ca, tiền ăn, thưởng doanh số, quà sinh nhật…) và khoản trừ (bảo hiểm, thuế, nghỉ phép, tạm ứng…). Nhân viên theo giờ có thể nhập thêm lương giờ và số giờ, sẽ hiện trên phiếu lương.",
+        "Các khoản khác thêm bằng \"Thêm khoản\", chọn cộng hoặc trừ và nhập tên, số tiền. Ghi chú viết ở \"Ghi chú\", nhân viên sẽ thấy trên phiếu.",
+        "Tổng thu nhập, tổng khấu trừ và thực lĩnh hiển thị ngay. Bấm \"Xem trước phiếu lương\" để xem như nhân viên.",
+        "Khi đã đúng, bấm \"Lưu phiếu lương nhập tay\". Nhân viên chọn tháng đó trong \"Lương của tôi\" để xem, in và xác nhận."
+      ],
+      "notes": [
+        "Sau khi lưu, không có tính toán tự động nào (nhân viên mở phiếu, tính hàng loạt, sửa cài đặt lương, duyệt tăng ca) ghi đè phiếu nhập tay; muốn sửa thì sửa ở đây và lưu lại.",
+        "Nếu tháng đó đã có phiếu tính tự động, lưu phiếu nhập tay sẽ thay thế nó (sẽ hỏi xác nhận trước).",
+        "\"Xóa (quay lại tính tự động)\" sẽ xóa phiếu nhập tay và tháng đó tính lại theo chấm công và lịch ca.",
+        "Phiếu nhập tay không tự xét chuyên cần, tiền ăn, quà sinh nhật và không tự trừ bảo hiểm; mọi số tiền theo đúng số bạn nhập.",
+        "Mỗi lần lưu và xóa đều được ghi trong \"Nhật ký thao tác\" ở tab quản trị."
+      ],
+      "terms": [
+        [
+          "Phiếu lương nhập tay",
+          "Phiếu lương do quản trị viên nhập từng khoản, trạng thái \"手動輸入\" và không bị tính lại."
+        ],
+        [
+          "Thực lĩnh",
+          "Tổng thu nhập (gồm khoản cộng) trừ tổng khấu trừ (gồm khoản trừ)."
         ]
       ]
     },
@@ -384,7 +414,8 @@
         "Đừng xoá bảng lương đã chi trả; nếu cần sửa thì lập điều chỉnh và lưu lại dấu vết.",
         "Tính hàng loạt sẽ ghi đè bảng lương đã có của tháng đó, hãy duyệt xong mọi đơn trước khi chạy.",
         "Sao chép thiết lập chỉ mang theo điều kiện lương; dữ liệu cá nhân như CCCD, tài khoản, ngày vào làm không bị sao chép.",
-        "Tệp xuất ra chứa dữ liệu cá nhân và tiền lương, không gửi ra ngoài công ty."
+        "Tệp xuất ra chứa dữ liệu cá nhân và tiền lương, không gửi ra ngoài công ty.",
+        "Tính hàng loạt sẽ bỏ qua nhân viên có phiếu nhập tay trong tháng và ghi \"手動薪資單，略過\" trong kết quả."
       ]
     }
   }

@@ -298,7 +298,8 @@
       ],
       "notes": [
         "Salary data is confidential - avoid opening or screenshotting it on shared devices.",
-        "The bottom of the payslip shows whether you earned the attendance bonus this month and why, plus any note from the admin."
+        "The bottom of the payslip shows whether you earned the attendance bonus this month and why, plus any note from the admin.",
+        "For months before the system went live, your payslip may have been entered by an admin; the amounts shown are the ones they entered."
       ]
     },
     "salary-setting": {
@@ -360,7 +361,8 @@
         "Recalculating the same month overwrites the previous result.",
         "Missing punches make hourly staff's hours too low, so clear the punch-correction queue first.",
         "Leave the advance blank to use this month's approved advance requests; leave the attendance bonus blank to follow the payroll rules, or enter an amount to override.",
-        "Adjustments are kept on the payslip and reused on every recalculation, including when the employee opens their own payslip."
+        "Adjustments are kept on the payslip and reused on every recalculation, including when the employee opens their own payslip.",
+        "If the month has a manual payslip, this screen only shows it and points you to \"Manual payslip\" below; it is not recalculated."
       ],
       "terms": [
         [
@@ -370,6 +372,34 @@
         [
           "Hourly pay",
           "Paid on actual hours worked, taken from the punch records."
+        ]
+      ]
+    },
+    "manual-payslip": {
+      "intro": "Enter every amount an employee will be paid for a month; the system only adds them up to the net pay. Use it for months before the system went live (such as the month before launch) or for special cases.",
+      "steps": [
+        "Choose the employee and month (last month by default) and press \"Start\".",
+        "If there is no manual payslip yet, the fixed amounts from the salary settings (base pay, allowances, insurance) are filled in; change them to what you will actually pay this month.",
+        "Fill in the earnings (base pay, allowances, attendance bonus, overtime, meal pay, sales bonus, birthday gift…) and the deductions (insurance, income tax, leave, advance…). For hourly staff you can also enter the hourly rate and hours worked, which appear on the payslip.",
+        "Add anything else with \"Add item\": choose add or deduct and enter a name and amount. Write any explanation in \"Note\"; the employee sees it on the payslip.",
+        "Gross pay, total deductions and net pay update as you type. Press \"Preview payslip\" to see what the employee will see.",
+        "When everything is right, press \"Save manual payslip\". The employee can open that month under My salary to view, print and acknowledge it."
+      ],
+      "notes": [
+        "Once saved, no automatic calculation (the employee opening the payslip, batch calculation, salary setting changes, overtime approvals) overwrites a manual payslip; to change it, edit it here and save again.",
+        "If the month already has an automatically calculated payslip, saving a manual one replaces it (you are asked to confirm first).",
+        "\"Delete (back to automatic)\" removes the manual payslip and the month is calculated from punches and shifts again.",
+        "A manual payslip does not work out the attendance bonus, meal pay or birthday gift, and does not deduct insurance by itself; every amount is what you enter.",
+        "Every save and delete is recorded in the admin tab's audit log."
+      ],
+      "terms": [
+        [
+          "Manual payslip",
+          "A payslip whose amounts an admin entered item by item. Its status is \"手動輸入\" and it is never recalculated."
+        ],
+        [
+          "Net pay",
+          "Gross pay (including added items) minus total deductions (including deducted items)."
         ]
       ]
     },
@@ -384,7 +414,8 @@
         "Do not delete payslips that have already been paid out; make a correcting adjustment and leave a record instead.",
         "Batch calculation overwrites existing payslips for that month, so finish all approvals first.",
         "Copying settings carries pay conditions only; personal data such as ID number, bank account and hire date is never copied.",
-        "Exported files contain personal and salary data — do not send them outside the company."
+        "Exported files contain personal and salary data — do not send them outside the company.",
+        "Batch calculation skips employees whose month is a manual payslip and marks them \"手動薪資單，略過\" in the results."
       ]
     }
   }

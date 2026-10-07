@@ -50,6 +50,7 @@
         ['employee-salary', 'SALARY_TAB_EMPLOYEE'],
         ['salary-setting', 'SALARY_TAB_SETTING'],
         ['salary-calc', 'SALARY_TAB_CALC'],
+        ['manual-payslip', 'MANUAL_PAYSLIP_TITLE'],
         ['salary-report', 'SALARY_TAB_REPORT'],
         ['bonus-records', 'SALARY_TAB_BONUS']
       ]

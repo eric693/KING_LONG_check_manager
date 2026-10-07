@@ -1967,6 +1967,77 @@
                 <div id="hourly-calculation-result" style="display: none; margin-top: 2rem;"></div>
             </div>
         </div>
+
+            <!-- 手動薪資單：直接逐項填金額，不依打卡自動計算（GS/ManualPayslip.gs） -->
+            <div id="manual-payslip" class="form-section" style="margin-top: 2rem;">
+                <div class="feature-title" data-i18n="MANUAL_PAYSLIP_TITLE">手動薪資單</div>
+                <p class="summary-hint section-intro" data-i18n="MANUAL_PAYSLIP_DESC">
+                    直接逐項輸入金額，系統只負責加總。適合系統上線前的月份或特殊情況；存檔後不會被自動計算覆蓋。
+                </p>
+
+                <div class="form-grid" style="max-width: 800px; margin-bottom: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label required" data-i18n="CALC_EMPLOYEE_LABEL">員工</label>
+                        <select id="mp-employee" class="form-select">
+                            <option value="" data-i18n-option="SALARY_SELECT_EMPLOYEE">請選擇員工</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required" data-i18n="CALC_YEAR_MONTH_LABEL">計算年月</label>
+                        <input type="month" id="mp-month" class="form-input">
+                    </div>
+                </div>
+                <button type="button" id="mp-load" class="submit-btn" style="max-width: 300px;" data-i18n="MANUAL_PAYSLIP_LOAD">開始輸入</button>
+
+                <div id="mp-form" style="display: none; margin-top: 1.5rem;">
+                    <p id="mp-status" class="summary-hint" style="margin-bottom: 1rem;"></p>
+
+                    <div class="form-grid" style="margin-bottom: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="SALARY_TYPE_LABEL">薪資類型</label>
+                            <select id="mp-salaryType" class="form-select">
+                                <option value="月薪" data-i18n-option="SALARY_TYPE_MONTHLY">月薪</option>
+                                <option value="時薪" data-i18n-option="SALARY_TYPE_HOURLY">時薪</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="mp-hourlyRate" data-i18n="HOURLY_RATE_LABEL">時薪</label>
+                            <input type="number" id="mp-hourlyRate" class="form-input mp-meta" min="0" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="mp-totalWorkHours" data-i18n="WORK_HOURS">工作時數</label>
+                            <input type="number" id="mp-totalWorkHours" class="form-input mp-meta" min="0" step="0.01">
+                        </div>
+                    </div>
+
+                    <h3 class="text-lg font-semibold mb-2" data-i18n="MANUAL_PAYSLIP_EARNINGS">應發項目</h3>
+                    <div class="form-grid" id="mp-earnings" style="margin-bottom: 1rem;"></div>
+
+                    <h3 class="text-lg font-semibold mb-2" data-i18n="MANUAL_PAYSLIP_DEDUCTIONS">扣款項目</h3>
+                    <div class="form-grid" id="mp-deductions" style="margin-bottom: 1rem;"></div>
+
+                    <h3 class="text-lg font-semibold mb-2" data-i18n="PAYROLL_MANUAL_ITEMS">手動加減項目</h3>
+                    <div id="mp-items" class="space-y-2 mb-2"></div>
+                    <button type="button" id="mp-add-item" class="ghost-btn" style="margin-bottom: 1rem;" data-i18n="PAYROLL_ADD_ITEM">新增項目</button>
+
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label" for="mp-note" data-i18n="PAYROLL_PAYSLIP_NOTE">備註</label>
+                        <textarea id="mp-note" class="form-input" rows="2" maxlength="500"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="info-card"><div class="info-label" data-i18n="SALARY_GROSS">應發總額</div><div class="info-value" id="mp-gross">$0</div></div>
+                        <div class="info-card"><div class="info-label" data-i18n="SALARY_DEDUCTIONS">扣款總額</div><div class="info-value" id="mp-deduct">$0</div></div>
+                        <div class="info-card"><div class="info-label" data-i18n="SALARY_NET">實發金額</div><div class="info-value" id="mp-net">$0</div></div>
+                    </div>
+
+                    <div class="button-row">
+                        <button type="button" id="mp-save" class="submit-btn" style="max-width: 240px;" data-i18n="MANUAL_PAYSLIP_SAVE">儲存手動薪資單</button>
+                        <button type="button" id="mp-preview" class="ghost-btn" data-i18n="MANUAL_PAYSLIP_PREVIEW">預覽薪資條</button>
+                        <button type="button" id="mp-delete" class="ghost-btn" style="display: none; color: #dc2626;" data-i18n="MANUAL_PAYSLIP_DELETE">刪除（改回自動計算）</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Tab 4: 薪資報表（列表、匯出、批次計算、複製設定） -->
@@ -2880,7 +2951,9 @@
                     
                     console.log(` 選擇員工: ${employee.name} (${employee.userId})`);
                     
-                    //  可選：自動載入該員工的現有薪資設定
+                    // 先清空表單再去查現有設定。以前是查完才清，查詢要等幾秒，
+                    // 這段時間已經填好的員工類型、金額會被整個清掉，按儲存才跳出「請選擇」
+                    clearSalaryConfigForm();
                     loadExistingSalaryConfig(employee.userId);
                     
                 } catch (error) {
@@ -2966,16 +3039,60 @@
         /**
         *  載入員工現有薪資設定（加強版）
         */
+        /**
+         * 清空薪資設定表單（只清這張表單的輸入欄位，不動員工選單、員工ID、姓名，也不動其他分頁）
+         */
+        function clearSalaryConfigForm() {
+            const form = document.getElementById('salary-config-form');
+            if (!form) return;
+            const keep = ['config-employee-select', 'config-employee-id', 'config-employee-name'];
+            form.querySelectorAll('input, select, textarea').forEach(el => {
+                if (keep.includes(el.id) || el.readOnly || el.type === 'hidden' || el.type === 'submit' || el.type === 'button') return;
+                if (el.type === 'checkbox' || el.type === 'radio') {
+                    el.checked = false;
+                } else {
+                    el.value = '';
+                }
+            });
+            setPreviewValues(0, 0, 0, 0, 0, 0, 0);
+        }
+
+        // 最後一次查詢的員工：使用者在等待時改選別人，舊的查詢結果就不要填進來
+        let salaryConfigLoadingFor = null;
+
         async function loadExistingSalaryConfig(employeeId) {
+            const submitBtn = document.querySelector('#salary-config-form button[type="submit"]');
+            salaryConfigLoadingFor = employeeId;
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.dataset.label = submitBtn.dataset.label || submitBtn.textContent;
+                submitBtn.textContent = t('LOADING');
+            }
             try {
                 console.log(` 檢查員工 ${employeeId} 的現有薪資設定...`);
                 
                 const res = await callApifetch(`getEmployeeSalaryTW&employeeId=${encodeURIComponent(employeeId)}`);
+                if (salaryConfigLoadingFor !== employeeId) return;
                 
                 if (res.ok && res.data) {
                     console.log(' 找到現有薪資設定，自動填入表單');
                     
-                    const data = res.data;
+                    // 後端回傳的是試算表的中文欄名，下面的程式讀英文鍵：
+                    // 以前兩邊對不上，選了已設定過的員工，表單永遠是空的（看起來像沒存成功）
+                    const zhKeys = {
+                        idNumber: '身分證字號', employeeType: '員工類型', salaryType: '薪資類型', baseSalary: '基本薪資',
+                        positionAllowance: '職務加給', mealAllowance: '伙食費', transportAllowance: '交通補助',
+                        attendanceBonus: '全勤獎金', performanceBonus: '業績獎金', otherAllowances: '其他津貼',
+                        bankCode: '銀行代碼', bankAccount: '銀行帳號', hireDate: '到職日期', paymentDay: '發薪日',
+                        pensionSelfRate: '勞退自提率(%)', laborFee: '勞保費', healthFee: '健保費',
+                        employmentFee: '就業保險費', pensionSelf: '勞退自提', incomeTax: '所得稅',
+                        welfareFee: '福利金扣款', dormitoryFee: '宿舍費用', groupInsurance: '團保費用',
+                        otherDeductions: '其他扣款', note: '備註'
+                    };
+                    const data = Object.assign({}, res.data);
+                    Object.keys(zhKeys).forEach(key => {
+                        if (data[key] === undefined && res.data[zhKeys[key]] !== undefined) data[key] = res.data[zhKeys[key]];
+                    });
                     
                     // === 基本資訊 ===
                     const idNumberEl = document.getElementById('config-id-number');
@@ -2985,8 +3102,21 @@
                     
                     if (idNumberEl) idNumberEl.value = data.idNumber || data['身分證字號'] || '';
                     if (employeeTypeEl) employeeTypeEl.value = data.employeeType || '正職';
-                    if (salaryTypeEl && data.salaryType) salaryTypeEl.value = data.salaryType;
+                    if (salaryTypeEl && data.salaryType) {
+                        salaryTypeEl.value = data.salaryType;
+                        if (typeof onSalaryTypeChange === 'function') onSalaryTypeChange();
+                    }
                     if (baseSalaryEl) baseSalaryEl.value = data.baseSalary || '';
+                    
+                    // 到職日期：生日禮金要看到職滿幾個月
+                    const hireDateEl = document.getElementById('config-hire-date');
+                    if (hireDateEl) {
+                        const hd = data.hireDate;
+                        const text = hd ? String(hd) : '';
+                        const parsed = text ? new Date(text) : null;
+                        hireDateEl.value = /^\d{4}-\d{2}-\d{2}$/.test(text) ? text
+                            : (parsed && !isNaN(parsed) ? `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${String(parsed.getDate()).padStart(2, '0')}` : '');
+                    }
                     
                     // === 津貼 ===
                     const allowanceIds = [
@@ -3075,19 +3205,18 @@
                     showNotification(' 已載入該員工的現有薪資設定', 'info');
                     
                 } else {
+                    // 還沒有薪資設定：選員工時已經清空過表單，這裡不再清，
+                    // 不然等待期間使用者已經填好的內容會被洗掉
                     console.log('ℹ 該員工尚無薪資設定，使用空白表單');
-                    // 清空所有欄位
-                    document.querySelectorAll('.form-input, .form-select').forEach(input => {
-                        if (!input.readOnly && input.id !== 'config-employee-id' && input.id !== 'config-employee-name') {
-                            input.value = '';
-                        }
-                    });
-                    // 重置預覽
-                    setPreviewValues(0, 0, 0, 0, 0, 0, 0);
                 }
                 
             } catch (error) {
                 console.error('載入現有薪資設定失敗:', error);
+            } finally {
+                if (salaryConfigLoadingFor === employeeId && submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = submitBtn.dataset.label || submitBtn.textContent;
+                }
             }
         }
 

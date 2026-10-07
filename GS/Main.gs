@@ -32,7 +32,10 @@ const ROUTE_ACCESS = {
   saveShiftTemplates: 'admin',
   savePayrollAdjustments: 'admin',
   createNoLineEmployee: 'admin',
-  createLoginLink: 'admin'
+  createLoginLink: 'admin',
+  getManualPayslip: 'admin',
+  saveManualPayslip: 'admin',
+  deleteManualPayslip: 'admin'
 };
 
 /**
@@ -54,20 +57,26 @@ const DEPLOY_CHECKS = [
   ['EmployeeSheetRepair.gs', () => typeof readOriginalLockedNames_ === 'function'],
   ['Expense.gs', () => typeof handleReviewExpense === 'function'],
   ['Handlers.gs', () => typeof handleGetLoginUrl === 'function' && handleGetLoginUrl.length >= 1 &&
-                         String(handleLinePunchWithToken).indexOf('checkPunchSequence_') !== -1],
+                         String(handleLinePunchWithToken).indexOf('checkPunchSequence_') !== -1 &&
+                         String(handleCalculateMonthlySalary).indexOf('readManualPayslip_') !== -1 &&
+                         String(handleSetEmployeeSalaryTW).indexOf("existing.data['到職日期']") !== -1],
   ['LeaveManagement.gs', () => typeof submitLeaveRequest === 'function'],
   ['LineApi.gs', () => typeof getLineUserInfo_ === 'function'],
   ['LineBotPunch.gs', () => typeof executePunch === 'function' && String(determinePunchType).indexOf('nextPunchType_') !== -1],
   ['LineNotification.gs', () => typeof sendLineNotification_ === 'function' &&
                                  String(sendLineNotification_).indexOf('isLineUserId_') !== -1],
+  ['ManualPayslip.gs', () => typeof handleSaveManualPayslip === 'function' && typeof readManualPayslip_ === 'function'],
   ['LoginLinks.gs', () => typeof handleRedeemLoginLink === 'function' && typeof createSessionForUser_ === 'function'],
   ['Offboarding.gs', () => typeof handleOffboardEmployee === 'function'],
   ['OvertimeOperations.gs', () => typeof initOvertimeSheet === 'function'],
-  ['PayrollRules.gs', () => typeof applyPayrollRules_ === 'function' && typeof payrollAttendanceZh_ === 'function'],
+  ['PayrollRules.gs', () => typeof applyPayrollRules_ === 'function' && typeof payrollAttendanceZh_ === 'function' &&
+                             String(handleSavePayrollAdjustments).indexOf('PAYSLIP_IS_MANUAL') !== -1],
   ['PunchRules.gs', () => typeof checkPunchSequence_ === 'function' && typeof computeDayWorkFromPunches_ === 'function'],
   ['QrPunch.gs', () => typeof qrPunch === 'function' && String(qrPunch).indexOf('checkPunchSequence_') !== -1],
-  ['SalaryManagement.gs', () => typeof calculateMonthlySalary === 'function' && calculateMonthlySalary.length >= 3],
-  ['SalaryTools.gs', () => typeof listPayableEmployees_ === 'function'],
+  ['SalaryManagement.gs', () => typeof calculateMonthlySalary === 'function' && calculateMonthlySalary.length >= 3 &&
+                                 String(saveMonthlySalary).indexOf('PAYSLIP_IS_MANUAL') !== -1],
+  ['SalaryTools.gs', () => typeof listPayableEmployees_ === 'function' &&
+                            String(handleBatchCalculateSalary).indexOf('readManualPayslip_') !== -1],
   ['ShiftManagement.gs', () => typeof shiftRowBreakMinutes_ === 'function'],
   ['ShiftTemplates.gs', () => typeof computeNetWorkMinutes_ === 'function' && typeof handleSaveShiftTemplates === 'function'],
   ['SystemSettings.gs', () => typeof validatePayrollRules_ === 'function'],
@@ -293,6 +302,12 @@ function doGet(e) {
         return respond1(handleSaveShiftTemplates(e.parameter));
       case "savePayrollAdjustments":
         return respond1(handleSavePayrollAdjustments(e.parameter));
+      case "getManualPayslip":
+        return respond1(handleGetManualPayslip(e.parameter));
+      case "saveManualPayslip":
+        return respond1(handleSaveManualPayslip(e.parameter));
+      case "deleteManualPayslip":
+        return respond1(handleDeleteManualPayslip(e.parameter));
       
       // ==================== 薪資系統 ====================
       case "setEmployeeSalaryTW":

@@ -983,6 +983,13 @@ function saveMonthlySalary(salaryData) {
     
     for (let i = 1; i < data.length; i++) {
       if (data[i][0] === salaryId) {
+        // 手動薪資單（ManualPayslip.gs）只能由手動薪資單本身改，任何自動重算都不能蓋掉
+        if (typeof isManualPayslipRow_ === 'function' && isManualPayslipRow_(headers.map(h => String(h).trim()), data[i]) &&
+            !salaryData.manualPayslip) {
+          Logger.log(` ${salaryId} 是手動薪資單，不覆蓋`);
+          return { success: false, code: 'PAYSLIP_IS_MANUAL', salaryId: salaryId,
+                   message: '這個月是手動輸入的薪資單，不會被自動計算覆蓋' };
+        }
         // 覆寫之前先留一份，稽核記錄才知道原本是多少
         beforeRow = data[i].slice();
         sheet.getRange(i + 1, 1, 1, row.length).setValues([row]);
@@ -1134,6 +1141,12 @@ function getMySalary(userId, yearMonth) {
     const employeeId = userId;
     
     Logger.log(` 查詢薪資: ${employeeId}, ${yearMonth}`);
+    
+    // 手動薪資單：直接給管理員填的內容，不重新計算
+    if (typeof readManualPayslip_ === 'function') {
+      const manual = readManualPayslip_(employeeId, yearMonth);
+      if (manual) return { success: true, data: manual };
+    }
     
     // ⭐⭐⭐ 步驟 1：先重新計算薪資（確保資料是最新的）
     Logger.log(' 重新計算薪資...');

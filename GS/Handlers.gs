@@ -1065,7 +1065,12 @@ function handleSetEmployeeSalaryTW(params) {
       // 銀行資訊 (4 項)
       bankCode: safeString(params.bankCode),
       bankAccount: safeString(params.bankAccount),
-      hireDate: params.hireDate || new Date(),
+      // 沒填到職日期就保留原本的；以前是填「今天」，每存一次設定到職日就變成今天，
+      // 生日禮金「到職滿 3 個月」永遠不會成立
+      hireDate: params.hireDate || (function () {
+        const existing = getEmployeeSalaryTW(params.employeeId);
+        return (existing.success && existing.data && existing.data['到職日期']) || '';
+      })(),
       paymentDay: safeString(params.paymentDay) || '5',
       
       // 法定扣款 (6 項)
@@ -1426,6 +1431,12 @@ function handleCalculateMonthlySalary(params) {
     }
     
     Logger.log(' 計算月薪: ' + params.employeeId + ', ' + params.yearMonth);
+    
+    // 這個月已經是手動薪資單：顯示它，不重新計算（前端也不會再存檔）
+    if (typeof readManualPayslip_ === 'function') {
+      const manual = readManualPayslip_(params.employeeId, params.yearMonth);
+      if (manual) return { ok: true, data: manual, manualPayslip: true };
+    }
     
     const result = calculateMonthlySalary(params.employeeId, params.yearMonth);
     

@@ -1266,6 +1266,8 @@ async function initUnifiedCalcTab() {
 
   document.getElementById('unified-calc-employee')?.addEventListener('change', updateCalcTypeHint);
   document.getElementById('unified-calc-btn')?.addEventListener('click', dispatchUnifiedCalculation);
+
+  initManualPayslip();
 }
 
 async function initSalaryReportTab() {
@@ -1318,4 +1320,285 @@ async function initSalaryReportTab() {
   document.getElementById('load-audit-btn')?.addEventListener('click', loadSalaryAuditLog);
   document.getElementById('batch-calc-btn')?.addEventListener('click', runBatchCalculation);
   document.getElementById('copy-config-btn')?.addEventListener('click', runCopySalaryConfig);
+}
+
+
+// ==================== 手動薪資單（GS/ManualPayslip.gs） ====================
+//
+// 管理員直接逐項填金額，系統只加總。存檔後任何自動重算都不會覆蓋，
+// 員工的「我的薪資」、列印、簽收照常可用。
+
+const MANUAL_PAYSLIP_EARNING_FIELDS = [
+  ['baseSalary', 'SALARY_BASE', '基本薪資'],
+  ['positionAllowance', 'SALARY_POSITION_ALLOWANCE', '職務加給'],
+  ['mealAllowance', 'SALARY_MEAL_ALLOWANCE', '伙食費'],
+  ['transportAllowance', 'SALARY_TRANSPORT_ALLOWANCE', '交通補助'],
+  ['attendanceBonus', 'SALARY_ATTENDANCE_BONUS', '全勤獎金'],
+  ['performanceBonus', 'SALARY_PERFORMANCE_BONUS', '業績獎金'],
+  ['otherAllowances', 'SALARY_OTHER_ALLOWANCES_LABEL', '其他津貼'],
+  ['weekdayOvertimePay', 'MANUAL_OT_PAY', '加班費'],
+  ['mealSubsidy', 'PAYROLL_MEAL_SUBSIDY', '餐費'],
+  ['salesBonus', 'PAYROLL_SALES_BONUS', '銷售獎金'],
+  ['birthdayGift', 'PAYROLL_BIRTHDAY_GIFT', '生日禮金']
+];
+const MANUAL_PAYSLIP_DEDUCTION_FIELDS = [
+  ['laborFee', 'SALARY_LABOR_INS', '勞保費'],
+  ['healthFee', 'SALARY_HEALTH_INS', '健保費'],
+  ['employmentFee', 'SALARY_EMPLOYMENT_INS', '就業保險費'],
+  ['pensionSelf', 'SALARY_PENSION', '勞退自提'],
+  ['incomeTax', 'SALARY_TAX', '所得稅'],
+  ['leaveDeduction', 'SALARY_LEAVE_DEDUCT', '請假扣款'],
+  ['advanceDeduction', 'PAYROLL_ADVANCE_DEDUCTION', '預支抵扣'],
+  ['otherDeductions', 'SALARY_OTHER_DEDUCT', '其他扣款']
+];
+
+let manualPayslipState = null;   // { employeeId, yearMonth, exists, data }
+
+function initManualPayslip() {
+  mirrorEmployeeOptions('mp-employee', 'calc-employee-select');
+
+  const month = document.getElementById('mp-month');
+  if (month && !month.value) {
+    // 預設上個月：最常見的用途是補發系統上線前的薪資
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() - 1);
+    month.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  const build = (containerId, fields) => {
+    const box = document.getElementById(containerId);
+    if (!box) return;
+    box.innerHTML = '';
+    fields.forEach(([key, labelKey, fallback]) => {
+      const group = document.createElement('div');
+      group.className = 'form-group';
+      const label = document.createElement('label');
+      label.className = 'form-label';
+      label.setAttribute('for', 'mp-' + key);
+      label.textContent = ta(labelKey, fallback);
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.min = '0';
+      input.step = '1';
+      input.id = 'mp-' + key;
+      input.className = 'form-input mp-amount';
+      input.dataset.key = key;
+      input.dataset.kind = containerId === 'mp-earnings' ? 'add' : 'sub';
+      group.appendChild(label);
+      group.appendChild(input);
+      box.appendChild(group);
+    });
+  };
+  build('mp-earnings', MANUAL_PAYSLIP_EARNING_FIELDS);
+  build('mp-deductions', MANUAL_PAYSLIP_DEDUCTION_FIELDS);
+
+  const form = document.getElementById('mp-form');
+  if (form) form.oninput = updateManualPayslipTotals;
+  const on = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
+  on('mp-load', loadManualPayslip);
+  on('mp-add-item', () => { addManualPayslipItem(null); updateManualPayslipTotals(); });
+  on('mp-save', saveManualPayslip);
+  on('mp-delete', deleteManualPayslip);
+  on('mp-preview', () => { if (typeof printPayslip === 'function') printPayslip(collectManualPayslipPreview()); });
+}
+
+function addManualPayslipItem(item) {
+  const list = document.getElementById('mp-items');
+  if (!list) return;
+  const row = document.createElement('div');
+  row.className = 'mp-item flex flex-wrap gap-2 items-center';
+  row.innerHTML = `
+      <select class="form-input mp-item-type" style="width:auto;">
+          <option value="add"></option>
+          <option value="sub"></option>
+      </select>
+      <input type="text" maxlength="30" class="form-input mp-item-name" style="flex:1;min-width:8rem;">
+      <input type="number" min="0" step="1" class="form-input mp-item-amount" style="width:8rem;">
+      <button type="button" class="row-remove-btn mp-item-remove"></button>`;
+  const [addOpt, subOpt] = row.querySelectorAll('option');
+  addOpt.textContent = ta('PAYROLL_MANUAL_ADD', '加項');
+  subOpt.textContent = ta('PAYROLL_MANUAL_SUB', '減項');
+  row.querySelector('.mp-item-name').placeholder = ta('PAYROLL_ITEM_NAME', '項目名稱');
+  row.querySelector('.mp-item-amount').placeholder = ta('PAYROLL_ITEM_AMOUNT', '金額');
+  const remove = row.querySelector('.mp-item-remove');
+  remove.textContent = ta('PAYROLL_REMOVE_ITEM', '移除');
+  remove.onclick = () => { row.remove(); updateManualPayslipTotals(); };
+  row.querySelector('.mp-item-type').value = item && item.type === 'sub' ? 'sub' : 'add';
+  row.querySelector('.mp-item-name').value = (item && item.name) || '';
+  row.querySelector('.mp-item-amount').value = (item && item.amount) || '';
+  list.appendChild(row);
+}
+
+function collectManualPayslip() {
+  const num = el => (el && el.value.trim() !== '') ? Number(el.value) : 0;
+  const payslip = {
+    salaryType: document.getElementById('mp-salaryType').value,
+    hourlyRate: num(document.getElementById('mp-hourlyRate')),
+    totalWorkHours: num(document.getElementById('mp-totalWorkHours')),
+    manualItems: Array.from(document.querySelectorAll('#mp-items .mp-item')).map(row => ({
+      type: row.querySelector('.mp-item-type').value,
+      name: row.querySelector('.mp-item-name').value.trim(),
+      amount: row.querySelector('.mp-item-amount').value
+    })),
+    note: document.getElementById('mp-note').value
+  };
+  document.querySelectorAll('#mp-form .mp-amount').forEach(input => {
+    payslip[input.dataset.key] = num(input);
+  });
+  return payslip;
+}
+
+function manualPayslipTotals(payslip) {
+  const sum = fields => fields.reduce((s, [key]) => s + (Number(payslip[key]) || 0), 0);
+  const items = payslip.manualItems.filter(i => i.name || Number(i.amount));
+  const add = items.filter(i => i.type !== 'sub').reduce((s, i) => s + (Number(i.amount) || 0), 0);
+  const sub = items.filter(i => i.type === 'sub').reduce((s, i) => s + (Number(i.amount) || 0), 0);
+  const gross = sum(MANUAL_PAYSLIP_EARNING_FIELDS) + add;
+  const deductions = sum(MANUAL_PAYSLIP_DEDUCTION_FIELDS) + sub;
+  return { gross: gross, deductions: deductions, net: gross - deductions };
+}
+
+function updateManualPayslipTotals() {
+  const totals = manualPayslipTotals(collectManualPayslip());
+  const set = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = formatCurrency(value); };
+  set('mp-gross', totals.gross);
+  set('mp-deduct', totals.deductions);
+  set('mp-net', totals.net);
+}
+
+/** 預覽薪資條：用畫面上的數字組出跟正式薪資單一樣的資料 */
+function collectManualPayslipPreview() {
+  const payslip = collectManualPayslip();
+  const totals = manualPayslipTotals(payslip);
+  return Object.assign({}, payslip, {
+    employeeId: manualPayslipState ? manualPayslipState.employeeId : '',
+    employeeName: manualPayslipSelectedEmployee().name,
+    yearMonth: manualPayslipState ? manualPayslipState.yearMonth : '',
+    grossSalary: totals.gross,
+    netSalary: totals.net,
+    payslipNote: payslip.note,
+    manualItems: payslip.manualItems.filter(i => i.name)
+  });
+}
+
+function fillManualPayslipForm(data) {
+  const value = v => (v === undefined || v === null || Number(v) === 0) ? '' : v;
+  document.getElementById('mp-salaryType').value = data.salaryType === '時薪' ? '時薪' : '月薪';
+  document.getElementById('mp-hourlyRate').value = value(data.hourlyRate);
+  document.getElementById('mp-totalWorkHours').value = value(data.totalWorkHours);
+  document.querySelectorAll('#mp-form .mp-amount').forEach(input => {
+    input.value = value(data[input.dataset.key]);
+  });
+  const list = document.getElementById('mp-items');
+  list.innerHTML = '';
+  (data.manualItems || []).forEach(addManualPayslipItem);
+  document.getElementById('mp-note').value = data.payslipNote || '';
+  updateManualPayslipTotals();
+}
+
+function renderManualPayslipStatus() {
+  const status = document.getElementById('mp-status');
+  const del = document.getElementById('mp-delete');
+  if (!manualPayslipState) return;
+  let key = 'MANUAL_PAYSLIP_STATUS_NEW';
+  let fallback = '這個月還沒有手動薪資單，已帶入薪資設定的固定金額，請修改成實際要發的金額。';
+  if (manualPayslipState.exists) {
+    key = 'MANUAL_PAYSLIP_STATUS_EXISTING';
+    fallback = '這個月已經有手動薪資單，修改後按儲存即可更新。';
+  } else if (manualPayslipState.autoExists) {
+    key = 'MANUAL_PAYSLIP_STATUS_AUTO_EXISTS';
+    fallback = '這個月已經有系統自動計算的薪資單，儲存手動薪資單後會取代它。';
+  }
+  if (status) {
+    status.textContent = ta(key, fallback);
+    status.style.color = manualPayslipState.autoExists && !manualPayslipState.exists ? '#b45309' : '';
+  }
+  if (del) del.style.display = manualPayslipState.exists ? '' : 'none';
+}
+
+/** 員工選單的值是 JSON（{ userId, name, … }），跟薪資試算的選單一樣 */
+function manualPayslipSelectedEmployee() {
+  const raw = document.getElementById('mp-employee')?.value || '';
+  try {
+    const employee = JSON.parse(raw);
+    return { id: String(employee.userId || ''), name: String(employee.name || '') };
+  } catch (error) {
+    return { id: raw, name: '' };
+  }
+}
+
+async function loadManualPayslip() {
+  const employeeId = manualPayslipSelectedEmployee().id;
+  const yearMonth = document.getElementById('mp-month').value;
+  if (!employeeId || !yearMonth) {
+    showNotification(ta('SALARY_INPUT_EMPLOYEE_MONTH', '請選擇員工與年月'), 'error');
+    return;
+  }
+  try {
+    const res = await callApifetch(`getManualPayslip&employeeId=${encodeURIComponent(employeeId)}` +
+                                   `&yearMonth=${encodeURIComponent(yearMonth)}`, null);
+    if (!res.ok) {
+      showNotification(res.msg || ta('MANUAL_PAYSLIP_SAVE_FAILED', '手動薪資單處理失敗'), 'error');
+      return;
+    }
+    manualPayslipState = { employeeId: employeeId, yearMonth: yearMonth, exists: !!res.exists, autoExists: !!res.autoExists };
+    fillManualPayslipForm(res.data || {});
+    renderManualPayslipStatus();
+    document.getElementById('mp-form').style.display = 'block';
+  } catch (error) {
+    console.error('載入手動薪資單失敗:', error);
+    showNotification(ta('MANUAL_PAYSLIP_SAVE_FAILED', '手動薪資單處理失敗'), 'error');
+  }
+}
+
+async function saveManualPayslip() {
+  if (!manualPayslipState) return;
+  if (manualPayslipState.autoExists && !manualPayslipState.exists &&
+      !confirm(ta('MANUAL_PAYSLIP_CONFIRM_REPLACE', '這個月已經有自動計算的薪資單，確定要用手動薪資單取代嗎？'))) {
+    return;
+  }
+  const btn = document.getElementById('mp-save');
+  if (btn) btn.disabled = true;
+  try {
+    const res = await callApifetch(
+      `saveManualPayslip&employeeId=${encodeURIComponent(manualPayslipState.employeeId)}` +
+      `&yearMonth=${encodeURIComponent(manualPayslipState.yearMonth)}` +
+      `&payslip=${encodeURIComponent(JSON.stringify(collectManualPayslip()))}`, null);
+    if (res.ok) {
+      manualPayslipState.exists = true;
+      manualPayslipState.autoExists = false;
+      if (res.data) fillManualPayslipForm(res.data);
+      renderManualPayslipStatus();
+      showNotification(ta('MANUAL_PAYSLIP_SAVED', '手動薪資單已儲存，員工可以在「我的薪資」查看'), 'success');
+    } else {
+      const text = res.code && ta(res.code, '') ? ta(res.code, '') : '';
+      showNotification(text || res.msg || ta('MANUAL_PAYSLIP_SAVE_FAILED', '手動薪資單處理失敗'), 'error');
+    }
+  } catch (error) {
+    console.error('儲存手動薪資單失敗:', error);
+    showNotification(ta('MANUAL_PAYSLIP_SAVE_FAILED', '手動薪資單處理失敗'), 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function deleteManualPayslip() {
+  if (!manualPayslipState || !manualPayslipState.exists) return;
+  if (!confirm(ta('MANUAL_PAYSLIP_DELETE_CONFIRM', '確定要刪除這張手動薪資單嗎？這個月會改回依打卡自動計算。'))) return;
+  try {
+    const res = await callApifetch(
+      `deleteManualPayslip&employeeId=${encodeURIComponent(manualPayslipState.employeeId)}` +
+      `&yearMonth=${encodeURIComponent(manualPayslipState.yearMonth)}`, null);
+    if (res.ok) {
+      showNotification(ta('MANUAL_PAYSLIP_DELETED', '已刪除手動薪資單，這個月改回自動計算'), 'success');
+      document.getElementById('mp-form').style.display = 'none';
+      manualPayslipState = null;
+    } else {
+      showNotification(res.msg || ta('MANUAL_PAYSLIP_SAVE_FAILED', '手動薪資單處理失敗'), 'error');
+    }
+  } catch (error) {
+    console.error('刪除手動薪資單失敗:', error);
+    showNotification(ta('MANUAL_PAYSLIP_SAVE_FAILED', '手動薪資單處理失敗'), 'error');
+  }
 }

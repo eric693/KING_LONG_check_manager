@@ -527,6 +527,10 @@ function handleSavePayrollAdjustments(params) {
     const checked = normalizePayrollAdjustments_(input);
     if (!checked.ok) return { ok: false, code: 'PAYROLL_ADJUST_INVALID', msg: checked.msg };
 
+    if (typeof readManualPayslip_ === 'function' && readManualPayslip_(employeeId, yearMonth)) {
+      return { ok: false, code: 'PAYSLIP_IS_MANUAL', msg: '這個月是手動輸入的薪資單，請到「手動薪資單」修改' };
+    }
+
     const calculated = calculateMonthlySalary(employeeId, yearMonth, checked.adjustments);
     if (!calculated.success) return { ok: false, msg: calculated.message };
 
