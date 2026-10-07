@@ -102,6 +102,16 @@ function closeAdjustTodayDialog() {
 async function submitAdjustToday() {
     if (_isSubmittingToday) { showNotification(t('NOTIF_PROCESSING_NO_DOUBLE'), 'warning'); return; }
     _isSubmittingToday = true;
+    // 不管成功、失敗或欄位沒填，結束都要放開。以前從來沒放開：送過一次之後，
+    // 再補第二張卡永遠只會看到「處理中，請勿重複送出」
+    try {
+        return await submitAdjustTodayInner();
+    } finally {
+        _isSubmittingToday = false;
+    }
+}
+
+async function submitAdjustTodayInner() {
     const typeSelect = document.getElementById('adjust-type-select');
     const timeInput = document.getElementById('adjust-time-input');
     const reasonInput = document.getElementById('adjust-reason-input');
@@ -128,13 +138,16 @@ async function submitAdjustToday() {
     try {
         const sessionToken = localStorage.getItem("sessionToken");
         
-        // 取得當前位置
-        const position = await new Promise((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject);
-        });
-        
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
+        // 位置非必要：補打卡是事後申請。以前一定要定位成功才能送出（而且沒有逾時），
+        // 定位被拒或在 LINE 瀏覽器裡抓不到位置時，當日修正就一直失敗
+        let lat = 0, lng = 0;
+        try {
+            const position = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000, enableHighAccuracy: false });
+            });
+            lat = position.coords.latitude;
+            lng = position.coords.longitude;
+        } catch (_) {}
         
         // 組合完整日期時間
         const now = new Date();
@@ -150,17 +163,17 @@ async function submitAdjustToday() {
             note: `【當日修正】${reason}`
         });
         
-        const res = await callApifetch(`adjustPunch&${params.toString()}`);
-        if (res.ok) clearMonthDataCache(); // 補打卡送出後，快取的月資料已過期
+        const result = await submitAdjustPunchRequest(params);
+        if (result.ok) clearMonthDataCache(); // 補打卡送出後，快取的月資料已過期
         
-        if (res.ok) {
+        if (result.ok) {
             showNotification(t('NOTIF_ADJUST_SUBMITTED'), 'success');
             closeAdjustTodayDialog();
             
             // 重新載入異常記錄
             await checkAbnormal();
         } else {
-            showNotification(t(res.code) || '修正失敗', 'error');
+            showNotification(result.message, 'error');
         }
         
     } catch (err) {
@@ -182,7 +195,8 @@ function openHistoryAdjustDialog() {
     
     const now = new Date();
     const today = toLocalDateStr(now);
-    const monthStart = toLocalDateStr(new Date(now.getFullYear(), now.getMonth(), 1));
+    // 可以補上個月與本月：月初還要補上個月最後幾天的卡
+    const monthStart = toLocalDateStr(new Date(now.getFullYear(), now.getMonth() - 1, 1));
     
     dialog.innerHTML = `
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
@@ -296,6 +310,15 @@ function closeHistoryAdjustDialog() {
 async function submitHistoryAdjust() {
     if (_isSubmittingHistory) { showNotification(t('NOTIF_PROCESSING_NO_DOUBLE'), 'warning'); return; }
     _isSubmittingHistory = true;
+    // 欄位沒填而提早結束時也要放開，不然之後再也送不出去
+    try {
+        return await submitHistoryAdjustInner();
+    } finally {
+        _isSubmittingHistory = false;
+    }
+}
+
+async function submitHistoryAdjustInner() {
 
     const dateInput = document.getElementById('history-adjust-date');
     const typeInput = document.getElementById('history-adjust-type');
@@ -332,10 +355,12 @@ async function submitHistoryAdjust() {
             return;
         }
 
-        const selectedDate = new Date(date);
+        // 用當地日期解析（new Date('2026-10-08') 會被當成 UTC，台灣是早上 8 點，今天會被誤判成未來）
+        const [sy, sm, sd] = date.split('-').map(Number);
+        const selectedDate = new Date(sy, sm - 1, sd);
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const monthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
         if (selectedDate < monthStart) {
             showNotification(t('NOTIF_ADJUST_THIS_MONTH_ONLY'), 'error');
@@ -382,15 +407,15 @@ async function submitHistoryAdjust() {
             note: noteWithTag
         });
 
-        const res = await callApifetch(`adjustPunch&${params.toString()}`);
-        if (res.ok) clearMonthDataCache(); // 補打卡送出後，快取的月資料已過期
+        const result = await submitAdjustPunchRequest(params);
+        if (result.ok) clearMonthDataCache(); // 補打卡送出後，快取的月資料已過期
 
-        if (res.ok) {
+        if (result.ok) {
             showNotification(t('NOTIF_HISTORY_ADJUST_SUBMITTED'), 'success');
             closeHistoryAdjustDialog();
             await checkAbnormal();
         } else {
-            showNotification(t(res.code) || '提交失敗', 'error');
+            showNotification(result.message, 'error');
         }
 
     } catch (err) {

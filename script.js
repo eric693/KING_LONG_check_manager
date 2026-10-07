@@ -903,10 +903,10 @@ async function submitAdjustPunch(date, type, note) {
             note: note || `補打卡 - ${type}`
         });
         
-        const res = await callApifetch(`adjustPunch&${params.toString()}`);
-        if (res.ok) clearMonthDataCache(); // 補打卡送出後，快取的月資料已過期
+        const result = await submitAdjustPunchRequest(params);
+        if (result.ok) clearMonthDataCache(); // 補打卡送出後，快取的月資料已過期
         
-        if (res.ok) {
+        if (result.ok) {
             showNotification(t('NOTIF_ADJUST_PUNCH_SUBMITTED'), "success");
             
             //  關鍵：補打卡成功後，重新檢查異常記錄
@@ -915,7 +915,7 @@ async function submitAdjustPunch(date, type, note) {
             // 關閉對話框
             closeAdjustDialog();
         } else {
-            showNotification(t(res.code) || "補打卡失敗", "error");
+            showNotification(result.message, "error");
         }
     } catch (err) {
         console.error('補打卡錯誤:', err);
@@ -2166,15 +2166,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     function validateAdjustTime(value) {
         const selected = new Date(value);
         const now = new Date();
-        const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
-        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        if (selected < monthStart) {
+        // 可以補上個月與本月的卡：月初幾天還要補上個月最後幾天的卡（以前只能補本月，10/1 補不了 9/30）
+        const earliest = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        if (selected < earliest) {
             showNotification(t("ERR_BEFORE_MONTH_START"), "error");
             return false;
         }
-        // 不允許選今天以後
-        if (selected > today) {
+        // 不允許選未來的時間。以前是跟「今天 0 點」比，今天任何時間都被當成未來，今天的卡永遠補不了
+        if (selected > now) {
             showNotification(t("ERR_AFTER_TODAY"), "error");
             return false;
         }
@@ -2230,21 +2229,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                     note: reason
                 });
                 
-                const res = await callApifetch(`adjustPunch&${params.toString()}`);
-                if (res.ok) clearMonthDataCache(); // 補打卡送出後，快取的月資料已過期
-                console.log(' 前端提交補打卡:', {
-                    type: type,
-                    datetime: datetime,
-                    reason: reason,
-                    response: res
-                });
+                const result = await submitAdjustPunchRequest(params);
+                if (result.ok) clearMonthDataCache(); // 補打卡送出後，快取的月資料已過期
                 
-                if (res.ok) {
+                if (result.ok) {
                     showNotification(t('NOTIF_ADJUST_PUNCH_SUBMITTED'), "success");
                     await checkAbnormal();
                     adjustmentFormContainer.innerHTML = '';
                 } else {
-                    showNotification(t(res.code) || "補打卡失敗", "error");
+                    showNotification(result.message, "error");
                 }
                 
             } catch (err) {

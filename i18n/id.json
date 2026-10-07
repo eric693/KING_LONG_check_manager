@@ -134,7 +134,7 @@
   "repair_approved": "Disetujui",
   "repair_pending": "Tertunda",
   "no_record": "Tidak ada catatan",
-  "ERR_BEFORE_MONTH_START": "⚠️ Tidak bisa memilih waktu sebelum bulan ini.",
+  "ERR_BEFORE_MONTH_START": "⚠️ Hanya bisa memperbaiki absen bulan lalu dan bulan ini",
   "STATUS_PUNCH_NORMAL": "Absen Normal",
   "STATUS_NO_RECORD": "Tidak Ada Catatan Absen",
   "STATUS_PUNCH_OUT_MISSING": "Tidak absen keluar",
@@ -770,7 +770,7 @@
     "NOTIF_LOCATIONS_FAILED_MSG": "Gagal memuat daftar lokasi: ",
     "NOTIF_REQUESTS_FAILED_NET": "Gagal memuat pengajuan yang menunggu. Periksa jaringan.",
     "NOTIF_REQUESTS_FAILED_MSG": "Gagal memuat pengajuan yang menunggu: ",
-    "NOTIF_ADJUST_THIS_MONTH_ONLY": "Perbaikan absensi hanya untuk bulan berjalan.",
+    "NOTIF_ADJUST_THIS_MONTH_ONLY": "Hanya bisa memperbaiki absen bulan lalu dan bulan ini",
     "NOTIF_LOCATION_ADDED": "Lokasi ditambahkan.",
     "NOTIF_NAME_TOO_LONG": "Nama tidak boleh lebih dari 50 karakter.",
     "NOTIF_NAME_TOO_SHORT": "Nama minimal 2 karakter.",
@@ -867,7 +867,7 @@
     "PAYSLIP_POPUP_BLOCKED": "Jendela cetak diblokir. Izinkan pop-up lalu coba lagi.",
     "SALARY_HOLIDAY_WORK_PAY": "Upah kerja hari libur",
     "SALARY_RECORD_AUTO_SAVED": "Slip gaji tersimpan otomatis.",
-    "ERR_DUPLICATE_ADJUST_PUNCH": "⚠️ Sudah ada pengajuan perbaikan absensi yang menunggu untuk hari itu. Tunggu hasilnya sebelum mengajukan lagi.",
+    "ERR_DUPLICATE_ADJUST_PUNCH": "⚠️ Permintaan yang sama untuk tanggal dan jam ini sudah menunggu persetujuan; tidak perlu dikirim lagi",
     "WORK_SCHEDULE_TITLE": "Pengaturan Jam Kerja",
     "WORK_SCHEDULE_DESCRIPTION": "Atur jam masuk, jam pulang, dan istirahat siang untuk seluruh perusahaan. Jam cuti hanya menghitung waktu di dalam rentang ini setelah dikurangi istirahat.",
     "WORK_SCHEDULE_START": "Jam masuk",
@@ -1404,5 +1404,9 @@
   "AUDIT_ACTION_SAVE_MANUAL_PAYSLIP": "Simpan slip manual",
   "AUDIT_ACTION_DELETE_MANUAL_PAYSLIP": "Hapus slip manual",
   "PUNCH_RETRYING": "Sistem sibuk, mencoba ulang otomatis (percobaan {n})…",
-  "PUNCH_BUSY_FAILED": "Sistem sibuk atau koneksi tidak stabil, absen kali ini gagal. Coba lagi dalam satu menit."
+  "PUNCH_BUSY_FAILED": "Sistem sibuk atau koneksi tidak stabil, absen kali ini gagal. Coba lagi dalam satu menit.",
+  "ERR_REASON_TOO_SHORT": "Alasan minimal 2 karakter",
+  "ERR_INVALID_DATE": "Format tanggal salah",
+  "ERR_ADJUST_PUNCH_LIMIT": "Sudah ada 2 permintaan jenis ini menunggu persetujuan untuk hari itu; tunggu admin meninjaunya",
+  "ERR_MISSING_DATETIME": "Pilih tanggal dan jam"
 }

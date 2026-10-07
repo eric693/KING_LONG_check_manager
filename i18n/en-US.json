@@ -134,7 +134,7 @@
   "repair_approved": "Approved",
   "repair_pending": "Pending",
   "no_record": "No Record",
-  "ERR_BEFORE_MONTH_START": "⚠️ Cannot select a time before this month",
+  "ERR_BEFORE_MONTH_START": "⚠️ You can only fix punches from last month or this month",
   "STATUS_PUNCH_NORMAL": "Punch Normal",
   "STATUS_NO_RECORD": "No Punch",
   "STATUS_PUNCH_OUT_MISSING": "Missing Punch Out",
@@ -792,7 +792,7 @@
     "NOTIF_LOCATIONS_FAILED_MSG": "Could not load the location list: ",
     "NOTIF_REQUESTS_FAILED_NET": "Could not load pending requests. Check your connection.",
     "NOTIF_REQUESTS_FAILED_MSG": "Could not load pending requests: ",
-    "NOTIF_ADJUST_THIS_MONTH_ONLY": "Make-up punches are limited to the current month.",
+    "NOTIF_ADJUST_THIS_MONTH_ONLY": "You can only fix punches from last month or this month",
     "NOTIF_LOCATION_ADDED": "Location added.",
     "NOTIF_NAME_TOO_LONG": "The name cannot exceed 50 characters.",
     "NOTIF_NAME_TOO_SHORT": "The name needs at least 2 characters.",
@@ -889,7 +889,7 @@
     "PAYSLIP_POPUP_BLOCKED": "The print window was blocked. Allow pop-ups and try again.",
     "SALARY_HOLIDAY_WORK_PAY": "Public holiday work pay",
     "SALARY_RECORD_AUTO_SAVED": "The payslip was saved automatically.",
-    "ERR_DUPLICATE_ADJUST_PUNCH": "⚠️ A make-up punch request for that day is already pending. Wait for the review before filing another.",
+    "ERR_DUPLICATE_ADJUST_PUNCH": "⚠️ An identical request for this date and time is already waiting for review; no need to send it again",
     "WORK_SCHEDULE_TITLE": "Working Hours Settings",
     "WORK_SCHEDULE_DESCRIPTION": "Set the company-wide start, end and lunch times. Leave hours only count time inside this window, with lunch already deducted.",
     "WORK_SCHEDULE_START": "Start time",
@@ -1425,5 +1425,9 @@
   "AUDIT_ACTION_SAVE_MANUAL_PAYSLIP": "Save manual payslip",
   "AUDIT_ACTION_DELETE_MANUAL_PAYSLIP": "Delete manual payslip",
   "PUNCH_RETRYING": "The system is busy, retrying automatically (attempt {n})…",
-  "PUNCH_BUSY_FAILED": "The system is busy or the connection is unstable, so this punch did not go through. Please try again in a minute."
+  "PUNCH_BUSY_FAILED": "The system is busy or the connection is unstable, so this punch did not go through. Please try again in a minute.",
+  "ERR_REASON_TOO_SHORT": "The reason must be at least 2 characters",
+  "ERR_INVALID_DATE": "Invalid date",
+  "ERR_ADJUST_PUNCH_LIMIT": "There are already 2 pending requests for this punch type on that day; please wait for the admin to review them",
+  "ERR_MISSING_DATETIME": "Please choose the date and time"
 }

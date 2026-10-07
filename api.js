@@ -205,3 +205,43 @@ async function punchWithRetry(action, punchType, onRetry) {
     }
     return last;
 }
+
+/**
+ * 送出補打卡申請（三個入口共用：當日修正、歷史補打、出勤異常的補打卡）。
+ * 系統忙碌時自動重試；前一次其實已經送出、重試時被判定「重複申請」，就當成成功。
+ * @returns {Promise<{ok: boolean, message: string}>}
+ */
+async function submitAdjustPunchRequest(params) {
+    const action = `adjustPunch&${params.toString()}`;
+    let hadFailure = false;
+    let last = null;
+    for (let i = 0; i < PUNCH_RETRY_DELAYS_MS.length; i++) {
+        if (PUNCH_RETRY_DELAYS_MS[i]) {
+            showNotification(t('PUNCH_RETRYING', { n: i }), 'warning');
+            await new Promise(resolve => setTimeout(resolve, PUNCH_RETRY_DELAYS_MS[i]));
+        }
+        try {
+            const res = await apiRequestJson(action, { timeoutMs: PUNCH_TIMEOUT_MS });
+            if (hadFailure && !res.ok && res.code === 'ERR_DUPLICATE_ADJUST_PUNCH') return { ok: true, res: res };
+            if (isBusyPunchFailure(res) || res.code === 'ERR_INTERNAL_ERROR') {
+                last = res;
+                hadFailure = true;
+                continue;
+            }
+            return { ok: !!res.ok, res: res, message: res.ok ? '' : adjustPunchErrorMessage(res) };
+        } catch (error) {
+            console.warn('補打卡請求失敗，準備重試:', error && error.message);
+            last = { ok: false, code: 'ERR_NETWORK' };
+            hadFailure = true;
+        }
+    }
+    return { ok: false, res: last, message: t('PUNCH_BUSY_FAILED') };
+}
+
+/** 補打卡失敗的訊息：有翻譯用翻譯，沒有就用後端的說明，不要讓員工看到 ERR_… 代碼 */
+function adjustPunchErrorMessage(res) {
+    if (!res) return t('NOTIF_ADJUST_PUNCH_FAILED');
+    const text = res.code ? t(res.code, res.params || {}) : '';
+    if (text && text !== res.code) return text;
+    return res.msg || t('NOTIF_ADJUST_PUNCH_FAILED');
+}

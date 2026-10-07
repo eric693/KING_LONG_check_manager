@@ -53,7 +53,8 @@ const DEPLOY_CHECKS = [
   ['Dailysalary.gs', () => typeof calculateDailySalary === 'function'],
   ['DatabaseSetup.gs', () => typeof setupLeaveSystemDatabase === 'function'],
   ['DbOperations.gs', () => typeof isEmployeeRowMisaligned_ === 'function' && typeof writeSession_ === 'function' &&
-                            String(writeSession_).indexOf('createSessionForUser_') !== -1],
+                            String(writeSession_).indexOf('createSessionForUser_') !== -1 &&
+                            String(punchAdjusted).indexOf('ERR_ADJUST_PUNCH_LIMIT') !== -1],
   ['EmployeeSheetRepair.gs', () => typeof readOriginalLockedNames_ === 'function'],
   ['Expense.gs', () => typeof handleReviewExpense === 'function'],
   ['Handlers.gs', () => typeof handleGetLoginUrl === 'function' && handleGetLoginUrl.length >= 1 &&

@@ -134,7 +134,7 @@
   "repair_approved": "承認済み",
   "repair_pending": "承認待ち",
   "no_record": "記録なし",
-  "ERR_BEFORE_MONTH_START": "⚠️ 今月より前の時間は選択できません",
+  "ERR_BEFORE_MONTH_START": "⚠️ 先月と今月の打刻のみ修正できます",
   "STATUS_PUNCH_NORMAL": "打刻正常",
   "STATUS_NO_RECORD": "打刻記録なし",
   "STATUS_PUNCH_OUT_MISSING": "退勤打刻なし",
@@ -770,7 +770,7 @@
     "NOTIF_LOCATIONS_FAILED_MSG": "地点リストの取得に失敗しました：",
     "NOTIF_REQUESTS_FAILED_NET": "承認待ちの申請を取得できませんでした。ネットワークを確認してください。",
     "NOTIF_REQUESTS_FAILED_MSG": "承認待ちの申請を取得できませんでした：",
-    "NOTIF_ADJUST_THIS_MONTH_ONLY": "打刻修正は今月分のみ可能です。",
+    "NOTIF_ADJUST_THIS_MONTH_ONLY": "先月と今月の打刻のみ補えます",
     "NOTIF_LOCATION_ADDED": "地点を追加しました。",
     "NOTIF_NAME_TOO_LONG": "氏名は 50 文字までです。",
     "NOTIF_NAME_TOO_SHORT": "氏名は 2 文字以上で入力してください。",
@@ -867,7 +867,7 @@
     "PAYSLIP_POPUP_BLOCKED": "印刷ウィンドウがブロックされました。ポップアップを許可してから再試行してください。",
     "SALARY_HOLIDAY_WORK_PAY": "祝日出勤手当",
     "SALARY_RECORD_AUTO_SAVED": "給与明細を自動保存しました。",
-    "ERR_DUPLICATE_ADJUST_PUNCH": "⚠️ その日はすでに承認待ちの打刻修正があります。承認後に再度申請してください。",
+    "ERR_DUPLICATE_ADJUST_PUNCH": "⚠️ この日時の同じ補打刻申請がすでに審査待ちです。再送信は不要です",
     "WORK_SCHEDULE_TITLE": "勤務時間設定",
     "WORK_SCHEDULE_DESCRIPTION": "全社共通の始業・終業・昼休み時間を設定します。休暇時間はこの時間帯のうち、昼休みを除いた分のみ計算されます。",
     "WORK_SCHEDULE_START": "始業時間",
@@ -1404,5 +1404,9 @@
   "AUDIT_ACTION_SAVE_MANUAL_PAYSLIP": "手入力明細を保存",
   "AUDIT_ACTION_DELETE_MANUAL_PAYSLIP": "手入力明細を削除",
   "PUNCH_RETRYING": "システムが混雑しています。自動で再試行中（{n} 回目）…",
-  "PUNCH_BUSY_FAILED": "システムの混雑または通信不良のため打刻できませんでした。1 分ほどしてからもう一度お試しください。"
+  "PUNCH_BUSY_FAILED": "システムの混雑または通信不良のため打刻できませんでした。1 分ほどしてからもう一度お試しください。",
+  "ERR_REASON_TOO_SHORT": "理由は 2 文字以上入力してください",
+  "ERR_INVALID_DATE": "日付の形式が正しくありません",
+  "ERR_ADJUST_PUNCH_LIMIT": "この日のこの種類の補打刻はすでに 2 件審査待ちです。審査後に申請してください",
+  "ERR_MISSING_DATETIME": "日時を選択してください"
 }

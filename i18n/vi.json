@@ -168,7 +168,7 @@
 
   "no_record": "Không có bản ghi",
 
-  "ERR_BEFORE_MONTH_START": "⚠️ Không thể chọn thời gian trước tháng này.",
+  "ERR_BEFORE_MONTH_START": "⚠️ Chỉ bù chấm công của tháng trước và tháng này",
   "ERR_AFTER_TODAY": "⚠️ Không thể chọn thời gian sau hôm nay",
 
   "STATUS_PUNCH_NORMAL": "Chấm công bình thường",
@@ -818,7 +818,7 @@
     "NOTIF_LOCATIONS_FAILED_MSG": "Không lấy được danh sách địa điểm: ",
     "NOTIF_REQUESTS_FAILED_NET": "Không lấy được các đề nghị chờ duyệt. Hãy kiểm tra mạng.",
     "NOTIF_REQUESTS_FAILED_MSG": "Không lấy được các đề nghị chờ duyệt: ",
-    "NOTIF_ADJUST_THIS_MONTH_ONLY": "Chỉ có thể bổ sung chấm công trong tháng này.",
+    "NOTIF_ADJUST_THIS_MONTH_ONLY": "Chỉ bù chấm công của tháng trước và tháng này",
     "NOTIF_LOCATION_ADDED": "Đã thêm địa điểm.",
     "NOTIF_NAME_TOO_LONG": "Tên không được quá 50 ký tự.",
     "NOTIF_NAME_TOO_SHORT": "Tên phải có ít nhất 2 ký tự.",
@@ -915,7 +915,7 @@
     "PAYSLIP_POPUP_BLOCKED": "Cửa sổ in bị chặn. Hãy cho phép cửa sổ bật lên rồi thử lại.",
     "SALARY_HOLIDAY_WORK_PAY": "Lương làm ngày lễ",
     "SALARY_RECORD_AUTO_SAVED": "Phiếu lương đã được lưu tự động.",
-    "ERR_DUPLICATE_ADJUST_PUNCH": "⚠️ Ngày đó đã có đề nghị bổ sung chấm công đang chờ duyệt. Hãy đợi duyệt xong rồi gửi tiếp.",
+    "ERR_DUPLICATE_ADJUST_PUNCH": "⚠️ Đã có yêu cầu giống hệt cho ngày giờ này đang chờ duyệt, không cần gửi lại",
     "BTN_APPLY_FILTER": "Áp dụng bộ lọc",
     "BTN_CLEAR_FILTER": "Xoá bộ lọc",
     "BTN_EXPORT_SHIFTS": "Xuất bảng ca",
@@ -1460,5 +1460,9 @@
   "AUDIT_ACTION_SAVE_MANUAL_PAYSLIP": "Lưu phiếu lương nhập tay",
   "AUDIT_ACTION_DELETE_MANUAL_PAYSLIP": "Xóa phiếu lương nhập tay",
   "PUNCH_RETRYING": "Hệ thống đang bận, đang tự thử lại (lần {n})…",
-  "PUNCH_BUSY_FAILED": "Hệ thống bận hoặc mạng không ổn định nên lần này chưa chấm công được, vui lòng thử lại sau một phút."
+  "PUNCH_BUSY_FAILED": "Hệ thống bận hoặc mạng không ổn định nên lần này chưa chấm công được, vui lòng thử lại sau một phút.",
+  "ERR_REASON_TOO_SHORT": "Lý do phải có ít nhất 2 ký tự",
+  "ERR_INVALID_DATE": "Ngày không hợp lệ",
+  "ERR_ADJUST_PUNCH_LIMIT": "Ngày đó đã có 2 yêu cầu bù cùng loại đang chờ duyệt, vui lòng chờ quản trị viên duyệt",
+  "ERR_MISSING_DATETIME": "Vui lòng chọn ngày giờ"
 }

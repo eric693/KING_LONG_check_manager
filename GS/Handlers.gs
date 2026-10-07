@@ -417,6 +417,11 @@ function handleAdjustPunch(params) {
     Logger.log('');
     Logger.log('═══════════════════════════════════════');
     
+    if (!result.ok && typeof logPunchFailure_ === 'function') {
+      const session = checkSession_(token);
+      logPunchFailure_({ userId: session.user ? session.user.userId : '', name: session.user ? session.user.name : '',
+                         method: '補打卡申請', type: type, code: result.code, msg: result.msg });
+    }
     return result;
     
   } catch (error) {

@@ -441,26 +441,36 @@ function punchAdjusted(sessionToken, type, punchDate, lat, lng, note) {
   const typeCol = headers.indexOf('類型');
   const statusCol = headers.indexOf('狀態');
 
+  // 一天可以有兩組上下班（兩頭班），所以同一天同一種卡可能要補兩張：
+  // 完全相同（同日、同類型、同時間）的待審核申請才算重複；同一天同一種卡最多 2 張待審核
   if (userIdCol >= 0 && dateCol >= 0 && typeCol >= 0 && statusCol >= 0) {
+    const timeCol = headers.indexOf('時間');
+    const tz = Session.getScriptTimeZone();
+    const asDate = v => (v instanceof Date) ? Utilities.formatDate(v, tz, 'yyyy-MM-dd') : String(v || '').trim();
+    const asTime = v => (v instanceof Date) ? Utilities.formatDate(v, tz, 'HH:mm') : String(v || '').trim().substring(0, 5);
     const allValues = sh.getDataRange().getValues();
+    let pendingSameType = 0;
     for (let i = 1; i < allValues.length; i++) {
       const row = allValues[i];
-      const rowUserId = String(row[userIdCol] || '').trim();
-      const rowDate = String(row[dateCol] || '').trim();
-      const rowType = String(row[typeCol] || '').trim();
-      const rowStatus = String(row[statusCol] || '').trim();
-
-      if (rowUserId === user.userId &&
-          rowDate === dateOnly &&
-          rowType === type &&
-          rowStatus === '待審核') {
-        Logger.log('防重複補打卡: ' + user.name + ' 在 ' + dateOnly + ' 已有待審核的補' + type + '卡申請');
+      if (String(row[userIdCol] || '').trim() !== user.userId) continue;
+      if (asDate(row[dateCol]) !== dateOnly || String(row[typeCol] || '').trim() !== type) continue;
+      if (String(row[statusCol] || '').trim() !== '待審核') continue;
+      pendingSameType++;
+      if (timeCol < 0 || asTime(row[timeCol]) === timeOnly) {
+        Logger.log('防重複補打卡: ' + user.name + ' 在 ' + dateOnly + ' ' + timeOnly + ' 已有待審核的補' + type + '卡申請');
         return {
           ok: false,
           code: "ERR_DUPLICATE_ADJUST_PUNCH",
-          msg: dateOnly + ' 的補' + type + '卡申請已送出，請等待審核後再申請'
+          msg: dateOnly + ' ' + timeOnly + ' 的補' + type + '卡申請已送出，請等待審核'
         };
       }
+    }
+    if (pendingSameType >= PUNCH_MAX_PER_TYPE) {
+      return {
+        ok: false,
+        code: "ERR_ADJUST_PUNCH_LIMIT",
+        msg: dateOnly + ' 的補' + type + '卡已經有 ' + PUNCH_MAX_PER_TYPE + ' 張待審核，請等待審核後再申請'
+      };
     }
   }
 

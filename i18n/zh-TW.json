@@ -90,7 +90,7 @@
     "ADJUST_PUNCH_DATETIME_LABEL": "選擇補打卡日期與時間：",
     "PUNCH_SUCCESS": "✅{type}打卡成功",
     "ADJUST_PUNCH_SUCCESS": "✅{type} 補打卡成功",
-    "ERR_DUPLICATE_ADJUST_PUNCH": "⚠️ 同一天已有待審核的補打卡申請，請等待審核後再申請",
+    "ERR_DUPLICATE_ADJUST_PUNCH": "⚠️ 這個日期與時間已經有一筆相同的補打卡在等審核，不用再送一次",
     "ERR_SESSION_INVALID": "🔄 登入憑證-已失效「請重新登入」",
     "ERR_SESSION_EXPIRED": "Session 已過期",
     "ERR_SESSION_TOKEN": "無效的 sessionToken",
@@ -135,7 +135,7 @@
     "repair_approved": "已審核",
     "repair_pending": "待審",
     "no_record": "無紀錄",
-    "ERR_BEFORE_MONTH_START": "⚠️ 不能選擇本月以前的時間",
+    "ERR_BEFORE_MONTH_START": "⚠️ 只能補上個月與本月的打卡",
     "STATUS_PUNCH_NORMAL": "打卡正常",
     "STATUS_NO_RECORD": "未打卡",
     "STATUS_PUNCH_OUT_MISSING": "未打下班卡",
@@ -811,7 +811,7 @@
     "NOTIF_LOCATIONS_FAILED_MSG": "取得地點清單失敗：",
     "NOTIF_REQUESTS_FAILED_NET": "取得待審核請求失敗，請檢查網路。",
     "NOTIF_REQUESTS_FAILED_MSG": "取得待審核請求失敗：",
-    "NOTIF_ADJUST_THIS_MONTH_ONLY": "只能補打本月的打卡記錄",
+    "NOTIF_ADJUST_THIS_MONTH_ONLY": "只能補打上個月與本月的打卡記錄",
     "NOTIF_LOCATION_ADDED": "地點新增成功！",
     "NOTIF_NAME_TOO_LONG": "姓名不能超過 50 個字",
     "NOTIF_NAME_TOO_SHORT": "姓名至少需要 2 個字",
@@ -1444,5 +1444,9 @@
   "AUDIT_ACTION_SAVE_MANUAL_PAYSLIP": "儲存手動薪資單",
   "AUDIT_ACTION_DELETE_MANUAL_PAYSLIP": "刪除手動薪資單",
   "PUNCH_RETRYING": "系統忙碌，正在自動重試（第 {n} 次）…",
-  "PUNCH_BUSY_FAILED": "系統忙碌或網路不穩，這次沒有打卡成功，請過一分鐘再試一次"
+  "PUNCH_BUSY_FAILED": "系統忙碌或網路不穩，這次沒有打卡成功，請過一分鐘再試一次",
+  "ERR_REASON_TOO_SHORT": "補打卡理由至少需要 2 個字",
+  "ERR_INVALID_DATE": "日期格式錯誤",
+  "ERR_ADJUST_PUNCH_LIMIT": "這一天這種卡已經有 2 張補打卡在等審核，請等管理員審核後再申請",
+  "ERR_MISSING_DATETIME": "請選擇補打卡的日期與時間"
 }
