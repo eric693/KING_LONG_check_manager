@@ -797,6 +797,8 @@ function generateLinePunchToken_(userId, punchType) {
     expiry: new Date().getTime() + 5 * 60 * 1000
   });
   PropertiesService.getScriptProperties().setProperty('LPT_' + token, data);
+  // 偶爾清一次沒被點開、早就過期的連結，指令碼屬性有總量上限
+  if (Math.random() < 0.1 && typeof cleanupLinePunchTokens_ === 'function') cleanupLinePunchTokens_();
   Logger.log('LINE 打卡 Token 已生成: ' + token + ' (' + punchType + ')');
   return token;
 }

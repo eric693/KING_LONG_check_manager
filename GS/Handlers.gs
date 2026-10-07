@@ -198,7 +198,19 @@ function handleExchangeToken(otoken) {
 
 function handlePunch(params) {
   const { token, type, lat, lng, note } = params;
-  return punch(token, type, parseFloat(lat), parseFloat(lng), note);
+  let result;
+  try {
+    result = punch(token, type, parseFloat(lat), parseFloat(lng), note);
+  } catch (error) {
+    Logger.log('handlePunch 錯誤: ' + error);
+    result = { ok: false, code: 'ERR_INTERNAL', msg: '系統錯誤，請稍後再試', detail: String(error.message || error).slice(0, 200) };
+  }
+  if (!result.ok && result.code !== 'ERR_SESSION_INVALID') {
+    const session = (typeof checkSession_ === 'function') ? checkSession_(token) : null;
+    logPunchFailure_({ userId: session && session.user ? session.user.userId : '', name: session && session.user ? session.user.name : '',
+                       method: '網頁', type: type, code: result.code, msg: result.msg, detail: result.detail });
+  }
+  return result;
 }
 
 // function handleAdjustPunch(params) {
@@ -212,11 +224,18 @@ function handlePunch(params) {
  * 不需要 sessionToken；LINE 打卡 Token 本身即是身份驗證
  */
 function handleLinePunchWithToken(params) {
+  let data = null;
+  const fail = (result) => {
+    logPunchFailure_({ userId: data ? data.userId : '', method: 'LINE', type: data ? data.punchType : '',
+                       code: result.code, msg: result.msg, detail: result.detail });
+    return result;
+  };
+
   try {
     const { token, lat, lng } = params;
 
     if (!token || !lat || !lng) {
-      return { ok: false, code: 'ERR_MISSING_PARAMS', msg: '缺少必要參數' };
+      return fail({ ok: false, code: 'ERR_MISSING_PARAMS', msg: '缺少必要參數' });
     }
 
     const props = PropertiesService.getScriptProperties();
@@ -224,18 +243,24 @@ function handleLinePunchWithToken(params) {
     const dataStr = props.getProperty(key);
 
     if (!dataStr) {
-      return { ok: false, code: 'ERR_LPT_INVALID', msg: '打卡連結無效或已使用，請重新在 LINE 輸入打卡指令' };
+      return fail({ ok: false, code: 'ERR_LPT_INVALID', msg: '打卡連結無效或已使用，請重新在 LINE 輸入打卡指令' });
     }
 
-    const data = JSON.parse(dataStr);
+    data = JSON.parse(dataStr);
+
+    // 已經打過卡的連結：同一個連結再送一次（例如網路慢、員工重按、前端自動重試），回傳同樣的成功結果，
+    // 不要讓已經成功的人看到「連結已使用」
+    if (data.done) {
+      return Object.assign({ ok: true, repeated: true }, data.done);
+    }
 
     if (new Date().getTime() > data.expiry) {
       props.deleteProperty(key);
-      return { ok: false, code: 'ERR_LPT_EXPIRED', msg: '打卡連結已過期（5 分鐘），請重新在 LINE 輸入打卡指令' };
+      return fail({ ok: false, code: 'ERR_LPT_EXPIRED', msg: '打卡連結已過期（5 分鐘），請重新在 LINE 輸入打卡指令' });
     }
 
-    // 單次使用：立即刪除 token
-    props.deleteProperty(key);
+    // 連結要等打卡成功才算用掉：以前一進來就刪，後面任何一步出錯（例如尖峰時段系統忙碌），
+    // 員工重試只會看到「連結無效」，只能回 LINE 重新要一次
 
     const userId    = data.userId;
     const punchType = data.punchType;
@@ -247,24 +272,28 @@ function handleLinePunchWithToken(params) {
     if (!locationCheck.valid) {
       const nearest = locationCheck.nearestLocation;
       const hint = nearest ? `（距離最近地點「${nearest.name}」還有 ${nearest.distance} 公尺）` : '';
-      return { ok: false, code: 'ERR_NOT_IN_RANGE', msg: locationCheck.reason + hint };
+      return fail({ ok: false, code: 'ERR_NOT_IN_RANGE', msg: locationCheck.reason + hint });
     }
 
     // 防重複打卡
     if (isDuplicatePunch_(userId, punchType)) {
-      return { ok: false, code: 'ERR_DUPLICATE_PUNCH', msg: '您剛剛已經打過卡了，請勿重複操作' };
+      return fail({ ok: false, code: 'ERR_DUPLICATE_PUNCH', msg: '您剛剛已經打過卡了，請勿重複操作' });
     }
 
     // 一天最多兩組上下班（休息前要打卡），順序與次數見 PunchRules.gs
     const sequence = checkPunchSequence_(userId, punchType);
-    if (!sequence.ok) return sequence;
+    if (!sequence.ok) return fail(sequence);
 
     // 執行打卡
     const result = executePunch(userId, punchType, latF, lngF, locationCheck.locationName);
 
     if (!result.success) {
-      return { ok: false, code: 'ERR_PUNCH_FAILED', msg: result.message };
+      return fail({ ok: false, code: 'ERR_PUNCH_FAILED', msg: result.message });
     }
+
+    const done = { punchType: punchType, time: result.time, location: locationCheck.locationName };
+    // 標記成用過（保留 30 分鐘給重送用，之後由 cleanupLinePunchTokens_ 清掉）
+    props.setProperty(key, JSON.stringify(Object.assign({}, data, { done: done, expiry: Date.now() + 30 * 60 * 1000 })));
 
     // 推播 LINE 成功通知給本人
     try {
@@ -290,17 +319,12 @@ function handleLinePunchWithToken(params) {
       Logger.log('LINE push 通知失敗（不影響打卡）: ' + notifyErr.message);
     }
 
-    return {
-      ok: true,
-      punchType: punchType,
-      time: result.time,
-      location: locationCheck.locationName
-    };
+    return Object.assign({ ok: true }, done);
 
   } catch (err) {
     Logger.log('handleLinePunchWithToken 錯誤: ' + err.message);
     // 附上原因：部署漏了檔案時（例如沒有 PunchRules.gs）畫面上就看得出是哪裡壞了
-    return { ok: false, code: 'ERR_INTERNAL', msg: '系統錯誤，請稍後再試', detail: String(err.message || err).slice(0, 200) };
+    return fail({ ok: false, code: 'ERR_INTERNAL', msg: '系統錯誤，請稍後再試', detail: String(err.message || err).slice(0, 200) });
   }
 }
 
@@ -2265,10 +2289,18 @@ function handleQRPunch(params) {
     if (!params.qrToken) {
       return { ok: false, msg: '缺少 QR Token 參數' };
     }
-    return qrPunch(params.token, params.qrToken, params.loc || '');
+    const result = qrPunch(params.token, params.qrToken, params.loc || '');
+    if (!result.ok) {
+      const session = checkSession_(params.token);
+      logPunchFailure_({ userId: session.user ? session.user.userId : '', name: session.user ? session.user.name : '',
+                         method: 'QR／平板', code: result.code, msg: result.msg });
+    }
+    return result;
   } catch (error) {
     Logger.log('handleQRPunch 錯誤: ' + error);
-    return { ok: false, msg: error.message };
+    const result = { ok: false, code: 'ERR_INTERNAL', msg: '系統錯誤，請稍後再試', detail: String(error.message || error).slice(0, 200) };
+    logPunchFailure_({ method: 'QR／平板', code: result.code, msg: result.msg, detail: result.detail });
+    return result;
   }
 }
 /**

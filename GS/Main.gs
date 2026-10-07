@@ -58,11 +58,13 @@ const DEPLOY_CHECKS = [
   ['Expense.gs', () => typeof handleReviewExpense === 'function'],
   ['Handlers.gs', () => typeof handleGetLoginUrl === 'function' && handleGetLoginUrl.length >= 1 &&
                          String(handleLinePunchWithToken).indexOf('checkPunchSequence_') !== -1 &&
+                         String(handleLinePunchWithToken).indexOf('data.done') !== -1 &&
                          String(handleCalculateMonthlySalary).indexOf('readManualPayslip_') !== -1 &&
                          String(handleSetEmployeeSalaryTW).indexOf("existing.data['到職日期']") !== -1],
   ['LeaveManagement.gs', () => typeof submitLeaveRequest === 'function'],
   ['LineApi.gs', () => typeof getLineUserInfo_ === 'function'],
-  ['LineBotPunch.gs', () => typeof executePunch === 'function' && String(determinePunchType).indexOf('nextPunchType_') !== -1],
+  ['LineBotPunch.gs', () => typeof executePunch === 'function' && String(determinePunchType).indexOf('nextPunchType_') !== -1 &&
+                             String(generateLinePunchToken_).indexOf('cleanupLinePunchTokens_') !== -1],
   ['LineNotification.gs', () => typeof sendLineNotification_ === 'function' &&
                                  String(sendLineNotification_).indexOf('isLineUserId_') !== -1],
   ['ManualPayslip.gs', () => typeof handleSaveManualPayslip === 'function' && typeof readManualPayslip_ === 'function'],
@@ -71,7 +73,8 @@ const DEPLOY_CHECKS = [
   ['OvertimeOperations.gs', () => typeof initOvertimeSheet === 'function'],
   ['PayrollRules.gs', () => typeof applyPayrollRules_ === 'function' && typeof payrollAttendanceZh_ === 'function' &&
                              String(handleSavePayrollAdjustments).indexOf('PAYSLIP_IS_MANUAL') !== -1],
-  ['PunchRules.gs', () => typeof checkPunchSequence_ === 'function' && typeof computeDayWorkFromPunches_ === 'function'],
+  ['PunchRules.gs', () => typeof checkPunchSequence_ === 'function' && typeof computeDayWorkFromPunches_ === 'function' &&
+                           typeof logPunchFailure_ === 'function'],
   ['QrPunch.gs', () => typeof qrPunch === 'function' && String(qrPunch).indexOf('checkPunchSequence_') !== -1],
   ['SalaryManagement.gs', () => typeof calculateMonthlySalary === 'function' && calculateMonthlySalary.length >= 3 &&
                                  String(saveMonthlySalary).indexOf('PAYSLIP_IS_MANUAL') !== -1],

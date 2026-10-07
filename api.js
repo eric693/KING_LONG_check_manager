@@ -69,7 +69,8 @@ async function apiRequest(action, options = {}) {
     for (let i = 0; i < attempts; i++) {
         // Apps Script 偶爾會很久不回應，沒有逾時的話畫面會一直卡在「載入中」
         const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+        const timeoutMs = options.timeoutMs || API_TIMEOUT_MS;
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
 
         try {
             const response = await fetch(url, { ...fetchOptions, signal: controller.signal });
@@ -84,7 +85,7 @@ async function apiRequest(action, options = {}) {
             return response;
         } catch (err) {
             lastError = (err.name === 'AbortError')
-                ? new Error(`連線逾時（${API_TIMEOUT_MS / 1000} 秒）`)
+                ? new Error(`連線逾時（${(options.timeoutMs || API_TIMEOUT_MS) / 1000} 秒）`)
                 : err;
             if (i < attempts - 1) console.warn('API 重試中:', name, lastError.message);
         } finally {
@@ -144,4 +145,63 @@ async function apiRequestParams(params) {
     // 交給 apiRequest 統一處理 GET/POST、逾時與重試
     const query = search.toString();
     return apiRequest(query ? `${action}&${query}` : action);
+}
+
+
+// ==================== 打卡專用：尖峰時段自動重試 ====================
+//
+// 上下班時間大家同時打卡，Apps Script 同時處理的請求有上限（同一個帳號約 30 個），
+// 超過的請求會直接失敗、或回一頁錯誤網頁、或拖到逾時。以前員工只看到「連線失敗」，
+// 只能自己再按一次。現在打卡遇到這種「系統忙碌」的失敗會等一下自動重試。
+//
+// 重試是安全的：
+//   ・網頁／QR 打卡：後端會檢查上下班順序，第一次其實已經寫進去的話，重試會回
+//     「已經打過這種卡」，這裡當成成功
+//   ・LINE 打卡：同一個打卡連結成功後再送，後端回傳同樣的成功結果
+
+const PUNCH_TIMEOUT_MS = 45000;
+const PUNCH_RETRY_DELAYS_MS = [0, 2500, 6000];
+
+function isBusyPunchFailure(res) {
+    if (!res || res.ok) return false;
+    if (res.code === 'ERR_NETWORK' || res.code === 'ERR_INTERNAL' || res.code === 'ERR_BUSY') return true;
+    return /too many|simultaneous|timed out|timeout|逾時|busy|忙碌|Service/i.test(String(res.detail || '') + ' ' + String(res.msg || ''));
+}
+
+/**
+ * @param {string} action   跟 callApifetch 一樣的 action 字串
+ * @param {string} [punchType] 上班／下班（用來辨認「其實已經打過了」）
+ * @param {function(number)} [onRetry] 第 n 次重試前呼叫（給畫面顯示「正在重試」）
+ * @returns {Promise<Object>} 後端回應；連線層失敗時是 { ok:false, code:'ERR_NETWORK' }
+ */
+async function punchWithRetry(action, punchType, onRetry) {
+    const typeKey = punchType === '上班' ? 'PUNCH_IN' : (punchType === '下班' ? 'PUNCH_OUT' : '');
+    let last = null;
+    let hadFailure = false;
+
+    for (let i = 0; i < PUNCH_RETRY_DELAYS_MS.length; i++) {
+        if (PUNCH_RETRY_DELAYS_MS[i]) {
+            if (typeof onRetry === 'function') onRetry(i);
+            await new Promise(resolve => setTimeout(resolve, PUNCH_RETRY_DELAYS_MS[i]));
+        }
+        try {
+            const res = await apiRequestJson(action, { timeoutMs: PUNCH_TIMEOUT_MS });
+            // 前一次失敗、這次卻說「已經打過這種卡」：表示前一次其實已經寫進去了
+            if (hadFailure && !res.ok && res.code === 'ERR_PUNCH_SAME_TYPE' && typeKey &&
+                res.params && res.params.type === typeKey) {
+                return { ok: true, code: 'PUNCH_SUCCESS', params: { type: punchType }, recovered: true };
+            }
+            if (isBusyPunchFailure(res)) {
+                last = res;
+                hadFailure = true;
+                continue;
+            }
+            return res;
+        } catch (error) {
+            console.warn('打卡請求失敗，準備重試:', error && error.message);
+            last = { ok: false, code: 'ERR_NETWORK', msg: String((error && error.message) || error) };
+            hadFailure = true;
+        }
+    }
+    return last;
 }

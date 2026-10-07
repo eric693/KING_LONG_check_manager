@@ -15,6 +15,14 @@ function punchServerMessage(res, fallbackKey) {
     return t(fallbackKey);
 }
 
+/** LINE 打卡頁關閉結果視窗：能回上一頁就回去，回不去（從 LINE 直接開的）就載入一般首頁 */
+function leaveLinePunchPage(overlay) {
+    overlay.remove();
+    if (!window.__linePunchOnly) return;
+    try { window.history.back(); } catch (e) { /* 沒有上一頁 */ }
+    setTimeout(() => { window.location.replace(window.location.pathname); }, 400);
+}
+
 async function handleLinePunchFromUrl() {
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('linePunchToken');
@@ -45,17 +53,25 @@ async function handleLinePunchFromUrl() {
         const btn = overlay.querySelector('#lpo-close');
         btn.style.display = 'inline-block';
         btn.style.background = btnColor || '#4CAF50';
-        btn.onclick = () => overlay.remove();
+        btn.onclick = () => leaveLinePunchPage(overlay);
     };
 
+    let position;
     try {
-        const position = await new Promise((resolve, reject) => {
+        position = await new Promise((resolve, reject) => {
             navigator.geolocation.getCurrentPosition(resolve, reject, {
                 timeout: 15000,
                 enableHighAccuracy: true
             });
         });
+    } catch (err) {
+        // 只有定位本身失敗才顯示定位錯誤；以前連線失敗也會被說成「無法取得位置」
+        const geoErrors = { 1: t('LPT_GEO_DENIED'), 3: t('LPT_GEO_TIMEOUT') };
+        setResult('❌', t('LPT_NO_LOCATION'), geoErrors[err.code] || t('LPT_GEO_CHECK'), '#f44336');
+        return;
+    }
 
+    try {
         overlay.querySelector('#lpo-title').textContent = t('LPT_PUNCHING');
         overlay.querySelector('#lpo-sub').textContent = '';
 
@@ -65,7 +81,10 @@ async function handleLinePunchFromUrl() {
             lng: position.coords.longitude
         });
 
-        const res = await callApifetch(`linePunch&${params.toString()}`);
+        // 尖峰時段系統忙碌會自動重試；同一個打卡連結重送是安全的（後端回傳同樣的成功結果）
+        const res = await punchWithRetry(`linePunch&${params.toString()}`, '', n => {
+            overlay.querySelector('#lpo-sub').textContent = t('PUNCH_RETRYING', { n: n });
+        });
 
         if (res.ok) {
             const typeText = res.punchType === '上班' ? '🟢 ' + t('KIOSK_CHECK_IN') : '🟠 ' + t('KIOSK_CHECK_OUT');
@@ -83,21 +102,19 @@ async function handleLinePunchFromUrl() {
                 secs--;
                 if (secs <= 0) {
                     clearInterval(autoCloseTimer);
-                    overlay.remove();
-                    try { window.history.back(); } catch(e) {}
+                    leaveLinePunchPage(overlay);
                 } else {
                     countdownEl.textContent = t('LPT_AUTO_CLOSE', { secs: secs });
                 }
             }, 1000);
             overlay.querySelector('#lpo-close').onclick = () => {
                 clearInterval(autoCloseTimer);
-                overlay.remove();
-                try { window.history.back(); } catch(e) {}
+                leaveLinePunchPage(overlay);
             };
 
-            await loadAbnormalRecordsInBackground();
         } else {
             const msgMap = {
+                ERR_NETWORK:      t('PUNCH_BUSY_FAILED'),
                 ERR_LPT_INVALID:  t('LPT_ERR_INVALID'),
                 ERR_LPT_EXPIRED:  t('LPT_ERR_EXPIRED'),
                 // 後端的中文訊息會附上最近的打卡地點與距離，中文介面直接用
@@ -107,13 +124,13 @@ async function handleLinePunchFromUrl() {
                 ERR_PUNCH_SAME_TYPE: t('ERR_PUNCH_SAME_TYPE', res.params || {}),
                 ERR_PUNCH_LIMIT: t('ERR_PUNCH_LIMIT', res.params || {})
             };
-            const failText = msgMap[res.code] || punchServerMessage(res, 'LPT_TRY_LATER');
+            const failText = msgMap[res.code] || (isBusyPunchFailure(res) ? t('PUNCH_BUSY_FAILED') : punchServerMessage(res, 'LPT_TRY_LATER'));
             // 系統錯誤時附上原因，截圖給管理員就知道是哪裡壞了
             setResult('❌', t('LPT_FAILED'), res.detail ? `${failText}（${res.detail}）` : failText, '#f44336');
         }
     } catch (err) {
-        const geoErrors = { 1: t('LPT_GEO_DENIED'), 3: t('LPT_GEO_TIMEOUT') };
-        setResult('❌', t('LPT_NO_LOCATION'), geoErrors[err.code] || t('LPT_GEO_CHECK'), '#f44336');
+        console.error('LINE 打卡失敗:', err);
+        setResult('❌', t('LPT_FAILED'), t('PUNCH_BUSY_FAILED'), '#f44336');
     }
 }
 
@@ -142,7 +159,10 @@ async function performQRPunch(qrTokenId) {
         sessionStorage.removeItem('pendingQRLoc');
         const urlParams = new URLSearchParams({ qrToken: qrTokenId });
         if (qrLoc) urlParams.append('loc', qrLoc);
-        const res = await callApifetch(`qrPunch&${urlParams.toString()}`);
+        const qrType = String(qrTokenId).indexOf('O_') === 0 ? '下班' : '上班';
+        const res = await punchWithRetry(`qrPunch&${urlParams.toString()}`, qrType, n => {
+            showNotification(t('PUNCH_RETRYING', { n: n }), 'warning');
+        });
         if (res.ok) {
             const type = (res.params && res.params.type) || '';
             const loc  = (res.params && res.params.location) || '';
@@ -158,7 +178,7 @@ async function performQRPunch(qrTokenId) {
                 'ERR_PUNCH_LIMIT':      t('ERR_PUNCH_LIMIT', res.params || {}),
                 'ERR_SESSION_INVALID':  t('QR_ERR_LOGIN')
             };
-            showNotification(msgMap[res.code] || punchServerMessage(res, 'NOTIF_QR_PUNCH_FAILED'), 'error');
+            showNotification(msgMap[res.code] || (isBusyPunchFailure(res) ? t('PUNCH_BUSY_FAILED') : punchServerMessage(res, 'NOTIF_QR_PUNCH_FAILED')), 'error');
         }
     } catch (err) {
         console.error('QR 打卡錯誤:', err);

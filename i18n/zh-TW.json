@@ -1442,5 +1442,7 @@
   "MANUAL_PAYSLIP_AMOUNT": "金額要介於 0～10,000,000",
   "MANUAL_PAYSLIP_INVALID": "請選擇員工與年月，並檢查手動項目的名稱",
   "AUDIT_ACTION_SAVE_MANUAL_PAYSLIP": "儲存手動薪資單",
-  "AUDIT_ACTION_DELETE_MANUAL_PAYSLIP": "刪除手動薪資單"
+  "AUDIT_ACTION_DELETE_MANUAL_PAYSLIP": "刪除手動薪資單",
+  "PUNCH_RETRYING": "系統忙碌，正在自動重試（第 {n} 次）…",
+  "PUNCH_BUSY_FAILED": "系統忙碌或網路不穩，這次沒有打卡成功，請過一分鐘再試一次"
 }

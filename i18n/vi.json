@@ -1458,5 +1458,7 @@
   "MANUAL_PAYSLIP_AMOUNT": "Số tiền phải từ 0 đến 10.000.000",
   "MANUAL_PAYSLIP_INVALID": "Chọn nhân viên và tháng, kiểm tra tên các khoản thủ công",
   "AUDIT_ACTION_SAVE_MANUAL_PAYSLIP": "Lưu phiếu lương nhập tay",
-  "AUDIT_ACTION_DELETE_MANUAL_PAYSLIP": "Xóa phiếu lương nhập tay"
+  "AUDIT_ACTION_DELETE_MANUAL_PAYSLIP": "Xóa phiếu lương nhập tay",
+  "PUNCH_RETRYING": "Hệ thống đang bận, đang tự thử lại (lần {n})…",
+  "PUNCH_BUSY_FAILED": "Hệ thống bận hoặc mạng không ổn định nên lần này chưa chấm công được, vui lòng thử lại sau một phút."
 }

@@ -1461,5 +1461,7 @@
   "MANUAL_PAYSLIP_AMOUNT": "จำนวนเงินต้องอยู่ระหว่าง 0–10,000,000",
   "MANUAL_PAYSLIP_INVALID": "เลือกพนักงานและเดือน และตรวจสอบชื่อรายการ",
   "AUDIT_ACTION_SAVE_MANUAL_PAYSLIP": "บันทึกสลิปแบบกรอกเอง",
-  "AUDIT_ACTION_DELETE_MANUAL_PAYSLIP": "ลบสลิปแบบกรอกเอง"
+  "AUDIT_ACTION_DELETE_MANUAL_PAYSLIP": "ลบสลิปแบบกรอกเอง",
+  "PUNCH_RETRYING": "ระบบกำลังยุ่ง กำลังลองใหม่อัตโนมัติ (ครั้งที่ {n})…",
+  "PUNCH_BUSY_FAILED": "ระบบยุ่งหรือเครือข่ายไม่เสถียร ครั้งนี้ลงเวลาไม่สำเร็จ โปรดลองใหม่ในอีกหนึ่งนาที"
 }

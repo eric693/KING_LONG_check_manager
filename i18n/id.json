@@ -1402,5 +1402,7 @@
   "MANUAL_PAYSLIP_AMOUNT": "Jumlah harus antara 0 dan 10.000.000",
   "MANUAL_PAYSLIP_INVALID": "Pilih karyawan dan bulan, periksa nama item manual",
   "AUDIT_ACTION_SAVE_MANUAL_PAYSLIP": "Simpan slip manual",
-  "AUDIT_ACTION_DELETE_MANUAL_PAYSLIP": "Hapus slip manual"
+  "AUDIT_ACTION_DELETE_MANUAL_PAYSLIP": "Hapus slip manual",
+  "PUNCH_RETRYING": "Sistem sibuk, mencoba ulang otomatis (percobaan {n})…",
+  "PUNCH_BUSY_FAILED": "Sistem sibuk atau koneksi tidak stabil, absen kali ini gagal. Coba lagi dalam satu menit."
 }

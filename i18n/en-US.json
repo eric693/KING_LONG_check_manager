@@ -1423,5 +1423,7 @@
   "MANUAL_PAYSLIP_AMOUNT": "Amounts must be between 0 and 10,000,000",
   "MANUAL_PAYSLIP_INVALID": "Choose an employee and month, and check the manual item names",
   "AUDIT_ACTION_SAVE_MANUAL_PAYSLIP": "Save manual payslip",
-  "AUDIT_ACTION_DELETE_MANUAL_PAYSLIP": "Delete manual payslip"
+  "AUDIT_ACTION_DELETE_MANUAL_PAYSLIP": "Delete manual payslip",
+  "PUNCH_RETRYING": "The system is busy, retrying automatically (attempt {n})…",
+  "PUNCH_BUSY_FAILED": "The system is busy or the connection is unstable, so this punch did not go through. Please try again in a minute."
 }

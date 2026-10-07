@@ -162,3 +162,53 @@ function computeDayWorkFromPunches_(punches, shift) {
     unpaired: paired.unpaired
   };
 }
+
+// ==================== 打卡失敗紀錄 ====================
+//
+// 打卡失敗時員工只看到一句訊息，管理員事後無從查起。每一次失敗都記一筆：
+// 誰、用什麼方式、什麼時候、錯誤代碼與原因（含系統錯誤的詳細內容）。
+
+const SHEET_PUNCH_FAILURES = '打卡失敗紀錄';
+const PUNCH_FAILURE_HEADERS = ['時間', '員工ID', '姓名', '方式', '打卡類別', '錯誤代碼', '錯誤訊息', '詳細'];
+
+function logPunchFailure_(info) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(SHEET_PUNCH_FAILURES);
+    if (!sheet) {
+      sheet = ss.insertSheet(SHEET_PUNCH_FAILURES);
+      sheet.appendRow(PUNCH_FAILURE_HEADERS);
+      sheet.setFrozenRows(1);
+    }
+    let name = info.name || '';
+    if (!name && info.userId && typeof getEmployeeNameMap_ === 'function') {
+      name = getEmployeeNameMap_()[info.userId] || '';
+    }
+    sheet.appendRow([
+      new Date(), info.userId || '', name, info.method || '', info.type || '',
+      info.code || '', String(info.msg || '').slice(0, 300), String(info.detail || '').slice(0, 300)
+    ]);
+  } catch (error) {
+    // 記錄失敗不能影響打卡本身的回應
+    Logger.log('打卡失敗紀錄寫入失敗: ' + error);
+  }
+}
+
+/** LINE 打卡連結：清掉過期很久的（沒被點開的連結會一直留在指令碼屬性裡） */
+function cleanupLinePunchTokens_() {
+  try {
+    const props = PropertiesService.getScriptProperties();
+    const all = props.getProperties();
+    const cutoff = Date.now() - 60 * 60 * 1000;
+    Object.keys(all).forEach(key => {
+      if (key.indexOf('LPT_') !== 0) return;
+      try {
+        if ((JSON.parse(all[key]).expiry || 0) < cutoff) props.deleteProperty(key);
+      } catch (error) {
+        props.deleteProperty(key);
+      }
+    });
+  } catch (error) {
+    Logger.log('清理 LINE 打卡連結失敗: ' + error);
+  }
+}

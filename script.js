@@ -1960,7 +1960,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // LINE Bot 網頁打卡：無需登入，直接處理後結束
     if (params.get('linePunchToken')) {
-        if (typeof handleLinePunchFromUrl === 'function') await handleLinePunchFromUrl();
+        if (typeof handleLinePunchFromUrl === 'function') {
+            // 從 LINE 打卡連結進來的頁面只做打卡這件事：不再載入公告、出勤異常、個人資料，
+            // 上下班尖峰時大家同時打卡，少掉這幾支請求，後端比較不會忙不過來。
+            // 關閉結果視窗時才重新載入一般頁面（見 qr-punch.js 的 leaveLinePunchPage）。
+            window.__linePunchOnly = true;
+            await handleLinePunchFromUrl();
+            return;
+        }
         // 繼續正常初始化（讓員工可操作 app）
     }
 
@@ -2791,9 +2798,12 @@ async function doPunch(type) {
         const action = `punch&type=${encodeURIComponent(type)}&lat=${lat}&lng=${lng}&datetime=${encodeURIComponent(datetime)}&note=${encodeURIComponent(navigator.userAgent)}`;
 
         try {
-            const res = await callApifetch(action);
-            const msgKey = res.code || "UNKNOWN_ERROR";
-            let msg = t(msgKey, res.params || {});
+            // 尖峰時段系統忙碌會自動重試（api.js 的 punchWithRetry）
+            const res = await punchWithRetry(action, type, n => {
+                showNotification(t('PUNCH_RETRYING', { n: n }), 'warning');
+            });
+            const msgKey = (res && res.code) || "UNKNOWN_ERROR";
+            let msg = isBusyPunchFailure(res) ? t('PUNCH_BUSY_FAILED') : t(msgKey, res.params || {});
             // 錯誤碼沒有翻譯時，顯示後端的中文說明，不要讓員工看到 ERR_… 這種代碼
             if (msg === msgKey && res.msg) msg = res.msg;
             showNotification(msg, res.ok ? "success" : "error");
