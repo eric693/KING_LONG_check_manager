@@ -7,7 +7,7 @@ let _deferredInstallPrompt = null;
 
 /**
  * 註冊 Service Worker。
- * 路徑用相對的 './sw.js'，這樣放在 /buono_check_manager/ 子目錄或根目錄都能用。
+ * 路徑用相對的 './sw.js'，這樣放在 /KING_LONG_check_manager/ 子目錄或根目錄都能用。
  */
 function registerServiceWorker() {
     if (!('serviceWorker' in navigator)) return;

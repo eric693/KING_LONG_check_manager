@@ -10,7 +10,7 @@
   const FALLBACK_LANG = 'zh-TW';
   const SUPPORTED = ['zh-TW', 'en-US', 'ja', 'ko', 'vi', 'th', 'id'];
   // 本機載不到時（例如頁面被放在別的網域）改用與 script.js 相同的來源
-  const REMOTE_BASE = 'https://eric693.github.io/buono_check_manager/i18n/help/';
+  const REMOTE_BASE = 'https://eric693.github.io/KING_LONG_check_manager/i18n/help/';
 
   const CSS = `
   .help-box{border:1px solid #c7d2fe;background:#eef2ff;border-radius:8px;margin-bottom:16px;overflow:hidden}

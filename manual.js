@@ -11,7 +11,7 @@
 (function () {
   const SUPPORTED = ['zh-TW', 'en-US', 'ja', 'ko', 'vi', 'th', 'id'];
   const FALLBACK_LANG = 'zh-TW';
-  const REMOTE_BASE = 'https://eric693.github.io/buono_check_manager/i18n/help/';
+  const REMOTE_BASE = 'https://eric693.github.io/KING_LONG_check_manager/i18n/help/';
 
   // 手冊的編排順序，以及每個說明模組對應的標題翻譯鍵。
   // 這裡刻意寫死順序，讓手冊照使用者實際會走的流程排，而不是 JSON 的鍵順序。

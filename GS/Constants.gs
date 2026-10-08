@@ -3,7 +3,7 @@
 // ==================== LINE 登入設定 ====================
 const LINE_CHANNEL_ID     = PropertiesService.getScriptProperties().getProperty("LINE_CHANNEL_ID");
 const LINE_CHANNEL_SECRET = PropertiesService.getScriptProperties().getProperty("LINE_CHANNEL_SECRET");
-const LINE_REDIRECT_URL   = "https://eric693.github.io/buono_check_manager/";
+const LINE_REDIRECT_URL   = "https://eric693.github.io/KING_LONG_check_manager/";
 
 // ==================== Session 設定 ====================
 const SESSION_TTL_MS = 7000 * 60 * 60 * 24; // 1 天

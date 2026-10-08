@@ -169,7 +169,7 @@ function createForgotPunchNotification(employeeName, date, punchType) {
             action: {
               type: "uri",
               label: "立即補打卡",
-              uri: "https://eric693.github.io/buono_check_manager/"
+              uri: "https://eric693.github.io/KING_LONG_check_manager/"
             },
             color: "#4CAF50"
           },
@@ -180,7 +180,7 @@ function createForgotPunchNotification(employeeName, date, punchType) {
             action: {
               type: "uri",
               label: "查看打卡記錄",
-              uri: "https://eric693.github.io/buono_check_manager/"
+              uri: "https://eric693.github.io/KING_LONG_check_manager/"
             }
           }
         ],
@@ -351,7 +351,7 @@ function createPunchApprovedNotification(employeeName, date, time, punchType, re
             action: {
               type: "uri",
               label: "查看詳情",
-              uri: "https://eric693.github.io/buono_check_manager/"
+              uri: "https://eric693.github.io/KING_LONG_check_manager/"
             },
             color: "#4CAF50"
           }
@@ -527,7 +527,7 @@ function createPunchRejectedNotification(employeeName, date, time, punchType, re
             action: {
               type: "uri",
               label: "查看詳情",
-              uri: "https://eric693.github.io/buono_check_manager/"
+              uri: "https://eric693.github.io/KING_LONG_check_manager/"
             }
           }
         ],
@@ -711,7 +711,7 @@ function createLeaveApprovedNotification(employeeName, leaveType, startDate, end
             action: {
               type: "uri",
               label: "查看假期餘額",
-              uri: "https://eric693.github.io/buono_check_manager/"
+              uri: "https://eric693.github.io/KING_LONG_check_manager/"
             },
             color: "#2196F3"
           }
@@ -886,7 +886,7 @@ function createLeaveRejectedNotification(employeeName, leaveType, startDate, end
             action: {
               type: "uri",
               label: "重新申請",
-              uri: "https://eric693.github.io/buono_check_manager/"
+              uri: "https://eric693.github.io/KING_LONG_check_manager/"
             }
           }
         ],
@@ -1047,7 +1047,7 @@ function createOvertimeApprovedNotification(employeeName, date, hours, reviewer)
             action: {
               type: "uri",
               label: "查看詳情",
-              uri: "https://eric693.github.io/buono_check_manager/"
+              uri: "https://eric693.github.io/KING_LONG_check_manager/"
             },
             color: "#FF9800"
           }
@@ -1221,7 +1221,7 @@ function createOvertimeRejectedNotification(employeeName, date, hours, reviewer,
             action: {
               type: "uri",
               label: "重新申請",
-              uri: "https://eric693.github.io/buono_check_manager/"
+              uri: "https://eric693.github.io/KING_LONG_check_manager/"
             }
           }
         ],
@@ -1409,7 +1409,7 @@ function createNewLeaveRequestNotification_(employeeName, leaveType, startDateTi
           type: "button",
           style: "primary",
           height: "sm",
-          action: { type: "uri", label: "前往審核", uri: "https://eric693.github.io/buono_check_manager/" },
+          action: { type: "uri", label: "前往審核", uri: "https://eric693.github.io/KING_LONG_check_manager/" },
           color: "#2196F3"
         }]
       }
@@ -1484,7 +1484,7 @@ function createNewOvertimeRequestNotification_(employeeName, overtimeDate, start
           type: "button",
           style: "primary",
           height: "sm",
-          action: { type: "uri", label: "前往審核", uri: "https://eric693.github.io/buono_check_manager/" },
+          action: { type: "uri", label: "前往審核", uri: "https://eric693.github.io/KING_LONG_check_manager/" },
           color: "#FF9800"
         }]
       }
@@ -1579,7 +1579,7 @@ function createNewAdjustPunchRequestNotification_(employeeName, date, time, punc
           type: "button",
           style: "primary",
           height: "sm",
-          action: { type: "uri", label: "前往審核", uri: "https://eric693.github.io/buono_check_manager/" },
+          action: { type: "uri", label: "前往審核", uri: "https://eric693.github.io/KING_LONG_check_manager/" },
           color: "#9C27B0"
         }]
       }

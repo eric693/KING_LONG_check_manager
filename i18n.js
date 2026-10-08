@@ -9,7 +9,7 @@ var translations = {};
 var currentLang = localStorage.getItem('lang');
 
 var I18N_SUPPORTED = ['zh-TW', 'en-US', 'ja', 'ko', 'vi', 'th', 'id'];
-var I18N_REMOTE_BASE = 'https://eric693.github.io/buono_check_manager/i18n/';
+var I18N_REMOTE_BASE = 'https://eric693.github.io/KING_LONG_check_manager/i18n/';
 
 /**
  * 依瀏覽器語言挑一個支援的語系（localStorage 已有紀錄時優先用紀錄）
