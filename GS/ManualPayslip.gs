@@ -81,7 +81,7 @@ function monthlyRowToSalaryData_(headers, row) {
   [].concat(MANUAL_PAYSLIP_EARNINGS, MANUAL_PAYSLIP_DEDUCTIONS,
             ['grossSalary', 'netSalary', 'hourlyRate', 'totalWorkHours', 'totalOvertimeHours',
              'manualAddTotal', 'manualSubTotal']).forEach(key => {
-    data[key] = Number(data[key]) || 0;
+    data[key] = sheetNumber_(data[key]);
   });
 
   try {
@@ -105,6 +105,17 @@ function monthlyRowToSalaryData_(headers, row) {
   delete data.payrollAdjustmentsJson;
   delete data.customItemDetail;
   return data;
+}
+
+/**
+ * 試算表的格子被設成「日期格式」時，寫進去的金額會被存成日期（0 變成 1899/12/30），
+ * 讀回來就是一個 Date。換算回原本的數字（Google 試算表的日期序號：1899/12/30 是 0）。
+ */
+function sheetNumber_(value) {
+  if (value instanceof Date || Object.prototype.toString.call(value) === '[object Date]') {
+    return Math.round((value.getTime() - Date.UTC(1899, 11, 30)) / 86400000);
+  }
+  return Number(value) || 0;
 }
 
 /** 這個月是手動薪資單就回傳它（英文鍵的物件），不是就回傳 null */

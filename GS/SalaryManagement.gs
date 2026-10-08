@@ -434,7 +434,42 @@ function getMonthlySalarySheetEnhanced() {
     MONTHLY_CUSTOM_DETAIL_COLUMN
   ].concat(MONTHLY_PAYROLL_RULE_COLUMNS));
   
+  ensureMonthlySalaryNumberFormats_(sheet);
+  
   return sheet;
+}
+
+// 「月薪資記錄」裡放金額、時數的欄位
+const MONTHLY_SALARY_HOUR_COLUMNS = ['時薪', '工作時數', '總加班時數', '病假時數', '事假時數'];
+const MONTHLY_SALARY_TEXT_COLUMNS = ['薪資單ID', '員工ID', '員工姓名', '年月', '薪資類型', '銀行代碼', '銀行帳號',
+                                     '狀態', '備註', '建立時間', MONTHLY_CUSTOM_DETAIL_COLUMN, '全勤說明', '薪資單備註', '計薪調整'];
+const MONTHLY_SALARY_FORMAT_VERSION = '1';
+
+/**
+ * 把金額、時數欄固定成數字格式。
+ *
+ * 後來加的欄位（餐費、銷售獎金、生日禮金、預支抵扣…）在正式區被試算表當成「日期格式」，
+ * 寫進去的數字被存成日期（0 變成 1899/12/30），讀回表單就變成 -2209190400000 這種數字。
+ * 改成數字格式後，原本已經存成日期的格子也會恢復成數字（試算表的日期本來就是數字序號）。
+ * 每個版本只做一次（記在指令碼屬性），不會每次讀表都重設格式。
+ */
+function ensureMonthlySalaryNumberFormats_(sheet) {
+  try {
+    const props = PropertiesService.getScriptProperties();
+    if (props.getProperty('MONTHLY_SALARY_FORMAT') === MONTHLY_SALARY_FORMAT_VERSION) return;
+
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
+    const rows = Math.max(sheet.getMaxRows() - 1, 1);
+    headers.forEach((header, i) => {
+      if (!header || MONTHLY_SALARY_TEXT_COLUMNS.indexOf(header) !== -1) return;
+      const format = MONTHLY_SALARY_HOUR_COLUMNS.indexOf(header) !== -1 ? '0.00' : '#,##0';
+      sheet.getRange(2, i + 1, rows, 1).setNumberFormat(format);
+    });
+    props.setProperty('MONTHLY_SALARY_FORMAT', MONTHLY_SALARY_FORMAT_VERSION);
+    Logger.log(' 已把「月薪資記錄」的金額欄設成數字格式');
+  } catch (error) {
+    Logger.log(' 設定月薪資記錄數字格式失敗: ' + error);
+  }
 }
 
 /**

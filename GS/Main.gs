@@ -68,7 +68,8 @@ const DEPLOY_CHECKS = [
                              String(generateLinePunchToken_).indexOf('cleanupLinePunchTokens_') !== -1],
   ['LineNotification.gs', () => typeof sendLineNotification_ === 'function' &&
                                  String(sendLineNotification_).indexOf('isLineUserId_') !== -1],
-  ['ManualPayslip.gs', () => typeof handleSaveManualPayslip === 'function' && typeof readManualPayslip_ === 'function'],
+  ['ManualPayslip.gs', () => typeof handleSaveManualPayslip === 'function' && typeof readManualPayslip_ === 'function' &&
+                              typeof sheetNumber_ === 'function'],
   ['LoginLinks.gs', () => typeof handleRedeemLoginLink === 'function' && typeof createSessionForUser_ === 'function'],
   ['Offboarding.gs', () => typeof handleOffboardEmployee === 'function'],
   ['OvertimeOperations.gs', () => typeof initOvertimeSheet === 'function'],
@@ -78,7 +79,8 @@ const DEPLOY_CHECKS = [
                            typeof logPunchFailure_ === 'function'],
   ['QrPunch.gs', () => typeof qrPunch === 'function' && String(qrPunch).indexOf('checkPunchSequence_') !== -1],
   ['SalaryManagement.gs', () => typeof calculateMonthlySalary === 'function' && calculateMonthlySalary.length >= 3 &&
-                                 String(saveMonthlySalary).indexOf('PAYSLIP_IS_MANUAL') !== -1],
+                                 String(saveMonthlySalary).indexOf('PAYSLIP_IS_MANUAL') !== -1 &&
+                                 typeof ensureMonthlySalaryNumberFormats_ === 'function'],
   ['SalaryTools.gs', () => typeof listPayableEmployees_ === 'function' &&
                             String(handleBatchCalculateSalary).indexOf('readManualPayslip_') !== -1],
   ['ShiftManagement.gs', () => typeof shiftRowBreakMinutes_ === 'function'],
