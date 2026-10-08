@@ -123,3 +123,14 @@ function setElementSrc(id, src) {
     if (el) el.src = src;
     return el;
 }
+
+// ===== 數字欄位不吃滾輪 =====
+// 數字欄位還在游標焦點時滾動滑鼠，瀏覽器會直接把數值加減，
+// 管理員填完全勤獎金 1000 往下捲，就悄悄變成 998。
+// 滾輪一動就讓欄位失焦：數值不變，頁面照常捲動。
+document.addEventListener('wheel', (e) => {
+    const el = e.target;
+    if (el instanceof HTMLInputElement && el.type === 'number' && el === document.activeElement) {
+        el.blur();
+    }
+}, { passive: true, capture: true });
