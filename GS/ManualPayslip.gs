@@ -16,12 +16,20 @@ const MANUAL_PAYSLIP_MAX_AMOUNT = 10000000;
 // 可以手動填的金額欄位（鍵名與 saveMonthlySalary 相同）
 const MANUAL_PAYSLIP_EARNINGS = [
   'baseSalary', 'positionAllowance', 'mealAllowance', 'transportAllowance', 'attendanceBonus',
-  'performanceBonus', 'otherAllowances', 'weekdayOvertimePay', 'mealSubsidy', 'salesBonus', 'birthdayGift'
+  'performanceBonus', 'otherAllowances', 'weekdayOvertimePay', 'mealSubsidy', 'salesBonus', 'birthdayGift',
+  'licenseAllowance', 'fuelAllowance', 'travelAllowance'
 ];
+// 請假扣款分四種填，合計存進「請假扣款」（見 MANUAL_PAYSLIP_LEAVE_PARTS）
 const MANUAL_PAYSLIP_DEDUCTIONS = [
   'laborFee', 'healthFee', 'employmentFee', 'pensionSelf', 'incomeTax',
-  'leaveDeduction', 'advanceDeduction', 'otherDeductions'
+  'personalLeaveDeduction', 'sickLeaveDeduction', 'menstrualLeaveDeduction', 'familyCareLeaveDeduction',
+  'proRataDeduction', 'advanceDeduction', 'otherDeductions'
 ];
+const MANUAL_PAYSLIP_LEAVE_PARTS = [
+  'personalLeaveDeduction', 'sickLeaveDeduction', 'menstrualLeaveDeduction', 'familyCareLeaveDeduction'
+];
+// 公司負擔：只記錄、列在薪資明細表，不影響實發
+const MANUAL_PAYSLIP_EMPLOYER = ['insuredSalary', 'laborEmployer', 'healthEmployer', 'pensionEmployer'];
 
 // 「月薪資記錄」每一欄對應的英文鍵（順序與 MONTHLY_SALARY_HEADERS 相同）
 const MONTHLY_SALARY_KEYS = [
@@ -71,6 +79,10 @@ function monthlyRowToSalaryData_(headers, row) {
     const index = headers.indexOf(header);
     if (index !== -1) data[MONTHLY_SALARY_KEYS[i]] = row[index];
   });
+  PAYROLL_SHEET_MONTHLY_FIELDS.forEach(f => {
+    const index = headers.indexOf(f.header);
+    if (index !== -1) data[f.key] = row[index];
+  });
 
   const ym = data.yearMonth;
   data.yearMonth = (ym instanceof Date || Object.prototype.toString.call(ym) === '[object Date]')
@@ -78,8 +90,9 @@ function monthlyRowToSalaryData_(headers, row) {
     : String(ym || '').substring(0, 7);
   data['年月'] = data.yearMonth;
 
-  [].concat(MANUAL_PAYSLIP_EARNINGS, MANUAL_PAYSLIP_DEDUCTIONS,
-            ['grossSalary', 'netSalary', 'hourlyRate', 'totalWorkHours', 'totalOvertimeHours',
+  [].concat(MANUAL_PAYSLIP_EARNINGS, MANUAL_PAYSLIP_DEDUCTIONS, MANUAL_PAYSLIP_EMPLOYER,
+            PAYROLL_SHEET_MONTHLY_FIELDS.map(f => f.key),
+            ['leaveDeduction', 'grossSalary', 'netSalary', 'hourlyRate', 'totalWorkHours', 'totalOvertimeHours',
              'manualAddTotal', 'manualSubTotal']).forEach(key => {
     data[key] = sheetNumber_(data[key]);
   });
@@ -152,7 +165,11 @@ function handleGetManualPayslip(params) {
 
   const found = readMonthlySalaryRow_(target.employeeId, target.yearMonth);
   if (found && isManualPayslipRow_(found.headers, found.row)) {
-    return { ok: true, exists: true, autoExists: false, data: monthlyRowToSalaryData_(found.headers, found.row) };
+    const data = monthlyRowToSalaryData_(found.headers, found.row);
+    // 以前的手動薪資單只有一格「請假扣款」，沒分假別：放進「其他扣款」，存檔時才不會不見
+    const parts = MANUAL_PAYSLIP_LEAVE_PARTS.reduce((s, k) => s + data[k], 0);
+    if (data.leaveDeduction > parts) data.otherDeductions += data.leaveDeduction - parts;
+    return { ok: true, exists: true, autoExists: false, data: data };
   }
 
   // 沒有手動薪資單：用薪資設定的固定金額當起點，省得每一格重打
@@ -175,6 +192,11 @@ function handleGetManualPayslip(params) {
     draft.healthFee = n(c['健保費']);
     draft.employmentFee = n(c['就業保險費']);
     draft.pensionSelf = n(c['勞退自提']);
+    Object.assign(draft, readPayrollSheetConfig_(c));
+    if (draft.salaryType === '月薪') {
+      draft.proRataDeduction = calculateProRataDeduction_(
+        draft.baseSalary, getProRataHireDate_(target.employeeId, c), target.yearMonth).deduction;
+    }
   }
   return { ok: true, exists: false, autoExists: !!found, data: draft };
 }
@@ -197,7 +219,8 @@ function handleSaveManualPayslip(params) {
   }
 
   const amounts = {};
-  for (const key of [].concat(MANUAL_PAYSLIP_EARNINGS, MANUAL_PAYSLIP_DEDUCTIONS, ['hourlyRate', 'totalWorkHours'])) {
+  for (const key of [].concat(MANUAL_PAYSLIP_EARNINGS, MANUAL_PAYSLIP_DEDUCTIONS, MANUAL_PAYSLIP_EMPLOYER,
+                             ['hourlyRate', 'totalWorkHours'])) {
     const raw = input[key];
     const value = (raw === undefined || raw === null || raw === '') ? 0 : Number(raw);
     if (!isFinite(value) || value < 0 || value > MANUAL_PAYSLIP_MAX_AMOUNT) {
@@ -233,6 +256,7 @@ function handleSaveManualPayslip(params) {
   if (!employeeName) return { ok: false, code: 'NOT_FOUND', msg: '找不到這位員工' };
 
   const salaryData = Object.assign({}, amounts, {
+    leaveDeduction: MANUAL_PAYSLIP_LEAVE_PARTS.reduce((s, k) => s + amounts[k], 0),
     employeeId: target.employeeId,
     employeeName: employeeName,
     yearMonth: target.yearMonth,

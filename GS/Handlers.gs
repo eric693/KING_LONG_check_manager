@@ -1123,6 +1123,12 @@ function handleSetEmployeeSalaryTW(params) {
       customItems: params.customItems
     };
     
+    // 薪資明細表的固定金額：投保級距、證照／油資／差旅、三項公司負擔（PayrollSheet.gs）
+    // 沒送這些欄位的舊版頁面不要把它們清成 0
+    PAYROLL_SHEET_CONFIG_FIELDS.forEach(f => {
+      if (params[f.key] !== undefined) salaryData[f.key] = safeNumber(params[f.key]);
+    });
+    
     Logger.log('');
     Logger.log(' 組裝後的 salaryData:');
     Logger.log('   基本薪資: ' + salaryData.baseSalary);

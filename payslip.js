@@ -66,6 +66,29 @@ function payrollSavedMessages(data) {
     return null;
 }
 
+/** 翻譯；這個語系還沒有這個鍵就用中文 */
+function payslipLabel(key, fallback) {
+    const text = t(key);
+    return text === key ? fallback : text;
+}
+
+/**
+ * 請假扣款依假別分開列（事假、病假、生理假、家庭照顧假）。
+ * 舊資料只有一個「請假扣款」合計，分不出假別的部分照舊列成「請假扣款」。
+ */
+function leaveDeductionItems(data) {
+    const pick = (key, header) => sheetAmount(data[key] !== undefined ? data[key] : data[header]);
+    const parts = [
+        [payslipLabel('SALARY_PERSONAL_LEAVE_DEDUCT', '事假扣款'), pick('personalLeaveDeduction', '事假扣款')],
+        [payslipLabel('SALARY_SICK_LEAVE_DEDUCT', '病假扣款'), pick('sickLeaveDeduction', '病假扣款')],
+        [payslipLabel('SALARY_MENSTRUAL_LEAVE_DEDUCT', '生理假扣款'), pick('menstrualLeaveDeduction', '生理假扣款')],
+        [payslipLabel('SALARY_FAMILY_CARE_LEAVE_DEDUCT', '家庭照顧假扣款'), pick('familyCareLeaveDeduction', '家庭照顧假扣款')]
+    ];
+    const rest = pick('leaveDeduction', '請假扣款') - parts.reduce((sum, [, value]) => sum + value, 0);
+    if (rest > 0) parts.push([t('SALARY_LEAVE_DEDUCT'), rest]);
+    return parts;
+}
+
 /**
  * 計薪規則加上的項目（餐費、生日禮金、銷售獎金、預支、手動加減項目）。
  * 計算結果用英文欄位；從「月薪資記錄」讀回來的是中文欄名，兩種都要認得。
@@ -94,10 +117,15 @@ function payrollRuleItems(rawData, options) {
     const earnings = [
         [mealDays ? t('PAYROLL_MEAL_SUBSIDY_DAYS', { days: mealDays }) : t('PAYROLL_MEAL_SUBSIDY'), pick('mealSubsidy', '餐費')],
         [t('PAYROLL_BIRTHDAY_GIFT'), pick('birthdayGift', '生日禮金')],
-        [t('PAYROLL_SALES_BONUS'), pick('salesBonus', '銷售獎金')]
+        [t('PAYROLL_SALES_BONUS'), pick('salesBonus', '銷售獎金')],
+        // 薪資明細表的項目（GS/PayrollSheet.gs）
+        [payslipLabel('SALARY_LICENSE_ALLOWANCE', '證照津貼'), pick('licenseAllowance', '證照津貼')],
+        [payslipLabel('SALARY_FUEL_ALLOWANCE', '油資津貼'), pick('fuelAllowance', '油資津貼')],
+        [payslipLabel('SALARY_TRAVEL_ALLOWANCE', '差旅費'), pick('travelAllowance', '差旅費')]
     ].concat(manualItems.filter(i => i.type !== 'sub').map(i => [String(i.name || ''), i.amount]));
     
     const deductions = [
+        [payslipLabel('SALARY_PRO_RATA_DEDUCT', '到職不足月'), pick('proRataDeduction', '到職不足月扣款')],
         [t('PAYROLL_ADVANCE_DEDUCTION'), pick('advanceDeduction', '預支抵扣')]
     ].concat(manualItems.filter(i => i.type === 'sub').map(i => [String(i.name || ''), i.amount]));
     
@@ -153,6 +181,7 @@ function buildPayslipHtml(rawData) {
         [t('SALARY_OTHER_ALLOWANCES_LABEL'), data.otherAllowances],
         [t('SALARY_WEEKDAY_OT'), data.weekdayOvertimePay],
         [t('SALARY_REST_OT'), data.restdayOvertimePay],
+        [payslipLabel('SALARY_SUNDAY_OT', '例假日加班費'), data.sundayOvertimePay !== undefined ? data.sundayOvertimePay : data['例假日加班費']],
         [t('SALARY_HOLIDAY_OT'), data.holidayOvertimePay],
         [t('SALARY_HOLIDAY_WORK_PAY') !== 'SALARY_HOLIDAY_WORK_PAY'
             ? t('SALARY_HOLIDAY_WORK_PAY') : '國定假日出勤薪資', data.holidayWorkPay]
@@ -166,7 +195,7 @@ function buildPayslipHtml(rawData) {
         [t('SALARY_EMPLOYMENT_INS'), data.employmentFee],
         [t('SALARY_PENSION'), data.pensionSelf],
         [t('SALARY_TAX'), data.incomeTax],
-        [t('SALARY_LEAVE_DEDUCT'), data.leaveDeduction],
+        ...leaveDeductionItems(data),
         [t('SALARY_EARLY_LEAVE_DEDUCT'), data.earlyLeaveDeduction || data['早退扣款']],
         [t('SALARY_WELFARE_FEE_LABEL'), data.welfareFee],
         [t('SALARY_DORMITORY_FEE_LABEL'), data.dormitoryFee],

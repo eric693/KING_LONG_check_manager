@@ -380,7 +380,7 @@ function getEmployeeSalarySheet() {
     Logger.log(" 建立員工薪資設定試算表（完整版）");
   }
   
-  ensureTrailingColumns_(sheet, [SALARY_CUSTOM_ITEMS_COLUMN]);
+  ensureTrailingColumns_(sheet, [SALARY_CUSTOM_ITEMS_COLUMN].concat(PAYROLL_SHEET_CONFIG_FIELDS.map(f => f.header)));
   
   return sheet;
 }
@@ -432,7 +432,7 @@ function getMonthlySalarySheetEnhanced() {
     MONTHLY_CUSTOM_ALLOWANCE_COLUMN,
     MONTHLY_CUSTOM_DEDUCTION_COLUMN,
     MONTHLY_CUSTOM_DETAIL_COLUMN
-  ].concat(MONTHLY_PAYROLL_RULE_COLUMNS));
+  ].concat(MONTHLY_PAYROLL_RULE_COLUMNS, PAYROLL_SHEET_MONTHLY_FIELDS.map(f => f.header)));
   
   ensureMonthlySalaryNumberFormats_(sheet);
   
@@ -443,7 +443,7 @@ function getMonthlySalarySheetEnhanced() {
 const MONTHLY_SALARY_HOUR_COLUMNS = ['時薪', '工作時數', '總加班時數', '病假時數', '事假時數'];
 const MONTHLY_SALARY_TEXT_COLUMNS = ['薪資單ID', '員工ID', '員工姓名', '年月', '薪資類型', '銀行代碼', '銀行帳號',
                                      '狀態', '備註', '建立時間', MONTHLY_CUSTOM_DETAIL_COLUMN, '全勤說明', '薪資單備註', '計薪調整'];
-const MONTHLY_SALARY_FORMAT_VERSION = '1';
+const MONTHLY_SALARY_FORMAT_VERSION = '2';   // 2：薪資明細表的欄位（PayrollSheet.gs）
 
 /**
  * 把金額、時數欄固定成數字格式。
@@ -615,11 +615,18 @@ function setEmployeeSalaryTW(salaryData) {
       Logger.log(` 警告：row 長度 (${row.length}) 與 Sheet 欄位數 (${data[0].length}) 不一致`);
     }
     
+    // 薪資明細表的固定金額（證照津貼、公司負擔…）補在後面，依欄名寫入
+    const headers = data[0].map(h => String(h).trim());
+    const fullRow = rowIndex > 0 ? data[rowIndex - 1].slice() : new Array(headers.length).fill('');
+    row.forEach((value, i) => { fullRow[i] = value; });
+    placePayrollSheetFields_(fullRow, headers,
+                             PAYROLL_SHEET_CONFIG_FIELDS.filter(f => salaryData[f.key] !== undefined), salaryData);
+    
     if (rowIndex > 0) {
-      sheet.getRange(rowIndex, 1, 1, row.length).setValues([row]);
+      sheet.getRange(rowIndex, 1, 1, fullRow.length).setValues([fullRow]);
       Logger.log(` 更新員工薪資設定: ${salaryData.employeeName} (列 ${rowIndex})`);
     } else {
-      sheet.appendRow(row);
+      sheet.appendRow(fullRow);
       Logger.log(` 新增員工薪資設定: ${salaryData.employeeName}`);
     }
     
@@ -1013,8 +1020,18 @@ function saveMonthlySalary(salaryData) {
     // 檢查是否已存在
     const data = sheet.getDataRange().getValues();
     const headers = data.length > 0 ? data[0] : MONTHLY_SALARY_HEADERS;
+    const trimmedHeaders = headers.map(h => String(h).trim());
     let found = false;
     let beforeRow = null;
+    
+    // 整列寫回：前面依位置，薪資明細表的欄位依欄名；
+    // 其他功能補在後面的欄（簽收時間…）沿用原本的值，不會被清掉
+    const toFullRow = existing => {
+      const full = existing ? existing.slice() : new Array(Math.max(trimmedHeaders.length, row.length)).fill('');
+      row.forEach((value, i) => { full[i] = value; });
+      return placePayrollSheetFields_(full, trimmedHeaders, PAYROLL_SHEET_MONTHLY_FIELDS, salaryData);
+    };
+    let fullRow = null;
     
     for (let i = 1; i < data.length; i++) {
       if (data[i][0] === salaryId) {
@@ -1027,7 +1044,8 @@ function saveMonthlySalary(salaryData) {
         }
         // 覆寫之前先留一份，稽核記錄才知道原本是多少
         beforeRow = data[i].slice();
-        sheet.getRange(i + 1, 1, 1, row.length).setValues([row]);
+        fullRow = toFullRow(data[i]);
+        sheet.getRange(i + 1, 1, 1, fullRow.length).setValues([fullRow]);
         found = true;
         Logger.log(` 更新薪資單: ${salaryId}`);
         break;
@@ -1035,7 +1053,8 @@ function saveMonthlySalary(salaryData) {
     }
     
     if (!found) {
-      sheet.appendRow(row);
+      fullRow = toFullRow(null);
+      sheet.appendRow(fullRow);
       Logger.log(` 新增薪資單: ${salaryId}`);
     }
     
@@ -1045,7 +1064,7 @@ function saveMonthlySalary(salaryData) {
         salaryId: salaryId,
         headers: headers,
         beforeRow: beforeRow,
-        afterRow: row,
+        afterRow: fullRow,
         token: salaryData.token || (globalThis.currentRequest &&
                                     globalThis.currentRequest.parameter &&
                                     globalThis.currentRequest.parameter.token)
@@ -1129,6 +1148,11 @@ function saveMonthlySalaryAPI() {
       attendanceNote: getParam('attendanceNote') || '',
       payslipNote: getParam('payslipNote') || ''
     };
+    
+    // 薪資明細表的欄位（PayrollSheet.gs）
+    PAYROLL_SHEET_MONTHLY_FIELDS.forEach(f => {
+      salaryData[f.key] = parseFloat(getParam(f.key)) || 0;
+    });
     
     // 沒帶計薪調整就保留這張薪資單原本的，不要因為從這裡存一次就把管理員填的銷售獎金、手動項目洗掉
     try {
@@ -1636,6 +1660,7 @@ function calculateHourlySalary(employeeId, yearMonth) {
     // ⭐ 四捨五入
     weekdayOvertimePay = Math.round(weekdayOvertimePay);
     restdayOvertimePay = Math.round(restdayOvertimePay);
+    sundayOvertimePay = Math.round(sundayOvertimePay);
     holidayOvertimePay = Math.round(holidayOvertimePay);
     holidayWorkPay = Math.round(holidayWorkPay);
 
@@ -1741,6 +1766,7 @@ function calculateHourlySalary(employeeId, yearMonth) {
                        otherAllowances +
                        weekdayOvertimePay + 
                        restdayOvertimePay +
+                       sundayOvertimePay +       // 例假日加班費：以前算了卻沒加進來
                        holidayOvertimePay +
                        holidayWorkPay +
                        customItems.allowanceTotal;
@@ -1866,6 +1892,7 @@ function calculateHourlySalary(employeeId, yearMonth) {
       otherAllowances: otherAllowances,
       weekdayOvertimePay: weekdayOvertimePay,
       restdayOvertimePay: restdayOvertimePay,
+      sundayOvertimePay: sundayOvertimePay,
       holidayOvertimePay: holidayOvertimePay,
       holidayWorkPay: holidayWorkPay,
       totalOvertimeHours: totalOvertimeHours,
@@ -2199,9 +2226,20 @@ function calculateMonthlySalary(employeeId, yearMonth, payrollAdjustments) {
       result = calculateMonthlySalaryInternal(employeeId, yearMonth);
     }
     
-    // 3. 店家的計薪規則：全勤、餐費、生日禮金、銷售獎金、預支、手動項目（PayrollRules.gs）
+    // 3. 薪資明細表的項目：證照／油資／差旅、生理假、家庭照顧假、到職不足月、公司負擔（PayrollSheet.gs）
+    //    要在計薪規則之前：計薪規則以「應發 − 實發」當作既有的扣款
+    if (result && result.success && result.data && typeof applyPayrollSheetItems_ === 'function') {
+      applyPayrollSheetItems_(result.data, config);
+    }
+    
+    // 4. 店家的計薪規則：全勤、餐費、生日禮金、銷售獎金、預支、手動項目（PayrollRules.gs）
     if (result && result.success && result.data && typeof applyPayrollRules_ === 'function') {
       applyPayrollRules_(result.data, config, payrollAdjustments);
+    }
+    
+    // 5. 當月才到職：全勤也按在職天數比例發（要在計薪規則決定全勤金額之後）
+    if (result && result.success && result.data && typeof prorateAttendanceBonus_ === 'function') {
+      prorateAttendanceBonus_(result.data);
     }
     return result;
     
@@ -2459,14 +2497,15 @@ function calculateMonthlySalaryInternal(employeeId, yearMonth) {
           const leaveType = String(record.leaveType).toUpperCase();
           const days = parseFloat(record.leaveDays) || 0;
           const hours = days * 8;
-          const dailyRate = Math.round(baseSalary / 30);
+          // 日薪不先四捨五入：45,800 請半天事假是 45,800 ÷ 30 × 0.5 = 763，不是 1,527 × 0.5 = 764
+          const dailyRate = baseSalary / 30;
           
           // 病假：扣半薪
           if (leaveType === 'SICK_LEAVE' || leaveType === '病假') {
             sickLeaveHours += hours;
             const deduction = Math.round(days * dailyRate * 0.5);
             sickLeaveDeduction += deduction;
-            Logger.log(`   病假 ${days} 天 = ${hours}h × $${dailyRate} × 50% = $${deduction}`);
+            Logger.log(`   病假 ${days} 天 × 日薪 $${dailyRate.toFixed(2)} × 50% = $${deduction}`);
           }
           
           // 事假：扣全薪
@@ -2474,7 +2513,7 @@ function calculateMonthlySalaryInternal(employeeId, yearMonth) {
             personalLeaveHours += hours;
             const deduction = Math.round(days * dailyRate);
             personalLeaveDeduction += deduction;
-            Logger.log(`   事假 ${days} 天 = ${hours}h × $${dailyRate} = $${deduction}`);
+            Logger.log(`   事假 ${days} 天 × 日薪 $${dailyRate.toFixed(2)} = $${deduction}`);
           }
         }
       });
@@ -2614,6 +2653,7 @@ function calculateMonthlySalaryInternal(employeeId, yearMonth) {
       otherAllowances: otherAllowances,
       weekdayOvertimePay: weekdayOvertimePay,
       restdayOvertimePay: restdayOvertimePay,
+      sundayOvertimePay: sundayOvertimePay,
       holidayWorkPay: holidayWorkPay, 
       holidayOvertimePay: holidayOvertimePay,
       totalOvertimeHours: totalOvertimeHours,
@@ -2718,114 +2758,30 @@ function exportAllSalaryExcel() {
     
     // ⭐⭐⭐ 移除 Session 驗證（已在 Main.gs 中驗證過）
     
-    Logger.log(' 開始匯出薪資總表: ' + yearMonth);
+    Logger.log(' 開始匯出薪資明細表: ' + yearMonth);
     
-    // 取得薪資記錄
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const salarySheet = ss.getSheetByName('月薪資記錄');
-    
-    if (!salarySheet) {
-      return jsonResponse(false, null, '找不到月薪資記錄工作表', 'SHEET_NOT_FOUND');
+    // 版面見 PayrollSheet.gs：員工橫排、項目直列、最右邊總計，第二個分頁是原始資料
+    const result = exportPayrollSheet_(yearMonth, params.companyName);
+    if (result.error) {
+      return jsonResponse(false, null, result.message, result.error);
     }
     
-    const lastRow = salarySheet.getLastRow();
-    
-    if (lastRow <= 1) {
-      return jsonResponse(false, null, '沒有薪資記錄', 'NO_RECORDS');
-    }
-    
-    const allData = salarySheet.getRange(2, 1, lastRow - 1, salarySheet.getLastColumn()).getValues();
-    
-    Logger.log(` 原始資料筆數: ${allData.length}`);
-    
-    // 篩選指定月份的記錄
-    const records = [];
-    
-    allData.forEach((row, index) => {
-      const rowYearMonth = row[3]; // 第4欄是年月
-      
-      let normalizedYearMonth = '';
-      
-      if (rowYearMonth instanceof Date) {
-        normalizedYearMonth = Utilities.formatDate(rowYearMonth, 'Asia/Taipei', 'yyyy-MM');
-      } else if (typeof rowYearMonth === 'string') {
-        normalizedYearMonth = rowYearMonth.substring(0, 7);
-      } else {
-        return;
-      }
-      
-      if (normalizedYearMonth === yearMonth) {
-        records.push(row);
-        Logger.log(` 找到符合記錄: 員工 ${row[2]}, 年月 ${normalizedYearMonth}`);
-      }
-    });
-    
-    Logger.log(` 找到 ${records.length} 筆 ${yearMonth} 的記錄`);
-    
-    if (records.length === 0) {
-      return jsonResponse(false, null, `${yearMonth} 沒有薪資記錄`, 'NO_RECORDS_FOR_MONTH');
-    }
-    
-    // 建立新的試算表
-    const spreadsheet = SpreadsheetApp.create(`薪資總表_${yearMonth}`);
-    const sheet = spreadsheet.getActiveSheet();
-    sheet.setName('薪資明細');
-    
-    // 標題直接用「月薪資記錄」自己的第一列。以前這裡另外寫了一份 35 欄的標題，
-    // 跟實際欄位差了好幾格（少了國定假日出勤薪資、早退扣款…），匯出來整排對不上。
-    // 「計薪調整」是給系統重算用的 JSON，不匯出。
-    const sourceHeaders = salarySheet.getRange(1, 1, 1, salarySheet.getLastColumn()).getValues()[0]
-                                     .map(h => String(h).trim());
-    const exportColumns = [];
-    sourceHeaders.forEach((h, i) => {
-      if (h && h !== PAYROLL_ADJUSTMENTS_COLUMN) exportColumns.push(i);
-    });
-    const headers = exportColumns.map(i => sourceHeaders[i]);
-    
-    // 寫入標題列
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-    
-    // 格式化標題列
-    const headerRange = sheet.getRange(1, 1, 1, headers.length);
-    headerRange.setBackground('#4a5568');
-    headerRange.setFontColor('#ffffff');
-    headerRange.setFontWeight('bold');
-    headerRange.setHorizontalAlignment('center');
-    
-    // 寫入資料
-    if (records.length > 0) {
-      const dataToWrite = records.map(row => exportColumns.map(i => row[i] === undefined ? '' : row[i]));
-      
-      sheet.getRange(2, 1, dataToWrite.length, headers.length).setValues(dataToWrite);
-      Logger.log(` 已寫入 ${dataToWrite.length} 筆資料`);
-    }
-    
-    // 自動調整欄寬
-    for (let i = 1; i <= headers.length; i++) {
-      sheet.autoResizeColumn(i);
-    }
-    
-    // 凍結標題列
-    sheet.setFrozenRows(1);
+    const spreadsheet = result.spreadsheet;
+    const fileId = spreadsheet.getId();
     
     // 設定檔案權限
-    const file = DriveApp.getFileById(spreadsheet.getId());
-    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    DriveApp.getFileById(fileId).setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
     
-    // 取得下載連結
-    const fileId = spreadsheet.getId();
     const downloadUrl = `https://docs.google.com/spreadsheets/d/${fileId}/export?format=xlsx`;
     
-    Logger.log(' Excel 已生成');
-    Logger.log(' 檔案 ID: ' + fileId);
-    Logger.log(' 下載連結: ' + downloadUrl);
+    Logger.log(' 薪資明細表已生成: ' + fileId);
     
     return jsonResponse(true, {
       fileUrl: downloadUrl,
       fileId: fileId,
-      fileName: `薪資總表_${yearMonth}`,
-      recordCount: records.length
-    }, '薪資總表已生成');
+      fileName: `薪資明細表_${yearMonth}`,
+      recordCount: result.recordCount
+    }, '薪資明細表已生成');
     
   } catch (error) {
     Logger.log(' exportAllSalaryExcel 錯誤: ' + error.toString());

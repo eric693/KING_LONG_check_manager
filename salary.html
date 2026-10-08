@@ -1623,6 +1623,27 @@
                                     value="0" min="0" step="1" placeholder="0">
                                 <span class="form-hint" data-i18n="HINT_OTHER_ALLOWANCES">其他固定津貼項目</span>
                             </div>
+                            
+                            <!-- 證照津貼 -->
+                            <div class="form-group">
+                                <label class="form-label" data-i18n="SALARY_LICENSE_ALLOWANCE_LABEL">證照津貼</label>
+                                <input type="number" id="config-license-allowance" class="form-input" 
+                                    value="0" min="0" step="1" placeholder="0">
+                            </div>
+                            
+                            <!-- 油資津貼 -->
+                            <div class="form-group">
+                                <label class="form-label" data-i18n="SALARY_FUEL_ALLOWANCE_LABEL">油資津貼</label>
+                                <input type="number" id="config-fuel-allowance" class="form-input" 
+                                    value="0" min="0" step="1" placeholder="0">
+                            </div>
+                            
+                            <!-- 差旅費 -->
+                            <div class="form-group">
+                                <label class="form-label" data-i18n="SALARY_TRAVEL_ALLOWANCE_LABEL">差旅費</label>
+                                <input type="number" id="config-travel-allowance" class="form-input" 
+                                    value="0" min="0" step="1" placeholder="0">
+                            </div>
                         </div>
                     </div>
 
@@ -1697,6 +1718,36 @@
                                     <span data-i18n="SALARY_TAX_LABEL">所得稅</span>
                                 </label>
                                 <input type="number" id="config-income-tax" class="form-input" 
+                                       value="0" min="0" step="1" placeholder="0">
+                            </div>
+                        </div>
+
+                        <hr class="section-divider">
+
+                        <!-- 投保級距與公司負擔：列在薪資明細表，不影響實發 -->
+                        <div class="section-label" data-i18n="SALARY_EMPLOYER_TITLE">投保級距與公司負擔</div>
+                        <p class="summary-hint section-intro" data-i18n="SALARY_EMPLOYER_DESC">
+                            列在匯出的薪資明細表上，不會從員工薪水扣
+                        </p>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label" data-i18n="SALARY_INSURED_SALARY_LABEL">投保級距</label>
+                                <input type="number" id="config-insured-salary" class="form-input" 
+                                       value="0" min="0" step="1" placeholder="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" data-i18n="SALARY_LABOR_EMPLOYER_LABEL">勞保公司負擔</label>
+                                <input type="number" id="config-labor-employer" class="form-input" 
+                                       value="0" min="0" step="1" placeholder="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" data-i18n="SALARY_PENSION_EMPLOYER_LABEL">勞退公司負擔</label>
+                                <input type="number" id="config-pension-employer" class="form-input" 
+                                       value="0" min="0" step="1" placeholder="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" data-i18n="SALARY_HEALTH_EMPLOYER_LABEL">健保公司負擔</label>
+                                <input type="number" id="config-health-employer" class="form-input" 
                                        value="0" min="0" step="1" placeholder="0">
                             </div>
                         </div>
@@ -2016,6 +2067,10 @@
                     <h3 class="text-lg font-semibold mb-2" data-i18n="MANUAL_PAYSLIP_DEDUCTIONS">扣款項目</h3>
                     <div class="form-grid" id="mp-deductions" style="margin-bottom: 1rem;"></div>
 
+                    <h3 class="text-lg font-semibold mb-2" data-i18n="SALARY_EMPLOYER_TITLE">投保級距與公司負擔</h3>
+                    <p class="summary-hint" style="margin-bottom: 0.5rem;" data-i18n="SALARY_EMPLOYER_DESC">列在匯出的薪資明細表上，不會從員工薪水扣</p>
+                    <div class="form-grid" id="mp-employer" style="margin-bottom: 1rem;"></div>
+
                     <h3 class="text-lg font-semibold mb-2" data-i18n="PAYROLL_MANUAL_ITEMS">手動加減項目</h3>
                     <div id="mp-items" class="space-y-2 mb-2"></div>
                     <button type="button" id="mp-add-item" class="ghost-btn" style="margin-bottom: 1rem;" data-i18n="PAYROLL_ADD_ITEM">新增項目</button>
@@ -2050,6 +2105,9 @@
                     <div style="flex: 1;">
                         <h4 style="color: var(--accent-text); font-weight: 600; margin-bottom: 6px;" data-i18n="SALARY_ADMIN_FEATURES">管理員功能</h4>
                         <p class="summary-hint" data-i18n="SALARY_EXPORT_DESC">匯出當月所有員工的薪資總表（Excel格式）</p>
+                        <input type="text" id="export-company-name" class="form-input" maxlength="60"
+                               style="margin-top: 8px; max-width: 320px;"
+                               data-i18n="SALARY_EXPORT_COMPANY_PLACEHOLDER" placeholder="表頭公司名稱（留空沿用上次）">
                     </div>
                     <button class="export-btn" onclick="exportAllSalaryExcel()" data-i18n="BTN_EXPORT_SALARY_SUMMARY">
                         匯出薪資總表
@@ -2989,6 +3047,9 @@
                 'config-attendance-bonus',
                 'config-performance-bonus',
                 'config-other-allowances',
+                'config-license-allowance',
+                'config-fuel-allowance',
+                'config-travel-allowance',
                 
                 //  新增:監聽法定扣款（使用者手動修改時也要更新預覽）
                 'config-labor-fee',
@@ -3190,6 +3251,12 @@
                         incomeTaxEl.value = data.incomeTax;
                     }
                     
+                    // 薪資明細表的固定金額（證照／油資／差旅、投保級距、公司負擔）
+                    SALARY_SHEET_CONFIG_INPUTS.forEach(([id, , header]) => {
+                        const el = document.getElementById(id);
+                        if (el) el.value = sheetAmount(res.data[header]) || 0;
+                    });
+                    
                     // 備註
                     const noteEl = document.getElementById('config-note');
                     if (noteEl) noteEl.value = data.note || '';
@@ -3346,8 +3413,10 @@
                 const performanceBonus = parseFloat(document.getElementById('config-performance-bonus').value) || 0;
                 const otherAllowances = parseFloat(document.getElementById('config-other-allowances').value) || 0;
                 
+                const sheetAllowances = ['config-license-allowance', 'config-fuel-allowance', 'config-travel-allowance']
+                    .reduce((sum, id) => sum + (parseFloat(document.getElementById(id)?.value) || 0), 0);
                 const totalAllowances = positionAllowance + mealAllowance + transportAllowance + 
-                                    attendanceBonus + performanceBonus + otherAllowances;
+                                    attendanceBonus + performanceBonus + otherAllowances + sheetAllowances;
                 
                 //  關鍵修正：直接讀取表單中的扣款數值（使用者可能已手動調整）
                 const laborFee = parseFloat(document.getElementById('config-labor-fee').value) || 0;

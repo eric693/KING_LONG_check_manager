@@ -1339,7 +1339,10 @@ const MANUAL_PAYSLIP_EARNING_FIELDS = [
   ['weekdayOvertimePay', 'MANUAL_OT_PAY', '加班費'],
   ['mealSubsidy', 'PAYROLL_MEAL_SUBSIDY', '餐費'],
   ['salesBonus', 'PAYROLL_SALES_BONUS', '銷售獎金'],
-  ['birthdayGift', 'PAYROLL_BIRTHDAY_GIFT', '生日禮金']
+  ['birthdayGift', 'PAYROLL_BIRTHDAY_GIFT', '生日禮金'],
+  ['licenseAllowance', 'SALARY_LICENSE_ALLOWANCE', '證照津貼'],
+  ['fuelAllowance', 'SALARY_FUEL_ALLOWANCE', '油資津貼'],
+  ['travelAllowance', 'SALARY_TRAVEL_ALLOWANCE', '差旅費']
 ];
 const MANUAL_PAYSLIP_DEDUCTION_FIELDS = [
   ['laborFee', 'SALARY_LABOR_INS', '勞保費'],
@@ -1347,9 +1350,20 @@ const MANUAL_PAYSLIP_DEDUCTION_FIELDS = [
   ['employmentFee', 'SALARY_EMPLOYMENT_INS', '就業保險費'],
   ['pensionSelf', 'SALARY_PENSION', '勞退自提'],
   ['incomeTax', 'SALARY_TAX', '所得稅'],
-  ['leaveDeduction', 'SALARY_LEAVE_DEDUCT', '請假扣款'],
+  ['personalLeaveDeduction', 'SALARY_PERSONAL_LEAVE_DEDUCT', '事假扣款'],
+  ['sickLeaveDeduction', 'SALARY_SICK_LEAVE_DEDUCT', '病假扣款'],
+  ['menstrualLeaveDeduction', 'SALARY_MENSTRUAL_LEAVE_DEDUCT', '生理假扣款'],
+  ['familyCareLeaveDeduction', 'SALARY_FAMILY_CARE_LEAVE_DEDUCT', '家庭照顧假扣款'],
+  ['proRataDeduction', 'SALARY_PRO_RATA_DEDUCT', '到職不足月'],
   ['advanceDeduction', 'PAYROLL_ADVANCE_DEDUCTION', '預支抵扣'],
   ['otherDeductions', 'SALARY_OTHER_DEDUCT', '其他扣款']
+];
+// 公司負擔：只記錄、列在薪資明細表，不算進應發或扣款
+const MANUAL_PAYSLIP_EMPLOYER_FIELDS = [
+  ['insuredSalary', 'SALARY_INSURED_SALARY_LABEL', '投保級距'],
+  ['laborEmployer', 'SALARY_LABOR_EMPLOYER_LABEL', '勞保公司負擔'],
+  ['pensionEmployer', 'SALARY_PENSION_EMPLOYER_LABEL', '勞退公司負擔'],
+  ['healthEmployer', 'SALARY_HEALTH_EMPLOYER_LABEL', '健保公司負擔']
 ];
 
 let manualPayslipState = null;   // { employeeId, yearMonth, exists, data }
@@ -1384,7 +1398,7 @@ function initManualPayslip() {
       input.id = 'mp-' + key;
       input.className = 'form-input mp-amount';
       input.dataset.key = key;
-      input.dataset.kind = containerId === 'mp-earnings' ? 'add' : 'sub';
+      input.dataset.kind = { 'mp-earnings': 'add', 'mp-deductions': 'sub' }[containerId] || 'info';
       group.appendChild(label);
       group.appendChild(input);
       box.appendChild(group);
@@ -1392,6 +1406,7 @@ function initManualPayslip() {
   };
   build('mp-earnings', MANUAL_PAYSLIP_EARNING_FIELDS);
   build('mp-deductions', MANUAL_PAYSLIP_DEDUCTION_FIELDS);
+  build('mp-employer', MANUAL_PAYSLIP_EMPLOYER_FIELDS);
 
   const form = document.getElementById('mp-form');
   if (form) form.oninput = updateManualPayslipTotals;

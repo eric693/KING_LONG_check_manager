@@ -961,6 +961,17 @@ function bindSalaryEvents() {
     }
 }
 
+// 薪資明細表的固定金額：[表單欄位 id, 參數名稱, 試算表欄名]（後端見 PayrollSheet.gs）
+const SALARY_SHEET_CONFIG_INPUTS = [
+    ['config-insured-salary', 'insuredSalary', '投保級距'],
+    ['config-license-allowance', 'licenseAllowance', '證照津貼'],
+    ['config-fuel-allowance', 'fuelAllowance', '油資津貼'],
+    ['config-travel-allowance', 'travelAllowance', '差旅費'],
+    ['config-labor-employer', 'laborEmployer', '勞保公司負擔'],
+    ['config-health-employer', 'healthEmployer', '健保公司負擔'],
+    ['config-pension-employer', 'pensionEmployer', '勞退公司負擔']
+];
+
 /**
  *  處理薪資設定表單提交（完整版 - 含所有津貼與扣款）
  */
@@ -1089,6 +1100,10 @@ async function handleSalaryConfigSubmit(e) {
             `&groupInsurance=${encodeURIComponent(groupInsurance)}` +
             `&otherDeductions=${encodeURIComponent(otherDeductions)}` +
             
+            // 薪資明細表的固定金額
+            SALARY_SHEET_CONFIG_INPUTS.map(([id, key]) =>
+                `&${key}=${encodeURIComponent(toNumber(safeGetValue(id)))}`).join('') +
+            
             // 備註
             `&note=${encodeURIComponent(note)}` +
             
@@ -1123,7 +1138,7 @@ async function handleSalaryConfigSubmit(e) {
                 'config-pension-self',
                 'config-income-tax',
                 'config-pension-rate'
-            ];
+            ].concat(SALARY_SHEET_CONFIG_INPUTS.map(([id]) => id));
             
             resetFields.forEach(id => {
                 const el = document.getElementById(id);
@@ -1701,6 +1716,12 @@ async function saveSalaryRecord(data) {
             `&groupInsurance=${encodeURIComponent(data.groupInsurance || 0)}` +
             `&otherDeductions=${encodeURIComponent(data.otherDeductions || 0)}` +
             
+            // 薪資明細表的欄位（證照／油資／差旅、生理假、家庭照顧假、到職不足月、公司負擔）
+            ['licenseAllowance', 'fuelAllowance', 'travelAllowance', 'sundayOvertimePay',
+             'menstrualLeaveDeduction', 'familyCareLeaveDeduction', 'proRataDeduction',
+             'insuredSalary', 'laborEmployer', 'healthEmployer', 'pensionEmployer']
+                .map(key => `&${key}=${encodeURIComponent(data[key] || 0)}`).join('') +
+            
             // 總計
             `&grossSalary=${encodeURIComponent(data.grossSalary)}` +
             `&netSalary=${encodeURIComponent(data.netSalary)}` +
@@ -2238,8 +2259,11 @@ async function exportAllSalaryExcel() {
         showExportProgress(t('SALARY_EXPORT_PROGRESS'));
         
         // 走 api.js，token 才不會被串在網址上（見 config.js 的 useHttpPost）
+        // 表頭的公司名稱：留空就用後端上次記住的
+        const companyName = (document.getElementById('export-company-name')?.value || '').trim();
         const result = await apiRequestJson(
-            `exportAllSalaryExcel&yearMonth=${encodeURIComponent(yearMonth)}`);
+            `exportAllSalaryExcel&yearMonth=${encodeURIComponent(yearMonth)}` +
+            (companyName ? `&companyName=${encodeURIComponent(companyName)}` : ''));
         
         console.log(' 收到回應:', result);
         
