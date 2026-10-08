@@ -91,6 +91,9 @@ const DEPLOY_CHECKS = [
   ['WorklogOperations.gs', () => typeof getWorklogSheet === 'function']
 ];
 
+// 每次後端有更新就改這個日期，健康檢查會回報，從外面就知道正式區部署到哪一版
+const BACKEND_VERSION = '2026-10-09';
+
 function handleHealthCheck() {
   const problems = [];
   DEPLOY_CHECKS.forEach(([file, check]) => {
@@ -100,6 +103,7 @@ function handleHealthCheck() {
   });
   return {
     ok: problems.length === 0,
+    version: BACKEND_VERSION,
     checked: DEPLOY_CHECKS.length,
     // 這些檔不存在、或還是舊版：請從 GitHub 複製最新的內容覆蓋
     missingOrOutdated: problems

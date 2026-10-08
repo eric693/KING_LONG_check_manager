@@ -245,3 +245,30 @@ function adjustPunchErrorMessage(res) {
     if (text && text !== res.code) return text;
     return res.msg || t('NOTIF_ADJUST_PUNCH_FAILED');
 }
+
+// ==================== 試算表把金額存成日期 ====================
+//
+// 「月薪資記錄」有幾欄被試算表設成日期格式，寫進去的金額會被存成日期（0 變成 1899/12/30），
+// 後端舊版讀回來就變成 -2209190400000 這種毫秒數（新版後端會自己換算，這裡是雙重保險）。
+// 正常的金額不可能大到 1e11，看到這種數字就當成日期換算回試算表的日期序號（= 原本的金額）。
+function sheetAmount(value) {
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(value)) value = Date.parse(value);
+    const n = Number(value);
+    if (!isFinite(n)) return 0;
+    if (Math.abs(n) > 1e11) return Math.round((n - Date.UTC(1899, 11, 30)) / 86400000) + 0;  // +0：不要 -0
+    return n;
+}
+
+/** 薪資資料裡所有被存成日期的金額換回數字（回傳新物件，不改原本的） */
+function normalizeSalaryAmounts(data) {
+    if (!data || typeof data !== 'object') return data;
+    const out = Array.isArray(data) ? data.slice() : Object.assign({}, data);
+    Object.keys(out).forEach(key => {
+        const v = out[key];
+        if ((typeof v === 'number' && Math.abs(v) > 1e11) ||
+            (typeof v === 'string' && /^1[89]\d\d-\d{2}-\d{2}T/.test(v))) {
+            out[key] = sheetAmount(v);
+        }
+    });
+    return out;
+}

@@ -603,7 +603,8 @@ function renderEmployeePayrollItems(data) {
         });
 }
 
-function displayEmployeeSalary(data) {
+function displayEmployeeSalary(rawData) {
+    const data = typeof normalizeSalaryAmounts === 'function' ? normalizeSalaryAmounts(rawData) : rawData;
     console.log(' 顯示薪資明細（完整版）:', data);
     
     renderPayslipAcknowledgement(data);
@@ -1187,8 +1188,9 @@ async function handleSalaryCalculation() {
 /**
  *  顯示薪資計算結果（支援月薪/時薪區分 + 國定假日完整版）
  */
-function displaySalaryCalculation(data, container) {
+function displaySalaryCalculation(rawData, container) {
     if (!container) return;
+    const data = typeof normalizeSalaryAmounts === 'function' ? normalizeSalaryAmounts(rawData) : rawData;
     
     // 記住這次的計算結果，列印薪資明細時直接用，不再向後端要一次
     if (typeof setLastCalculatedSalary === 'function') setLastCalculatedSalary(data);

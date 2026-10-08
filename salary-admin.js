@@ -1488,7 +1488,8 @@ function collectManualPayslipPreview() {
   });
 }
 
-function fillManualPayslipForm(data) {
+function fillManualPayslipForm(rawData) {
+  const data = typeof normalizeSalaryAmounts === 'function' ? normalizeSalaryAmounts(rawData) : rawData;
   const value = v => (v === undefined || v === null || Number(v) === 0) ? '' : v;
   document.getElementById('mp-salaryType').value = data.salaryType === '時薪' ? '時薪' : '月薪';
   document.getElementById('mp-hourlyRate').value = value(data.hourlyRate);

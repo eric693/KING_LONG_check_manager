@@ -71,7 +71,8 @@ function payrollSavedMessages(data) {
  * 計算結果用英文欄位；從「月薪資記錄」讀回來的是中文欄名，兩種都要認得。
  * 薪資單、試算結果、員工自己的薪資頁都用這一份，三邊才會一致。
  */
-function payrollRuleItems(data, options) {
+function payrollRuleItems(rawData, options) {
+    const data = typeof normalizeSalaryAmounts === 'function' ? normalizeSalaryAmounts(rawData) : rawData;
     const pick = (key, header) => {
         const v = data[key] !== undefined ? data[key] : data[header];
         return parseFloat(v) || 0;
@@ -138,7 +139,8 @@ function payrollRuleItems(data, options) {
 /**
  * 組出薪資明細表的 HTML
  */
-function buildPayslipHtml(data) {
+function buildPayslipHtml(rawData) {
+    const data = typeof normalizeSalaryAmounts === 'function' ? normalizeSalaryAmounts(rawData) : rawData;
     const num = v => parseFloat(v) || 0;
     
     const earnings = [
