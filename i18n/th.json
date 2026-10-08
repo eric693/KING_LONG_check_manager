@@ -1467,5 +1467,7 @@
   "ERR_REASON_TOO_SHORT": "เหตุผลต้องมีอย่างน้อย 2 ตัวอักษร",
   "ERR_INVALID_DATE": "รูปแบบวันที่ไม่ถูกต้อง",
   "ERR_ADJUST_PUNCH_LIMIT": "วันนั้นมีคำขอแก้ไขประเภทนี้รออนุมัติ 2 รายการแล้ว โปรดรอผู้ดูแลอนุมัติก่อน",
-  "ERR_MISSING_DATETIME": "โปรดเลือกวันและเวลา"
+  "ERR_MISSING_DATETIME": "โปรดเลือกวันและเวลา",
+  "MANUAL_PAYSLIP_EDITING": "กำลังแก้ไข: {name} ({month})",
+  "MANUAL_PAYSLIP_TARGET_CHANGED": "พนักงานหรือเดือนเปลี่ยนไป ระบบโหลดใหม่แล้ว โปรดตรวจสอบก่อนบันทึก"
 }

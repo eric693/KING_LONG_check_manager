@@ -1408,5 +1408,7 @@
   "ERR_REASON_TOO_SHORT": "理由は 2 文字以上入力してください",
   "ERR_INVALID_DATE": "日付の形式が正しくありません",
   "ERR_ADJUST_PUNCH_LIMIT": "この日のこの種類の補打刻はすでに 2 件審査待ちです。審査後に申請してください",
-  "ERR_MISSING_DATETIME": "日時を選択してください"
+  "ERR_MISSING_DATETIME": "日時を選択してください",
+  "MANUAL_PAYSLIP_EDITING": "編集中：{name}（{month}）",
+  "MANUAL_PAYSLIP_TARGET_CHANGED": "従業員または月が変わったため再読み込みしました。内容を確認してから保存してください。"
 }

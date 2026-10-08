@@ -1408,5 +1408,7 @@
   "ERR_REASON_TOO_SHORT": "Alasan minimal 2 karakter",
   "ERR_INVALID_DATE": "Format tanggal salah",
   "ERR_ADJUST_PUNCH_LIMIT": "Sudah ada 2 permintaan jenis ini menunggu persetujuan untuk hari itu; tunggu admin meninjaunya",
-  "ERR_MISSING_DATETIME": "Pilih tanggal dan jam"
+  "ERR_MISSING_DATETIME": "Pilih tanggal dan jam",
+  "MANUAL_PAYSLIP_EDITING": "Sedang mengedit: {name} ({month})",
+  "MANUAL_PAYSLIP_TARGET_CHANGED": "Karyawan atau bulan berubah; formulir dimuat ulang. Periksa sebelum menyimpan."
 }

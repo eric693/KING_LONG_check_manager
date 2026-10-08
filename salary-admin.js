@@ -1397,6 +1397,12 @@ function initManualPayslip() {
   if (form) form.oninput = updateManualPayslipTotals;
   const on = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
   on('mp-load', loadManualPayslip);
+  // 換員工或月份就重新載入那個人的資料。以前要再按一次「開始輸入」，沒按的話
+  // 表單還停在上一位，按儲存會把第二位的金額存到第一位身上
+  ['mp-employee', 'mp-month'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.onchange = onManualPayslipTargetChange;
+  });
   on('mp-add-item', () => { addManualPayslipItem(null); updateManualPayslipTotals(); });
   on('mp-save', saveManualPayslip);
   on('mp-delete', deleteManualPayslip);
@@ -1511,7 +1517,11 @@ function renderManualPayslipStatus() {
     fallback = '這個月已經有系統自動計算的薪資單，儲存手動薪資單後會取代它。';
   }
   if (status) {
-    status.textContent = ta(key, fallback);
+    // 先講清楚正在編輯誰，避免存錯人
+    const who = ta('MANUAL_PAYSLIP_EDITING', '正在編輯：{name}（{month}）')
+      .replace('{name}', manualPayslipState.employeeName || manualPayslipState.employeeId)
+      .replace('{month}', manualPayslipState.yearMonth);
+    status.textContent = who + '　' + ta(key, fallback);
     status.style.color = manualPayslipState.autoExists && !manualPayslipState.exists ? '#b45309' : '';
   }
   if (del) del.style.display = manualPayslipState.exists ? '' : 'none';
@@ -1528,7 +1538,20 @@ function manualPayslipSelectedEmployee() {
   }
 }
 
+function onManualPayslipTargetChange() {
+  manualPayslipState = null;
+  const form = document.getElementById('mp-form');
+  if (form) form.style.display = 'none';
+  const employeeId = manualPayslipSelectedEmployee().id;
+  const yearMonth = document.getElementById('mp-month')?.value;
+  if (employeeId && yearMonth) loadManualPayslip();
+}
+
+// 載入請求的序號：快速連續換人時，只採用最後一次的結果
+let manualPayslipLoadSeq = 0;
+
 async function loadManualPayslip() {
+  const seq = ++manualPayslipLoadSeq;
   const employeeId = manualPayslipSelectedEmployee().id;
   const yearMonth = document.getElementById('mp-month').value;
   if (!employeeId || !yearMonth) {
@@ -1538,11 +1561,13 @@ async function loadManualPayslip() {
   try {
     const res = await callApifetch(`getManualPayslip&employeeId=${encodeURIComponent(employeeId)}` +
                                    `&yearMonth=${encodeURIComponent(yearMonth)}`, null);
+    if (seq !== manualPayslipLoadSeq) return;   // 等待期間又換了人，這次的結果作廢
     if (!res.ok) {
       showNotification(res.msg || ta('MANUAL_PAYSLIP_SAVE_FAILED', '手動薪資單處理失敗'), 'error');
       return;
     }
-    manualPayslipState = { employeeId: employeeId, yearMonth: yearMonth, exists: !!res.exists, autoExists: !!res.autoExists };
+    manualPayslipState = { employeeId: employeeId, employeeName: manualPayslipSelectedEmployee().name,
+                           yearMonth: yearMonth, exists: !!res.exists, autoExists: !!res.autoExists };
     fillManualPayslipForm(res.data || {});
     renderManualPayslipStatus();
     document.getElementById('mp-form').style.display = 'block';
@@ -1554,6 +1579,14 @@ async function loadManualPayslip() {
 
 async function saveManualPayslip() {
   if (!manualPayslipState) return;
+  // 儲存前再核對一次：選單上的人和月份必須跟正在編輯的一樣
+  const selected = manualPayslipSelectedEmployee();
+  const month = document.getElementById('mp-month')?.value;
+  if (selected.id !== manualPayslipState.employeeId || month !== manualPayslipState.yearMonth) {
+    showNotification(ta('MANUAL_PAYSLIP_TARGET_CHANGED', '員工或月份已經換了，請先確認畫面上的資料再儲存'), 'error');
+    onManualPayslipTargetChange();
+    return;
+  }
   if (manualPayslipState.autoExists && !manualPayslipState.exists &&
       !confirm(ta('MANUAL_PAYSLIP_CONFIRM_REPLACE', '這個月已經有自動計算的薪資單，確定要用手動薪資單取代嗎？'))) {
     return;

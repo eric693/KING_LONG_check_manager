@@ -258,7 +258,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     await loadUserPermissions();
     await loadShiftTemplates();
     initializeTabs();
-    loadEmployees();
+    // 員工清單只有管理員、排班人員排班時用得到；一般員工呼叫會被拒絕，白白增加後端負擔
+    if (isAdmin || isScheduler) loadEmployees();
     loadLocations();
     loadShifts();
     setupEventListeners();
