@@ -97,7 +97,7 @@ async function loadCurrentEmployeeSalary() {
         } else {
             console.log(` 沒有 ${currentMonth} 的薪資記錄`);
             if (emptyEl) {
-                showNoSalaryMessage(currentMonth);
+                showNoSalaryMessage(currentMonth, result.code);
                 emptyEl.style.display = 'block';
             }
         }
@@ -152,6 +152,15 @@ async function loadEmployeeSalaryByMonth() {
         console.log(' 重新計算薪資...');
         const calcResult = await callApifetch(`calculateMonthlySalary&employeeId=${encodeURIComponent(employeeId)}&yearMonth=${encodeURIComponent(yearMonth)}`);
         
+        if (calcResult.code === 'PAYSLIP_NOT_RELEASED') {
+            loadingEl.style.display = 'none';
+            showNoSalaryMessage(yearMonth, calcResult.code);
+            emptyEl.style.display = 'block';
+            const detailsSection = document.getElementById('attendance-details-section');
+            if (detailsSection) detailsSection.style.display = 'none';
+            return;
+        }
+        
         if (calcResult.success && calcResult.data) {
             //  步驟 2：儲存計算結果
             console.log(' 儲存計算結果...');
@@ -172,7 +181,7 @@ async function loadEmployeeSalaryByMonth() {
             await loadAttendanceDetails(yearMonth);
         } else {
             console.log(` 沒有 ${yearMonth} 的薪資記錄`);
-            showNoSalaryMessage(yearMonth);
+            showNoSalaryMessage(yearMonth, res.code);
             emptyEl.style.display = 'block';
             const detailsSection = document.getElementById('attendance-details-section');
             if (detailsSection) detailsSection.style.display = 'none';
@@ -524,14 +533,18 @@ function renderPayslipAcknowledgement(data) {
 
     const yearMonth = data.yearMonth || data['年月'] || '';
     const acknowledgedAt = data['簽收時間'] || data.acknowledgedAt || '';
+    // 發放後管理員又改過金額，讓員工知道現在看到的是更新後的版本
+    const updatedNote = data.updatedAfterRelease
+        ? payslipLabel('PAYSLIP_UPDATED_AFTER_RELEASE', '此薪資單於 {time} 更新過').replace('{time}', data.updatedAfterRelease) + '　'
+        : '';
 
     if (acknowledgedAt) {
-        status.textContent = `${t('PAYSLIP_ACKNOWLEDGED_AT')}：${acknowledgedAt}`;
+        status.textContent = updatedNote + `${t('PAYSLIP_ACKNOWLEDGED_AT')}：${acknowledgedAt}`;
         button.style.display = 'none';
         return;
     }
 
-    status.textContent = t('PAYSLIP_NOT_ACKNOWLEDGED');
+    status.textContent = updatedNote + t('PAYSLIP_NOT_ACKNOWLEDGED');
     button.style.display = 'inline-block';
     button.disabled = false;
 
@@ -916,8 +929,19 @@ function createSalaryHistoryItem(salary) {
 /**
  * 顯示無薪資訊息
  */
-function showNoSalaryMessage(month) {
+function showNoSalaryMessage(month, code) {
     const emptyEl = document.getElementById('current-salary-empty');
+    // 管理員還沒發放這個月的薪資條（GS/PayrollRelease.gs）
+    if (emptyEl && code === 'PAYSLIP_NOT_RELEASED') {
+        emptyEl.innerHTML = `
+            <div class="empty-state-icon"></div>
+            <div class="empty-state-title">${escapeHtml(payslipLabel('PAYSLIP_NOT_RELEASED_TITLE', '本月薪資尚未發放'))}</div>
+            <div class="empty-state-text">
+                <p>${escapeHtml(payslipLabel('PAYSLIP_NOT_RELEASED_TEXT', '薪資條發放後就能在這裡查看，屆時會再通知您。'))}</p>
+            </div>
+        `;
+        return;
+    }
     if (emptyEl) {
         emptyEl.innerHTML = `
             <div class="empty-state-icon"></div>

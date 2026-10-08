@@ -35,7 +35,10 @@ const ROUTE_ACCESS = {
   createLoginLink: 'admin',
   getManualPayslip: 'admin',
   saveManualPayslip: 'admin',
-  deleteManualPayslip: 'admin'
+  deleteManualPayslip: 'admin',
+  getPayrollRelease: 'admin',
+  releasePayroll: 'admin',
+  unreleasePayroll: 'admin'
 };
 
 /**
@@ -61,6 +64,8 @@ const DEPLOY_CHECKS = [
                          String(handleLinePunchWithToken).indexOf('checkPunchSequence_') !== -1 &&
                          String(handleLinePunchWithToken).indexOf('data.done') !== -1 &&
                          String(handleCalculateMonthlySalary).indexOf('readManualPayslip_') !== -1 &&
+                         String(handleCalculateMonthlySalary).indexOf('isPayrollReleased_') !== -1 &&
+                         String(handleSetEmployeeSalaryTW).indexOf('PAYROLL_SHEET_CONFIG_FIELDS') !== -1 &&
                          String(handleSetEmployeeSalaryTW).indexOf("existing.data['到職日期']") !== -1],
   ['LeaveManagement.gs', () => typeof submitLeaveRequest === 'function'],
   ['LineApi.gs', () => typeof getLineUserInfo_ === 'function'],
@@ -71,8 +76,11 @@ const DEPLOY_CHECKS = [
   ['ManualPayslip.gs', () => typeof handleSaveManualPayslip === 'function' && typeof readManualPayslip_ === 'function' &&
                               typeof sheetNumber_ === 'function'],
   ['LoginLinks.gs', () => typeof handleRedeemLoginLink === 'function' && typeof createSessionForUser_ === 'function'],
-  ['Offboarding.gs', () => typeof handleOffboardEmployee === 'function'],
+  ['Offboarding.gs', () => typeof handleOffboardEmployee === 'function' &&
+                            String(handleAcknowledgePayslip).indexOf('isPayrollReleased_') !== -1],
   ['OvertimeOperations.gs', () => typeof initOvertimeSheet === 'function'],
+  ['PayrollRelease.gs', () => typeof handleReleasePayroll === 'function' && typeof isPayrollReleased_ === 'function'],
+  ['PayrollSheet.gs', () => typeof exportPayrollSheet_ === 'function' && typeof prorateAttendanceBonus_ === 'function'],
   ['PayrollRules.gs', () => typeof applyPayrollRules_ === 'function' && typeof payrollAttendanceZh_ === 'function' &&
                              String(handleSavePayrollAdjustments).indexOf('PAYSLIP_IS_MANUAL') !== -1],
   ['PunchRules.gs', () => typeof checkPunchSequence_ === 'function' && typeof computeDayWorkFromPunches_ === 'function' &&
@@ -80,6 +88,8 @@ const DEPLOY_CHECKS = [
   ['QrPunch.gs', () => typeof qrPunch === 'function' && String(qrPunch).indexOf('checkPunchSequence_') !== -1],
   ['SalaryManagement.gs', () => typeof calculateMonthlySalary === 'function' && calculateMonthlySalary.length >= 3 &&
                                  String(saveMonthlySalary).indexOf('PAYSLIP_IS_MANUAL') !== -1 &&
+                                 String(saveMonthlySalary).indexOf('markUpdatedAfterRelease_') !== -1 &&
+                                 String(getMySalary).indexOf('isPayrollReleased_') !== -1 &&
                                  typeof ensureMonthlySalaryNumberFormats_ === 'function'],
   ['SalaryTools.gs', () => typeof listPayableEmployees_ === 'function' &&
                             String(handleBatchCalculateSalary).indexOf('readManualPayslip_') !== -1],
@@ -92,7 +102,7 @@ const DEPLOY_CHECKS = [
 ];
 
 // 每次後端有更新就改這個日期，健康檢查會回報，從外面就知道正式區部署到哪一版
-const BACKEND_VERSION = '2026-10-09';
+const BACKEND_VERSION = '2026-10-10';
 
 function handleHealthCheck() {
   const problems = [];
@@ -539,6 +549,12 @@ function doGet(e) {
       // ==================== 薪資簽收與離職 ====================
       case "acknowledgePayslip":
         return respond1(handleAcknowledgePayslip(e.parameter));
+      case "getPayrollRelease":
+        return respond1(handleGetPayrollRelease(e.parameter));
+      case "releasePayroll":
+        return respond1(handleReleasePayroll(e.parameter));
+      case "unreleasePayroll":
+        return respond1(handleUnreleasePayroll(e.parameter));
       case "getPayslipAcknowledgements":
         return respond1(handleGetPayslipAcknowledgements(e.parameter));
       case "offboardEmployee":

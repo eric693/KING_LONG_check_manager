@@ -432,7 +432,8 @@ function getMonthlySalarySheetEnhanced() {
     MONTHLY_CUSTOM_ALLOWANCE_COLUMN,
     MONTHLY_CUSTOM_DEDUCTION_COLUMN,
     MONTHLY_CUSTOM_DETAIL_COLUMN
-  ].concat(MONTHLY_PAYROLL_RULE_COLUMNS, PAYROLL_SHEET_MONTHLY_FIELDS.map(f => f.header)));
+  ].concat(MONTHLY_PAYROLL_RULE_COLUMNS, PAYROLL_SHEET_MONTHLY_FIELDS.map(f => f.header),
+           [MONTHLY_UPDATED_AFTER_RELEASE_COLUMN]));
   
   ensureMonthlySalaryNumberFormats_(sheet);
   
@@ -442,8 +443,11 @@ function getMonthlySalarySheetEnhanced() {
 // 「月薪資記錄」裡放金額、時數的欄位
 const MONTHLY_SALARY_HOUR_COLUMNS = ['時薪', '工作時數', '總加班時數', '病假時數', '事假時數'];
 const MONTHLY_SALARY_TEXT_COLUMNS = ['薪資單ID', '員工ID', '員工姓名', '年月', '薪資類型', '銀行代碼', '銀行帳號',
-                                     '狀態', '備註', '建立時間', MONTHLY_CUSTOM_DETAIL_COLUMN, '全勤說明', '薪資單備註', '計薪調整'];
-const MONTHLY_SALARY_FORMAT_VERSION = '2';   // 2：薪資明細表的欄位（PayrollSheet.gs）
+                                     '狀態', '備註', '建立時間', MONTHLY_CUSTOM_DETAIL_COLUMN, '全勤說明', '薪資單備註', '計薪調整',
+                                     '簽收時間', '簽收人', '發放後更新時間'];
+// 時間欄設成日期格式；設成數字格式的話讀回來會是一串數字，不是日期
+const MONTHLY_SALARY_DATE_COLUMNS = ['建立時間', '簽收時間', '發放後更新時間'];
+const MONTHLY_SALARY_FORMAT_VERSION = '3';   // 2：薪資明細表的欄位（PayrollSheet.gs）；3：時間欄改回日期格式
 
 /**
  * 把金額、時數欄固定成數字格式。
@@ -461,6 +465,10 @@ function ensureMonthlySalaryNumberFormats_(sheet) {
     const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
     const rows = Math.max(sheet.getMaxRows() - 1, 1);
     headers.forEach((header, i) => {
+      if (MONTHLY_SALARY_DATE_COLUMNS.indexOf(header) !== -1) {
+        sheet.getRange(2, i + 1, rows, 1).setNumberFormat('yyyy/MM/dd HH:mm');
+        return;
+      }
       if (!header || MONTHLY_SALARY_TEXT_COLUMNS.indexOf(header) !== -1) return;
       const format = MONTHLY_SALARY_HOUR_COLUMNS.indexOf(header) !== -1 ? '0.00' : '#,##0';
       sheet.getRange(2, i + 1, rows, 1).setNumberFormat(format);
@@ -1045,6 +1053,10 @@ function saveMonthlySalary(salaryData) {
         // 覆寫之前先留一份，稽核記錄才知道原本是多少
         beforeRow = data[i].slice();
         fullRow = toFullRow(data[i]);
+        // 已經發放的月份又被改了金額：標記「發放後更新」，員工端會顯示（PayrollRelease.gs）
+        if (typeof markUpdatedAfterRelease_ === 'function') {
+          markUpdatedAfterRelease_(trimmedHeaders, beforeRow, fullRow, normalizedYearMonth);
+        }
         sheet.getRange(i + 1, 1, 1, fullRow.length).setValues([fullRow]);
         found = true;
         Logger.log(` 更新薪資單: ${salaryId}`);
@@ -1201,6 +1213,19 @@ function getMySalary(userId, yearMonth) {
     
     Logger.log(` 查詢薪資: ${employeeId}, ${yearMonth}`);
     
+    // 薪資條還沒發放：員工看不到（PayrollRelease.gs）
+    if (typeof isPayrollReleased_ === 'function') {
+      const releaseState = getPayrollReleaseState_();
+      if (!isPayrollReleased_(yearMonth, releaseState)) {
+        return { success: false, code: 'PAYSLIP_NOT_RELEASED', message: '本月薪資尚未發放' };
+      }
+      // 已發放：給發放時存下的薪資單，不重新計算
+      if (getPayrollReleaseInfo_(yearMonth, releaseState)) {
+        const released = readReleasedPayslip_(employeeId, yearMonth);
+        return released ? { success: true, data: released } : { success: false, message: '查無薪資記錄' };
+      }
+    }
+    
     // 手動薪資單：直接給管理員填的內容，不重新計算
     if (typeof readManualPayslip_ === 'function') {
       const manual = readManualPayslip_(employeeId, yearMonth);
@@ -1327,9 +1352,14 @@ function getMySalaryHistory(userId, limit = 12) {
       return yearMonthB.localeCompare(yearMonthA);
     });
     
-    const result = salaries.slice(0, limit);
+    // 還沒發放的月份不列給員工看
+    const releaseState = (typeof getPayrollReleaseState_ === 'function') ? getPayrollReleaseState_() : null;
+    const visible = releaseState
+      ? salaries.filter(s => isPayrollReleased_(String(s['年月'] || '').substring(0, 7), releaseState))
+      : salaries;
+    const result = visible.slice(0, limit);
     
-    return { success: true, data: result, total: salaries.length };
+    return { success: true, data: result, total: visible.length };
     
   } catch (error) {
     Logger.log(" 查詢薪資歷史失敗: " + error);

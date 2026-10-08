@@ -285,7 +285,8 @@ function handleSaveManualPayslip(params) {
   const saved = saveMonthlySalary(salaryData);
   if (!saved.success) return { ok: false, msg: saved.message };
 
-  return { ok: true, salaryId: saved.salaryId, data: readManualPayslip_(target.employeeId, target.yearMonth) };
+  return { ok: true, salaryId: saved.salaryId, data: readManualPayslip_(target.employeeId, target.yearMonth),
+           released: typeof isPayrollReleased_ === 'function' ? isPayrollReleased_(target.yearMonth) : true };
 }
 
 /**

@@ -1322,6 +1322,7 @@ function handleGetMySalary(params) {
     return { 
       ok: result.success,
       success: result.success, // 向後相容
+      code: result.code,
       data: result.data, 
       msg: result.message || result.msg || (result.success ? '查詢成功' : '查無資料')
     };
@@ -1466,6 +1467,22 @@ function handleCalculateMonthlySalary(params) {
     }
     
     Logger.log(' 計算月薪: ' + params.employeeId + ', ' + params.yearMonth);
+    
+    // 員工查自己的：薪資條還沒發放就看不到，發放後看發放時的版本（PayrollRelease.gs）
+    if (typeof isPayrollReleased_ === 'function') {
+      const session = checkSession_(params.token);
+      if (!session.ok || !session.user || session.user.dept !== '管理員') {
+        const yearMonth = String(params.yearMonth).substring(0, 7);
+        const releaseState = getPayrollReleaseState_();
+        if (!isPayrollReleased_(yearMonth, releaseState)) {
+          return { ok: false, code: 'PAYSLIP_NOT_RELEASED', msg: '本月薪資尚未發放' };
+        }
+        if (getPayrollReleaseInfo_(yearMonth, releaseState)) {
+          const released = readReleasedPayslip_(params.employeeId, yearMonth);
+          return released ? { ok: true, data: released } : { ok: false, msg: '查無薪資記錄' };
+        }
+      }
+    }
     
     // 這個月已經是手動薪資單：顯示它，不重新計算（前端也不會再存檔）
     if (typeof readManualPayslip_ === 'function') {

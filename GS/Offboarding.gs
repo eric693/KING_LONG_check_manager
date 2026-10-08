@@ -28,6 +28,11 @@ function handleAcknowledgePayslip(params) {
       return { ok: false, code: 'INVALID_YEAR_MONTH', msg: '年月格式錯誤' };
     }
 
+    // 還沒發放的薪資單不能簽收（PayrollRelease.gs）
+    if (typeof isPayrollReleased_ === 'function' && !isPayrollReleased_(yearMonth)) {
+      return { ok: false, code: 'PAYSLIP_NOT_RELEASED', msg: '本月薪資尚未發放' };
+    }
+
     const sheet = getMonthlySalarySheetEnhanced();
     ensureTrailingColumns_(sheet, [MONTHLY_ACK_COLUMN, MONTHLY_ACK_BY_COLUMN]);
 

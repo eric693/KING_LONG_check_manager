@@ -751,6 +751,31 @@
             color: var(--negative);
         }
 
+        /* ==================== 薪資條發放 ==================== */
+
+        .release-status {
+            padding: 10px 13px;
+            border-radius: var(--r-sm);
+            background: var(--warning-soft);
+            color: var(--warning);
+            font-size: 0.875rem;
+            margin-top: 14px;
+        }
+        .release-status.is-released { background: var(--positive-soft); color: var(--positive); }
+        .release-table-wrap { overflow-x: auto; margin-top: 12px; }
+        .release-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+        .release-table th, .release-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+            white-space: nowrap;
+        }
+        .release-table th { color: var(--text-muted); font-weight: 600; background: var(--surface-2); }
+        .release-table td.num, .release-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+        .release-table tr.is-missing td { color: var(--negative); }
+        .release-table tfoot td { font-weight: 600; border-top: 2px solid var(--border-strong); }
+        .release-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+
         .checkbox-list {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
@@ -2097,6 +2122,28 @@
 
         <!-- Tab 4: 薪資報表（列表、匯出、批次計算、複製設定） -->
         <div id="salary-report" class="tab-content">
+            <!-- 發放薪資條：核對整個月的薪資單，再一次發放給員工（GS/PayrollRelease.gs） -->
+            <div class="form-section">
+                <div class="feature-title" data-i18n="PAYROLL_RELEASE_TITLE">發放薪資條</div>
+                <p class="summary-hint section-intro" data-i18n="PAYROLL_RELEASE_DESC">
+                    薪資單存好後，員工還看不到。全部核對無誤後按「發放」，所有人會同時看到，有 LINE 的員工會收到通知。
+                </p>
+
+                <div class="toolbar">
+                    <label class="form-label" data-i18n="CALC_YEAR_MONTH_LABEL">年月</label>
+                    <input type="month" id="release-month" class="form-input">
+                    <button type="button" id="load-release-btn" class="toolbar-btn" data-i18n="BTN_LOAD_RELEASE">載入確認清單</button>
+                </div>
+
+                <div id="release-status" class="release-status" style="display: none;"></div>
+                <div id="release-list" class="release-table-wrap"></div>
+                <div class="release-actions">
+                    <button type="button" id="release-btn" class="submit-btn" style="display: none; max-width: 320px;"></button>
+                    <button type="button" id="unrelease-btn" class="ghost-btn" style="display: none; color: var(--negative);"
+                            data-i18n="BTN_UNRELEASE_PAYROLL">取消發放</button>
+                </div>
+            </div>
+
             <div class="form-section">
                 <div class="feature-title" data-i18n="SALARY_LIST_TITLE">薪資列表</div>
                 
@@ -2395,6 +2442,7 @@
                     displayEmployeeSalary(res.data);
                     contentEl.style.display = 'block';
                 } else {
+                    if (typeof showNoSalaryMessage === 'function') showNoSalaryMessage(yearMonth, res.code);
                     emptyEl.style.display = 'block';
                 }
                 
