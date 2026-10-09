@@ -454,7 +454,16 @@ function punchAdjusted(sessionToken, type, punchDate, lat, lng, note) {
       const row = allValues[i];
       if (String(row[userIdCol] || '').trim() !== user.userId) continue;
       if (asDate(row[dateCol]) !== dateOnly || String(row[typeCol] || '').trim() !== type) continue;
-      if (String(row[statusCol] || '').trim() !== '待審核') continue;
+      const rowStatus = String(row[statusCol] || '').trim();
+      // 已核准的同一張卡（同日、同類型、同時間）再申請一次，核准後就會多一筆打卡
+      if (rowStatus === '已核准' && timeCol >= 0 && asTime(row[timeCol]) === timeOnly) {
+        return {
+          ok: false,
+          code: "ERR_ADJUST_PUNCH_ALREADY_APPROVED",
+          msg: dateOnly + ' ' + timeOnly + ' 的補' + type + '卡已經核准過了'
+        };
+      }
+      if (rowStatus !== '待審核') continue;
       pendingSameType++;
       if (timeCol < 0 || asTime(row[timeCol]) === timeOnly) {
         Logger.log('防重複補打卡: ' + user.name + ' 在 ' + dateOnly + ' ' + timeOnly + ' 已有待審核的補' + type + '卡申請');
@@ -1190,7 +1199,19 @@ function getReviewRequest() {
 /**
  *  更新審核狀態（完整修正版 - 從補打卡申請工作表讀取）
  */
+// 同一筆申請按兩次核准（或兩位管理員同時按）會寫入兩筆一樣的打卡，
+// 讓那天的上下班次數對不上，被判成缺卡。鎖住整個審核，已審核過的不能再審。
 function updateReviewStatus(rowNumber, status, note) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    return updateReviewStatusLocked_(rowNumber, status, note);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function updateReviewStatusLocked_(rowNumber, status, note) {
   try {
     Logger.log('═══════════════════════════════════════');
     Logger.log(' 開始審核補打卡');
@@ -1280,6 +1301,12 @@ function updateReviewStatus(rowNumber, status, note) {
     Logger.log('   類型: ' + punchType);
     Logger.log('   理由: ' + reason);
     
+    const currentStatus = String(record[statusCol - 1] || '').trim();
+    if (currentStatus !== '待審核') {
+      Logger.log(' 這筆申請已經審核過: ' + currentStatus);
+      return { ok: false, code: 'ERR_ALREADY_REVIEWED', msg: '這筆申請已經' + currentStatus + '，不能重複審核' };
+    }
+
     //  更新審核狀態
     const statusText = (status === "v") ? "已核准" : "已拒絕";
     
@@ -1333,7 +1360,20 @@ function updateReviewStatus(rowNumber, status, note) {
           reason || note || ''     // J: 裝置資訊（補打卡理由）
         ];
         
-        attendanceSheet.appendRow(row);
+        // 打卡紀錄裡已經有同一人、同一時間、同一種卡，就不再寫一次
+        const tz = Session.getScriptTimeZone();
+        const targetKey = Utilities.formatDate(punchDateTime, tz, 'yyyy-MM-dd HH:mm');
+        const alreadyPunched = attendanceSheet.getDataRange().getValues().slice(1).some(r =>
+          r[0] instanceof Date &&
+          String(r[1]).trim() === String(userId).trim() &&
+          String(r[4]).trim() === String(punchType).trim() &&
+          Utilities.formatDate(r[0], tz, 'yyyy-MM-dd HH:mm') === targetKey);
+
+        if (alreadyPunched) {
+          Logger.log(' 打卡紀錄已有相同的' + punchType + '卡，略過寫入: ' + targetKey);
+        } else {
+          attendanceSheet.appendRow(row);
+        }
         
         Logger.log(' 已寫入出勤紀錄');
         Logger.log('   寫入內容: ' + JSON.stringify(row));
