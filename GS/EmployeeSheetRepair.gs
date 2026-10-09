@@ -124,7 +124,7 @@ function readOriginalLockedNames_(ss) {
 }
 
 function runEmployeeSheetRepair_(apply) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet_();
   const sheet = ss.getSheetByName(SHEET_EMPLOYEES);
   if (!sheet) {
     Logger.log('找不到「員工名單」工作表');

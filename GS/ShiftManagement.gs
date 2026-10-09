@@ -72,7 +72,7 @@ function formatTimeOnly(timeValue) {
  * 取得排班工作表
  */
 function getShiftSheet() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet_();
   let sheet = ss.getSheetByName('排班表');
   
   if (!sheet) {
@@ -707,7 +707,7 @@ function sendShiftNotification(employeeId, shiftData) {
  */
 function getUserInfoByEmployeeId(employeeId) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getSpreadsheet_();
     const userSheet = ss.getSheetByName('使用者資料');
     if (!userSheet) return null;
     

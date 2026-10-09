@@ -272,7 +272,7 @@ function buildPayrollSheetColumn_(record, config, yearMonth) {
  * 第一個分頁是明細表，第二個分頁「原始資料」是月薪資記錄的原樣，對帳用。
  */
 function exportPayrollSheet_(yearMonth, companyName) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet_();
   const salarySheet = ss.getSheetByName(SHEET_MONTHLY_SALARY_ENHANCED);
   if (!salarySheet || salarySheet.getLastRow() < 2) return { error: 'NO_RECORDS', message: '沒有薪資記錄' };
 

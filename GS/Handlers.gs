@@ -2002,7 +2002,7 @@ function handleGetEmployeeMonthlyOvertime(params) {
  */
 function handleGetAnnouncements(params) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getSpreadsheet_();
     let sheet = ss.getSheetByName('公告');
     
     // 如果工作表不存在,建立它
@@ -2046,7 +2046,7 @@ function handleAddAnnouncement(params) {
       return { ok: false, msg: '無權限' };
     }
     
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getSpreadsheet_();
     let sheet = ss.getSheetByName('公告');
     
     if (!sheet) {
@@ -2087,7 +2087,7 @@ function handleDeleteAnnouncement(params) {
       return { ok: false, msg: '無權限' };
     }
     
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getSpreadsheet_();
     const sheet = ss.getSheetByName('公告');
     
     if (!sheet) {

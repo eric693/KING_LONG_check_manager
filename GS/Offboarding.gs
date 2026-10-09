@@ -185,7 +185,7 @@ function handleOffboardEmployee(params) {
     const leaveDate = String(params.leaveDate || '').trim() ||
                       formatDate(new Date());
 
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getSpreadsheet_();
     const steps = [];
 
     // 1. 員工名單：狀態改離職
@@ -287,7 +287,7 @@ function handleReinstateEmployee(params) {
       return { ok: false, code: 'MISSING_EMPLOYEE', msg: '缺少員工ID' };
     }
 
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getSpreadsheet_();
     const employeeSheet = ss.getSheetByName(SHEET_EMPLOYEES);
     let employeeName = employeeId;
     let found = false;

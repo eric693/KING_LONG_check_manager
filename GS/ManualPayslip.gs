@@ -50,7 +50,7 @@ const MONTHLY_SALARY_KEYS = [
  * @returns {{ headers: Array, row: Array, rowIndex: number }|null}
  */
 function readMonthlySalaryRow_(employeeId, yearMonth) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_MONTHLY_SALARY_ENHANCED);
+  const sheet = getSpreadsheet_().getSheetByName(SHEET_MONTHLY_SALARY_ENHANCED);
   if (!sheet || sheet.getLastRow() < 2) return null;
   const data = sheet.getDataRange().getValues();
   const salaryId = `SAL-${yearMonth}-${employeeId}`;
@@ -306,7 +306,7 @@ function handleDeleteManualPayslip(params) {
     if (!found || !isManualPayslipRow_(found.headers, found.row)) {
       return { ok: false, code: 'MANUAL_PAYSLIP_NOT_FOUND', msg: '這個月沒有手動薪資單' };
     }
-    SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_MONTHLY_SALARY_ENHANCED).deleteRow(found.rowIndex);
+    getSpreadsheet_().getSheetByName(SHEET_MONTHLY_SALARY_ENHANCED).deleteRow(found.rowIndex);
     return { ok: true };
   } finally {
     lock.releaseLock();

@@ -139,7 +139,7 @@ function getSheetValues_(sheetName) {
     return _sheetValuesCache[sheetName];
   }
 
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+  const sheet = getSpreadsheet_().getSheetByName(sheetName);
   const values = sheet ? sheet.getDataRange().getValues() : [];
 
   if (_sheetValuesCache) {

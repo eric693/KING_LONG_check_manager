@@ -5,7 +5,7 @@
  * 這個函數可以在 Google Apps Script 編輯器中直接執行
  */
 function batchInitializeAllEmployeesLeave() {
-  const employeeSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_EMPLOYEES);
+  const employeeSheet = getSpreadsheet_().getSheetByName(SHEET_EMPLOYEES);
   
   if (!employeeSheet) {
     Logger.log(" 找不到員工資料表");
@@ -88,8 +88,8 @@ function manualInitializeEmployeeLeave(userId, hireDate) {
  * 查看員工假期使用情況報表
  */
 function generateLeaveUsageReport() {
-  const balanceSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_LEAVE_BALANCE);
-  const leaveSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_LEAVE_RECORDS);
+  const balanceSheet = getSpreadsheet_().getSheetByName(SHEET_LEAVE_BALANCE);
+  const leaveSheet = getSpreadsheet_().getSheetByName(SHEET_LEAVE_RECORDS);
   
   if (!balanceSheet) {
     Logger.log(" 找不到假期額度表");
@@ -136,7 +136,7 @@ function resetAnnualLeave() {
     return;
   }
   
-  const employeeSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_EMPLOYEES);
+  const employeeSheet = getSpreadsheet_().getSheetByName(SHEET_EMPLOYEES);
   
   if (!employeeSheet) {
     Logger.log(" 找不到員工資料表");

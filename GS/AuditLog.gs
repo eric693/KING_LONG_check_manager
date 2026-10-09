@@ -19,7 +19,7 @@ const AUDIT_MAX_FIELDS_PER_ENTRY = 40;
  * 取得（必要時建立）稽核記錄表
  */
 function getSalaryAuditSheet_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet_();
   let sheet = ss.getSheetByName(SHEET_SALARY_AUDIT);
 
   if (!sheet) {
@@ -266,7 +266,7 @@ const ADMIN_AUDIT_SUMMARY_KEYS = ['changes', 'before', 'deleted', 'cancelled'];
 const ADMIN_AUDIT_SUMMARY_MAX = 600;
 
 function getAdminAuditSheet_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet_();
   let sheet = ss.getSheetByName(SHEET_ADMIN_AUDIT);
 
   if (!sheet) {

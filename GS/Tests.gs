@@ -760,7 +760,7 @@ function debugMonthQuery() {
   const userId = 'Ue76b65367821240ac26387d2972a5adf';
   const yearMonth = '2026-02';
   
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_ATTENDANCE);
+  const sheet = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE);
   const values = sheet.getDataRange().getValues();
   
   Logger.log(' 檢查所有該用戶的記錄:');
@@ -802,7 +802,7 @@ function debugFebruary2026() {
   
   // 步驟 1: 檢查原始資料
   Logger.log(' 步驟 1: 檢查原始資料');
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_ATTENDANCE);
+  const sheet = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE);
   const values = sheet.getDataRange().getValues();
   
   Logger.log(`   工作表總行數: ${values.length}`);
@@ -942,7 +942,7 @@ function checkDateFormatIssue() {
   Logger.log('');
   
   const userId = 'Ue76b65367821240ac26387d2972a5adf';
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_ATTENDANCE);
+  const sheet = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE);
   const values = sheet.getDataRange().getValues();
   
   Logger.log(' 檢查所有該用戶的記錄日期格式:');
@@ -1359,7 +1359,7 @@ function checkEmployeeMonthDistribution() {
   Logger.log('');
   
   const userId = 'Uf69dfe3aad5589e2f219d919cb44d469'; // 連宜蓁
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_ATTENDANCE);
+  const sheet = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE);
   const values = sheet.getDataRange().getValues();
   
   const monthCount = {};
@@ -1454,7 +1454,7 @@ function testEricMonthQuery() {
   Logger.log('');
   
   // 從員工表找 Eric 的 userId
-  const empSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('員工資料');
+  const empSheet = getSpreadsheet_().getSheetByName('員工資料');
   const empValues = empSheet.getDataRange().getValues();
   
   let ericUserId = null;
@@ -1715,8 +1715,8 @@ function checkForgotPunchDaily() {
   
   const dateStr = Utilities.formatDate(yesterday, "GMT+8", "yyyy-MM-dd");
   
-  const attendanceSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_ATTENDANCE);
-  const employeeSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_EMPLOYEES);
+  const attendanceSheet = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE);
+  const employeeSheet = getSpreadsheet_().getSheetByName(SHEET_EMPLOYEES);
   
   if (!attendanceSheet || !employeeSheet) {
     Logger.log(" 找不到必要的工作表");
@@ -1781,8 +1781,8 @@ function checkForgotPunchInMorning() {
   
   const dateStr = Utilities.formatDate(yesterday, "GMT+8", "yyyy-MM-dd");
   
-  const attendanceSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_ATTENDANCE);
-  const employeeSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_EMPLOYEES);
+  const attendanceSheet = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE);
+  const employeeSheet = getSpreadsheet_().getSheetByName(SHEET_EMPLOYEES);
   
   if (!attendanceSheet || !employeeSheet) {
     Logger.log(" 找不到必要的工作表");
@@ -2200,7 +2200,7 @@ function testExportSalaryDirect() {
 function testCheckSalaryData() {
   Logger.log(' 檢查薪資記錄資料結構');
   
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet_();
   const salarySheet = ss.getSheetByName('月薪資記錄');
   
   if (!salarySheet) {
@@ -3392,9 +3392,9 @@ function testWebhookSetup() {
   Logger.log(' 步驟 2：檢查必要工作表');
   
   const sheets = {
-    'SHEET_ATTENDANCE': SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_ATTENDANCE),
-    'SHEET_EMPLOYEES': SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_EMPLOYEES),
-    'SHEET_LOCATIONS': SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_LOCATIONS)
+    'SHEET_ATTENDANCE': getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE),
+    'SHEET_EMPLOYEES': getSpreadsheet_().getSheetByName(SHEET_EMPLOYEES),
+    'SHEET_LOCATIONS': getSpreadsheet_().getSheetByName(SHEET_LOCATIONS)
   };
   
   for (let name in sheets) {
@@ -3410,7 +3410,7 @@ function testWebhookSetup() {
   // 檢查打卡地點
   Logger.log(' 步驟 3：檢查打卡地點設定');
   
-  const locationSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_LOCATIONS);
+  const locationSheet = getSpreadsheet_().getSheetByName(SHEET_LOCATIONS);
   
   if (locationSheet) {
     const lastRow = locationSheet.getLastRow();
@@ -3637,7 +3637,7 @@ function testLineBotLocation() {
     
     // 檢查 Google Sheet 是否有新記錄
     Logger.log(' 檢查打卡記錄...');
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_ATTENDANCE);
+    const sheet = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE);
     const lastRow = sheet.getLastRow();
     const lastRecord = sheet.getRange(lastRow, 1, 1, 10).getValues()[0];
     
@@ -3743,7 +3743,7 @@ function checkTodayPunchRecords() {
   const testUserId = 'YOUR_LINE_USER_ID_HERE';
   
   const today = Utilities.formatDate(new Date(), 'Asia/Taipei', 'yyyy-MM-dd');
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_ATTENDANCE);
+  const sheet = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE);
   const values = sheet.getDataRange().getValues();
   
   Logger.log(' 日期: ' + today);

@@ -29,7 +29,7 @@ const EXPENSE_COL = {
 };
 
 function getExpenseSheet_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet_();
   let sheet = ss.getSheetByName(SHEET_EXPENSE);
 
   if (!sheet) {

@@ -278,7 +278,7 @@ function sendMonthlyRecords(replyToken, userId, employeeName, yearMonth) {
 
 function getMonthlyPunchRecords(userId, yearMonth) {
   try {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_ATTENDANCE);
+    const sheet = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE);
     const values = sheet.getDataRange().getValues();
     
     Logger.log(' 開始查詢打卡記錄');
@@ -1130,7 +1130,7 @@ function clearPunchIntent_(userId) {
  */
 function isDuplicatePunch_(userId, punchType) {
   try {
-    const sheet = SpreadsheetApp.getActive().getSheetByName(SHEET_ATTENDANCE);
+    const sheet = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE);
     const values = sheet.getDataRange().getValues();
     const now = new Date().getTime();
     
@@ -1229,7 +1229,7 @@ function determinePunchType(userId) {
  */
 function executePunch(userId, punchType, lat, lng, locationName) {
   try {
-    const sheet = SpreadsheetApp.getActive().getSheetByName(SHEET_ATTENDANCE);
+    const sheet = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE);
     const employee = findEmployeeByLineUserId_(userId);
     
     if (!employee.ok) {
@@ -1598,7 +1598,7 @@ function createPunchFailedMessage(reason, nearestLocation) {
 function sendTodayPunchRecords(replyToken, userId, employeeName) {
   try {
     const today = Utilities.formatDate(new Date(), 'Asia/Taipei', 'yyyy-MM-dd');
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_ATTENDANCE);
+    const sheet = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE);
     const values = sheet.getDataRange().getValues();
     
     const records = [];
@@ -3107,7 +3107,7 @@ function showQuickFix() {
 
 function findUserMonths() {
   const userId = 'Ue76b65367821240ac26387d2972a5adf';
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_ATTENDANCE);
+  const sheet = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE);
   const values = sheet.getDataRange().getValues();
   
   const months = {};
@@ -3381,7 +3381,7 @@ function sendMyOvertimeRecords(replyToken, userId, employeeName) {
     Logger.log('   userId: ' + userId);
     
     // 取得加班記錄
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_OVERTIME);
+    const sheet = getSpreadsheet_().getSheetByName(SHEET_OVERTIME);
     
     if (!sheet) {
       replyMessage(replyToken, ' 找不到加班申請記錄');
@@ -4893,7 +4893,7 @@ function sendMyLeaveRecords(replyToken, userId, employeeName) {
     Logger.log('   userId: ' + userId);
     
     // 取得請假記錄
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('請假紀錄');
+    const sheet = getSpreadsheet_().getSheetByName('請假紀錄');
     
     if (!sheet) {
       replyMessage(replyToken, `${employeeName}，請假記錄表不存在\n\n請聯繫管理員設定`);
@@ -5222,7 +5222,7 @@ function sendLeaveBalance(replyToken, userId, employeeName) {
     Logger.log('   userId: ' + userId);
     
     // 取得假期餘額
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('假期餘額');
+    const sheet = getSpreadsheet_().getSheetByName('假期餘額');
     
     if (!sheet) {
       replyMessage(replyToken, `${employeeName}，假期餘額表不存在\n\n請聯繫管理員設定`);
@@ -5544,7 +5544,7 @@ function sendPendingLeaveRequests(replyToken, userId, employeeName) {
     }
     
     // 取得待審核記錄
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('請假紀錄');
+    const sheet = getSpreadsheet_().getSheetByName('請假紀錄');
     
     if (!sheet) {
       replyMessage(replyToken, ' 請假記錄表不存在');
@@ -5791,7 +5791,7 @@ function handleLeaveReview(replyToken, userId, employeeName, text) {
     Logger.log(`   rowNumber: ${rowNumber}`);
     
     // 取得請假記錄
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('請假紀錄');
+    const sheet = getSpreadsheet_().getSheetByName('請假紀錄');
     
     if (!sheet) {
       replyMessage(replyToken, ' 請假記錄表不存在');
@@ -5871,7 +5871,7 @@ function deductLeaveBalanceByUserId(userId, leaveType, hours) {
     Logger.log(`   假別: ${leaveType}`);
     Logger.log(`   小時數: ${hours}`);
     
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('假期餘額');
+    const sheet = getSpreadsheet_().getSheetByName('假期餘額');
     
     if (!sheet) {
       return { ok: false, msg: '假期餘額表不存在' };
@@ -6003,7 +6003,7 @@ function diagnoseWithCorrectUserId() {
   // ⭐ 從截圖複製的正確 userId
   const userId = 'Ue76b65367821240ac26387d2972a5adf';
   
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_ATTENDANCE);
+  const sheet = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE);
   const values = sheet.getDataRange().getValues();
   
   const today = Utilities.formatDate(new Date(), 'Asia/Taipei', 'yyyy-MM-dd');
@@ -6100,7 +6100,7 @@ function diagnoseWithCorrectUserId() {
  */
 function checkPunchLocation(lat, lng) {
   try {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_LOCATIONS);
+    const sheet = getSpreadsheet_().getSheetByName(SHEET_LOCATIONS);
     const lastRow = sheet.getLastRow();
     
     if (lastRow < 2) {

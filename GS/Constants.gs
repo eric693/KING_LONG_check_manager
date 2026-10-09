@@ -9,6 +9,16 @@ const LINE_REDIRECT_URL   = "https://eric693.github.io/KING_LONG_check_manager/"
 const SESSION_TTL_MS = 7000 * 60 * 60 * 24; // 1 天
 const TOKEN_LENGTH   = 36;
 
+// ==================== 試算表 ====================
+// 只讀寫這一份試算表，不管 Apps Script 是不是綁在它上面
+const SPREADSHEET_ID = '1Y6da5p8G6TdbrKOsbwrwgYbBM9Ly-CgX6jYL7cHse7M';
+let spreadsheetCache_ = null;
+
+function getSpreadsheet_() {
+  if (!spreadsheetCache_) spreadsheetCache_ = SpreadsheetApp.openById(SPREADSHEET_ID);
+  return spreadsheetCache_;
+}
+
 // ==================== 工作表名稱 ====================
 // 基礎系統
 const SHEET_EMPLOYEES  = '員工名單';

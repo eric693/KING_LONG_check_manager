@@ -36,7 +36,7 @@ function isCountedPunchRow_(row) {
  */
 function getDayPunches_(userId, dateStr, rows) {
   const tz = Session.getScriptTimeZone();
-  const data = rows || SpreadsheetApp.getActive().getSheetByName(SHEET_ATTENDANCE).getDataRange().getValues();
+  const data = rows || getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE).getDataRange().getValues();
   const list = [];
 
   for (let i = 1; i < data.length; i++) {
@@ -173,7 +173,7 @@ const PUNCH_FAILURE_HEADERS = ['時間', '員工ID', '姓名', '方式', '打卡
 
 function logPunchFailure_(info) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getSpreadsheet_();
     let sheet = ss.getSheetByName(SHEET_PUNCH_FAILURES);
     if (!sheet) {
       sheet = ss.insertSheet(SHEET_PUNCH_FAILURES);

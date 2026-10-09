@@ -15,7 +15,7 @@ const WORK_SCHEDULE_CACHE_TTL = 300; // 秒；改設定時會主動清掉
  * 取得（必要時建立）系統設定工作表
  */
 function getSystemSettingsSheet_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet_();
   let sheet = ss.getSheetByName(SHEET_SYSTEM_SETTINGS);
 
   if (!sheet) {

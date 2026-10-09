@@ -22,7 +22,7 @@ const SESSION_MAX_PER_USER = 5;
 const NO_LINE_EMPLOYEE_ROLES = ['員工', '排班人員'];
 
 function getLoginLinkSheet_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet_();
   let sheet = ss.getSheetByName(SHEET_LOGIN_LINKS);
   if (!sheet) {
     sheet = ss.insertSheet(SHEET_LOGIN_LINKS);
@@ -48,7 +48,7 @@ function isLineUserId_(userId) {
  * @returns {string} session token
  */
 function createSessionForUser_(userId) {
-  const sheet = SpreadsheetApp.getActive().getSheetByName(SHEET_SESSION);
+  const sheet = getSpreadsheet_().getSheetByName(SHEET_SESSION);
   const token = Utilities.getUuid();
   const now = new Date();
   sheet.appendRow([token, userId, now, new Date(now.getTime() + SESSION_TTL_MS)]);
@@ -73,7 +73,7 @@ function pruneUserSessions_(sheet, userId) {
 }
 
 function findEmployeeRow_(userId) {
-  const data = SpreadsheetApp.getActive().getSheetByName(SHEET_EMPLOYEES).getDataRange().getValues();
+  const data = getSpreadsheet_().getSheetByName(SHEET_EMPLOYEES).getDataRange().getValues();
   for (let i = 1; i < data.length; i++) {
     if (String(data[i][EMPLOYEE_COL.USER_ID]).trim() === String(userId).trim()) {
       return { row: i + 1, values: data[i] };
@@ -106,7 +106,7 @@ function handleCreateNoLineEmployee(params) {
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
-    const sheet = SpreadsheetApp.getActive().getSheetByName(SHEET_EMPLOYEES);
+    const sheet = getSpreadsheet_().getSheetByName(SHEET_EMPLOYEES);
     const userId = 'M' + Utilities.getUuid().replace(/-/g, '').slice(0, 20);
     // 欄位與 LINE 登入建立的員工相同；姓名同時寫進 nameOverride，之後不會被任何 LINE 名稱蓋掉
     sheet.appendRow([userId, '', name, '', new Date(), role, '', '啟用', name]);

@@ -5,7 +5,7 @@
  * 執行這個函數會自動建立所需的工作表和欄位
  */
 function setupLeaveSystemDatabase() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet_();
   
   Logger.log(' 開始建立請假系統資料庫（15種假別）...\n');
   
@@ -215,7 +215,7 @@ function updateEmployeeSheet_(ss) {
  * 檢查所有必要的工作表和欄位是否存在
  */
 function validateLeaveSystemDatabase() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet_();
   let isValid = true;
   
   Logger.log(' 開始驗證請假系統資料庫結構（15種假別）...\n');
@@ -347,7 +347,7 @@ function cleanupLeaveSystemData() {
     return;
   }
   
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet_();
   
   // 清空「員工假期額度」
   const balanceSheet = ss.getSheetByName(SHEET_LEAVE_BALANCE);
@@ -376,7 +376,7 @@ function cleanupLeaveSystemData() {
  * 匯出假期資料為 CSV
  */
 function exportLeaveDataToCSV() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet_();
   const balanceSheet = ss.getSheetByName(SHEET_LEAVE_BALANCE);
   
   if (!balanceSheet) {
@@ -405,7 +405,7 @@ function exportLeaveDataToCSV() {
  * 如果員工沒有到職日期，自動填入建立時間
  */
 function batchFillHireDateFromCreated() {
-  const employeeSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_EMPLOYEES);
+  const employeeSheet = getSpreadsheet_().getSheetByName(SHEET_EMPLOYEES);
   
   if (!employeeSheet) {
     Logger.log(' 找不到員工資料表');
@@ -438,7 +438,7 @@ function batchFillHireDateFromCreated() {
  * 用於檢查計算是否正確
  */
 function previewAnnualLeaveCalculation() {
-  const employeeSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_EMPLOYEES);
+  const employeeSheet = getSpreadsheet_().getSheetByName(SHEET_EMPLOYEES);
   
   if (!employeeSheet) {
     Logger.log(' 找不到員工資料表');

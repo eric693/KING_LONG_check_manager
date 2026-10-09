@@ -28,7 +28,7 @@ const ROLE_LEVELS = {
  *  修正版：登入時不覆蓋手動設定的姓名
  */
 function writeEmployee_(profile) {
-  const sheet = SpreadsheetApp.getActive().getSheetByName(SHEET_EMPLOYEES);
+  const sheet = getSpreadsheet_().getSheetByName(SHEET_EMPLOYEES);
   const values = sheet.getDataRange().getValues();
   const employeeId = profile.userId;
 
@@ -105,7 +105,7 @@ function isEmployeeRowMisaligned_(row) {
  *  修正版：優先使用手動設定的姓名
  */
 function findEmployeeByLineUserId_(userId) {
-  const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_EMPLOYEES);
+  const sh = getSpreadsheet_().getSheetByName(SHEET_EMPLOYEES);
   const values = sh.getDataRange().getValues();
 
   for (let i = 1; i < values.length; i++) {
@@ -150,7 +150,7 @@ function unlockEmployeeName(userId) {
     Logger.log(' 解除員工姓名鎖定');
     Logger.log('   userId: ' + userId);
     
-    const sheet = SpreadsheetApp.getActive().getSheetByName(SHEET_EMPLOYEES);
+    const sheet = getSpreadsheet_().getSheetByName(SHEET_EMPLOYEES);
     
     if (!sheet) {
       return { ok: false, msg: '找不到員工工作表' };
@@ -204,7 +204,7 @@ function getAllUsers() {
     Logger.log(' 開始取得員工列表');
     
     // 取得員工資料表
-    const sheet = SpreadsheetApp.getActive().getSheetByName(SHEET_EMPLOYEES);
+    const sheet = getSpreadsheet_().getSheetByName(SHEET_EMPLOYEES);
     
     if (!sheet) {
       Logger.log(' 找不到員工工作表: ' + SHEET_EMPLOYEES);
@@ -334,7 +334,7 @@ function writeSession_(userId) {
  * 兌換一次性 token
  */
 function verifyOneTimeToken_(otoken) {
-  const sheet = SpreadsheetApp.getActive().getSheetByName(SHEET_SESSION);
+  const sheet = getSpreadsheet_().getSheetByName(SHEET_SESSION);
   const range = sheet.getRange("A:A").createTextFinder(otoken).findNext();
   if (!range) return null;
 
@@ -358,7 +358,7 @@ function punch(sessionToken, type, lat, lng, note) {
   const user = employee.user;
   if (!user) return { ok: false, code: "ERR_SESSION_INVALID" };
 
-  const shLoc = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_LOCATIONS);
+  const shLoc = getSpreadsheet_().getSheetByName(SHEET_LOCATIONS);
   const lastRow = shLoc.getLastRow();
 
   if (lastRow < 2) {
@@ -386,7 +386,7 @@ function punch(sessionToken, type, lat, lng, note) {
   if (type !== '上班' && type !== '下班') {
     return { ok: false, code: "ERR_INVALID_PUNCH_TYPE", msg: '打卡類型不正確' };
   }
-  const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_ATTENDANCE);
+  const sh = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE);
   const sequence = checkPunchSequence_(user.userId, type, sh.getDataRange().getValues());
   if (!sequence.ok) {
     Logger.log('打卡順序不符: ' + user.name + ' ' + type + ' - ' + sequence.msg);
@@ -424,7 +424,7 @@ function punchAdjusted(sessionToken, type, punchDate, lat, lng, note) {
     return { ok: false, code: "ERR_SESSION_INVALID" };
   }
 
-  const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_ADJUST_PUNCH);
+  const sh = getSpreadsheet_().getSheetByName(SHEET_ADJUST_PUNCH);
 
   if (!sh) {
     Logger.log('找不到補打卡申請工作表');
@@ -513,7 +513,7 @@ function punchAdjusted(sessionToken, type, punchDate, lat, lng, note) {
  * 員工ID → 目前的姓名（手動設定的姓名優先，沒有才用 LINE 名稱）
  */
 function getEmployeeNameMap_() {
-  const sheet = SpreadsheetApp.getActive().getSheetByName(SHEET_EMPLOYEES);
+  const sheet = getSpreadsheet_().getSheetByName(SHEET_EMPLOYEES);
   const map = {};
   if (!sheet) return map;
 
@@ -533,7 +533,7 @@ function getEmployeeNameMap_() {
  * 這裡一律換成目前的姓名，報表才會一致；找不到員工（例如已刪除）才用紀錄上的名字。
  */
 function getAttendanceRecords(monthParam, userIdParam) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_ATTENDANCE);
+  const sheet = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE);
   const values = sheet.getDataRange().getValues().slice(1);
   const nameMap = getEmployeeNameMap_();
   
@@ -768,7 +768,7 @@ function getApprovedOvertimeRecords(monthParam, userIdParam) {
     Logger.log('   月份: ' + monthParam);
     Logger.log('   員工ID: ' + userIdParam);
     
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_OVERTIME);
+    const sheet = getSpreadsheet_().getSheetByName(SHEET_OVERTIME);
     
     if (!sheet) {
       Logger.log(' 找不到加班申請工作表');
@@ -1023,7 +1023,7 @@ function withLocationLock_(fn) {
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_LOCATIONS);
+    const sheet = getSpreadsheet_().getSheetByName(SHEET_LOCATIONS);
     if (!sheet) return { ok: false, code: 'ERR_NO_LOCATIONS', msg: '找不到打卡地點表' };
     return fn(sheet);
   } finally {
@@ -1076,7 +1076,7 @@ function deleteLocation(id) {
  * 取得所有打卡地點
  */
 function getLocation() {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_LOCATIONS);
+  const sheet = getSpreadsheet_().getSheetByName(SHEET_LOCATIONS);
   if (!sheet) return { ok: true, locations: [] };
 
   // 有空白 ID 要補時才鎖；平常只是讀
@@ -1102,7 +1102,7 @@ function getLocation() {
 function getReviewRequest() {
   Logger.log(' 開始取得待審核補打卡申請');
   
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_ADJUST_PUNCH);
+  const sheet = getSpreadsheet_().getSheetByName(SHEET_ADJUST_PUNCH);
   
   if (!sheet) {
     Logger.log(' 找不到「補打卡申請」工作表');
@@ -1198,7 +1198,7 @@ function updateReviewStatus(rowNumber, status, note) {
     Logger.log('   狀態: ' + status);
     
     //  修正：改為從補打卡申請工作表讀取
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_ADJUST_PUNCH);
+    const sheet = getSpreadsheet_().getSheetByName(SHEET_ADJUST_PUNCH);
     
     if (!sheet) {
       Logger.log(' 找不到補打卡申請工作表');
@@ -1297,7 +1297,7 @@ function updateReviewStatus(rowNumber, status, note) {
     
     //  如果核准，寫入「出勤紀錄」工作表
     if (status === "v") {
-      const attendanceSheet = SpreadsheetApp.getActive().getSheetByName(SHEET_ATTENDANCE);
+      const attendanceSheet = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE);
       
       if (attendanceSheet) {
         Logger.log('');
@@ -1384,7 +1384,7 @@ function updateUserRole(userId, newRole) {
     Logger.log('   userId: ' + userId);
     Logger.log('   newRole: ' + newRole);
     
-    const sheet = SpreadsheetApp.getActive().getSheetByName(SHEET_EMPLOYEES);
+    const sheet = getSpreadsheet_().getSheetByName(SHEET_EMPLOYEES);
     
     if (!sheet) {
       return {
@@ -1458,7 +1458,7 @@ function deleteUser(userId) {
     Logger.log(' 開始刪除用戶');
     Logger.log('   userId: ' + userId);
     
-    const sheet = SpreadsheetApp.getActive().getSheetByName(SHEET_EMPLOYEES);
+    const sheet = getSpreadsheet_().getSheetByName(SHEET_EMPLOYEES);
     
     if (!sheet) {
       return {
@@ -1540,7 +1540,7 @@ function getEmployeeMonthlyPunchData(employeeId, yearMonth) {
     Logger.log('   員工ID: ' + employeeId);
     Logger.log('   月份: ' + yearMonth);
     
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_ATTENDANCE);
+    const sheet = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE);
     const values = sheet.getDataRange().getValues();
     
     if (values.length <= 1) {
@@ -1678,7 +1678,7 @@ function updateEmployeeName(userId, newName) {
       };
     }
     
-    const sheet = SpreadsheetApp.getActive().getSheetByName(SHEET_EMPLOYEES);
+    const sheet = getSpreadsheet_().getSheetByName(SHEET_EMPLOYEES);
     
     if (!sheet) {
       return {
@@ -1755,7 +1755,7 @@ function setEmployeeBasicInfo(data) {
     Logger.log(' 設定員工基本資料');
     Logger.log('   員工ID: ' + data.employeeId);
     
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getSpreadsheet_();
     let sheet = ss.getSheetByName(SHEET_EMPLOYEE_INFO);
     
     // 如果工作表不存在，創建它
@@ -1845,7 +1845,7 @@ function getEmployeeBasicInfo(employeeId) {
   try {
     Logger.log(' 查詢員工基本資料: ' + employeeId);
     
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getSpreadsheet_();
     const sheet = ss.getSheetByName(SHEET_EMPLOYEE_INFO);
     
     if (!sheet) {
@@ -1902,7 +1902,7 @@ function getAllEmployeeBasicInfo() {
   try {
     Logger.log(' 取得所有員工基本資料');
     
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getSpreadsheet_();
     const sheet = ss.getSheetByName(SHEET_EMPLOYEE_INFO);
     
     if (!sheet) {
@@ -1954,7 +1954,7 @@ function deleteEmployeeBasicInfo(employeeId) {
   try {
     Logger.log(' 刪除員工基本資料: ' + employeeId);
     
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getSpreadsheet_();
     const sheet = ss.getSheetByName(SHEET_EMPLOYEE_INFO);
     
     if (!sheet) {
@@ -2011,7 +2011,7 @@ function checkSession_(sessionToken) {
 }
 
 function checkSessionUncached_(sessionToken) {
-  const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_SESSION);
+  const sh = getSpreadsheet_().getSheetByName(SHEET_SESSION);
   if (!sh) return { ok: false, code: "SESSION_SHEET_NOT_FOUND" };
 
   const values = sh.getDataRange().getValues();

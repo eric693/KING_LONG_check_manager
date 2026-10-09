@@ -15,7 +15,7 @@ const WORKLOG_STATUS = {
  * 取得工作日誌工作表
  */
 function getWorklogSheet() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet_();
   let sheet = ss.getSheetByName(SHEET_WORKLOG);
   
   if (!sheet) {

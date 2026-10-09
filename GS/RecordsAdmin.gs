@@ -60,7 +60,7 @@ function parsePunchDateTime_(dateStr, timeStr) {
 
 /** 員工名單裡的姓名（有手動姓名用手動的）與部門 */
 function findEmployeeForRecords_(employeeId) {
-  const sheet = SpreadsheetApp.getActive().getSheetByName(SHEET_EMPLOYEES);
+  const sheet = getSpreadsheet_().getSheetByName(SHEET_EMPLOYEES);
   const values = sheet.getDataRange().getValues();
   const id = String(employeeId || '').trim();
   for (let i = 1; i < values.length; i++) {
@@ -106,7 +106,7 @@ function handleAdminListPunches(params) {
     const tz = Session.getScriptTimeZone();
     const nameMap = getEmployeeNameMap_();
     const employeeId = String(params.employeeId || '').trim();
-    const data = SpreadsheetApp.getActive().getSheetByName(SHEET_ATTENDANCE).getDataRange().getValues();
+    const data = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE).getDataRange().getValues();
     const records = [];
 
     for (let i = 1; i < data.length; i++) {
@@ -168,7 +168,7 @@ function handleAdminAddPunch(params) {
     const lock = LockService.getScriptLock();
     lock.waitLock(20000);
     try {
-      const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_ATTENDANCE);
+      const sh = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE);
       sh.getRange(sh.getLastRow() + 1, 1, 1, row.length).setValues([row]);
     } finally {
       lock.releaseLock();
@@ -208,7 +208,7 @@ function handleAdminUpdatePunch(params) {
     const lock = LockService.getScriptLock();
     lock.waitLock(20000);
     try {
-      const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_ATTENDANCE);
+      const sh = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE);
       const found = lockedPunchRow_(sh, params.row, params.key);
       if (!found.ok) return found;
       const old = found.values;
@@ -244,7 +244,7 @@ function handleAdminDeletePunch(params) {
     const lock = LockService.getScriptLock();
     lock.waitLock(20000);
     try {
-      const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_ATTENDANCE);
+      const sh = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE);
       const found = lockedPunchRow_(sh, params.row, params.key);
       if (!found.ok) return found;
       const old = found.values;
@@ -301,7 +301,7 @@ function handleAdminGetLeaveBalances(params) {
     }
 
     // 還沒有餘額資料的在職員工
-    const empValues = SpreadsheetApp.getActive().getSheetByName(SHEET_EMPLOYEES).getDataRange().getValues();
+    const empValues = getSpreadsheet_().getSheetByName(SHEET_EMPLOYEES).getDataRange().getValues();
     for (let i = 1; i < empValues.length; i++) {
       const uid = String(empValues[i][0] || '').trim();
       if (!uid || seen.has(uid) || String(empValues[i][7] || '').trim() === '停用') continue;
@@ -731,7 +731,7 @@ function editorAuditText_(header, text) {
 function editorSheet_(name) {
   const sheetName = String(name || '');
   if (!sheetName || SHEET_EDITOR_HIDDEN.indexOf(sheetName) !== -1) return null;
-  return SpreadsheetApp.getActive().getSheetByName(sheetName);
+  return getSpreadsheet_().getSheetByName(sheetName);
 }
 
 /** 儲存格 → { v: 顯示／編輯用文字, t: 型別 }。型別：date、datetime、time、number、bool、text */
@@ -804,7 +804,7 @@ function handleAdminListSheets(params) {
   try {
     const admin = requireRecordsAdmin_(params.token);
     if (!admin.ok) return admin;
-    const sheets = SpreadsheetApp.getActive().getSheets()
+    const sheets = getSpreadsheet_().getSheets()
       .filter(sh => SHEET_EDITOR_HIDDEN.indexOf(sh.getName()) === -1)
       .map(sh => ({ name: sh.getName(), rows: Math.max(0, sh.getLastRow() - 1), readOnly: editorReadOnly_(sh.getName()) }));
     return { ok: true, sheets: sheets };
@@ -1046,7 +1046,7 @@ function handleAdminMonthlyHours(params) {
     if (params.employeeId) {
       ids = [String(params.employeeId).trim()];
     } else {
-      const values = SpreadsheetApp.getActive().getSheetByName(SHEET_EMPLOYEES).getDataRange().getValues();
+      const values = getSpreadsheet_().getSheetByName(SHEET_EMPLOYEES).getDataRange().getValues();
       ids = values.slice(1)
         .filter(r => String(r[0] || '').trim() && String(r[7] || '啟用').trim() === '啟用')
         .map(r => String(r[0]).trim());

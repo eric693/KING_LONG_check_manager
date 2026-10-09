@@ -1295,7 +1295,7 @@ function isWeekday(date) {
  */
 function getAdminUserIds_() {
   try {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_EMPLOYEES);
+    const sheet = getSpreadsheet_().getSheetByName(SHEET_EMPLOYEES);
     if (!sheet) return [];
 
     const values = sheet.getDataRange().getValues();

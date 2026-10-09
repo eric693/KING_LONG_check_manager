@@ -183,7 +183,7 @@ function normalizePayrollAdjustments_(input) {
 /** 讀出這張薪資單上次存的計薪調整；沒有就回傳 null */
 function readSavedPayrollAdjustments_(employeeId, yearMonth) {
   try {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_MONTHLY_SALARY_ENHANCED);
+    const sheet = getSpreadsheet_().getSheetByName(SHEET_MONTHLY_SALARY_ENHANCED);
     if (!sheet || sheet.getLastRow() < 2) return null;
     const data = sheet.getDataRange().getValues();
     const col = data[0].map(h => String(h).trim()).indexOf(PAYROLL_ADJUSTMENTS_COLUMN);

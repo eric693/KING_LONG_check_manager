@@ -340,7 +340,7 @@ function calculateWorkHoursAndDays_Unlimited(start, end) {
  *  取得或建立請假記錄工作表
  */
 function getLeaveRecordsSheet() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet_();
   let sheet = ss.getSheetByName('請假紀錄');
   
   if (!sheet) {
@@ -455,7 +455,7 @@ function getLeaveBalance(sessionToken) {
  *  取得或建立假期餘額工作表
  */
 function getLeaveBalanceSheet() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet_();
   let sheet = ss.getSheetByName('假期餘額');
   
   if (!sheet) {
@@ -926,7 +926,7 @@ function getApprovedLeaveRecords(monthParam, userIdParam) {
     Logger.log(`   userIdParam: ${userIdParam}`);
     Logger.log('');
     
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('請假紀錄');
+    const sheet = getSpreadsheet_().getSheetByName('請假紀錄');
     
     if (!sheet) {
       Logger.log(' 找不到請假紀錄工作表');

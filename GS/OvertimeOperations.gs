@@ -9,7 +9,7 @@ const SHEET_OVERTIME = "加班申請";
  * 初始化加班申請工作表
  */
 function initOvertimeSheet() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet_();
   let sheet = ss.getSheetByName(SHEET_OVERTIME);
   
   if (!sheet) {
@@ -134,7 +134,7 @@ function getEmployeeOvertimeRequests(sessionToken) {
   const user = employee.user;
   if (!user) return { ok: false, code: "ERR_SESSION_INVALID" };
   
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_OVERTIME);
+  const sheet = getSpreadsheet_().getSheetByName(SHEET_OVERTIME);
   if (!sheet) return { ok: true, requests: [] };
   
   const values = sheet.getDataRange().getValues();
@@ -182,7 +182,7 @@ function getPendingOvertimeRequests(sessionToken) {
     return { ok: false, code: "ERR_NO_PERMISSION" };
   }
   
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_OVERTIME);
+  const sheet = getSpreadsheet_().getSheetByName(SHEET_OVERTIME);
   if (!sheet) return { ok: true, requests: [] };
   
   const values = sheet.getDataRange().getValues();
@@ -253,7 +253,7 @@ function reviewOvertimeRequest(sessionToken, rowNumber, action, comment) {
     return { ok: false, code: "ERR_NO_PERMISSION" };
   }
   
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_OVERTIME);
+  const sheet = getSpreadsheet_().getSheetByName(SHEET_OVERTIME);
   if (!sheet) return { ok: false, msg: "找不到加班申請工作表" };
   
   const actionStr = String(action).trim().toLowerCase();
@@ -360,7 +360,7 @@ function reviewOvertimeRequest(sessionToken, rowNumber, action, comment) {
  *  升級工具：為現有工作表新增補休時數欄位（只需執行一次）
  */
 function upgradeOvertimeSheet() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet_();
   let sheet = ss.getSheetByName(SHEET_OVERTIME);
   
   if (!sheet) {

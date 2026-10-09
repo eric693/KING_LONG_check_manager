@@ -25,7 +25,7 @@ const ATTACHMENT_TYPES = ['leave', 'overtime', 'adjustPunch', 'worklog', 'expens
  * 取得（必要時建立）附件記錄表
  */
 function getAttachmentSheet_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet_();
   let sheet = ss.getSheetByName(SHEET_ATTACHMENTS);
 
   if (!sheet) {

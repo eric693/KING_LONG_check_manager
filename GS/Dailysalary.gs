@@ -170,7 +170,7 @@ function calculateDailySalary(employeeId, yearMonth, manualInputs) {
  *  取得日薪 Sheet
  */
 function getDailySalarySheet() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet_();
   let sheet = ss.getSheetByName('日薪員工');
   
   if (!sheet) {
@@ -316,7 +316,7 @@ function setDailyEmployee(data) {
  */
 function saveDailySalaryRecord(data) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getSpreadsheet_();
     let sheet = ss.getSheetByName('日薪計算記錄');
     
     if (!sheet) {
@@ -391,7 +391,7 @@ function saveDailySalaryRecord(data) {
  */
 function getEmployeeOvertimeForMonth(employeeId, yearMonth) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getSpreadsheet_();
     const sheet = ss.getSheetByName('加班申請');
     
     if (!sheet) return [];
@@ -433,7 +433,7 @@ function getEmployeeOvertimeForMonth(employeeId, yearMonth) {
  */
 function getEmployeeLeaveForMonth(employeeId, yearMonth) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getSpreadsheet_();
     const sheet = ss.getSheetByName('請假申請');
     
     if (!sheet) return [];
@@ -512,7 +512,7 @@ function getAllDailyEmployees() {
  */
 function getDailySalaryRecords(yearMonth) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getSpreadsheet_();
     const sheet = ss.getSheetByName('日薪計算記錄');
     
     if (!sheet) {

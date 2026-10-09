@@ -37,7 +37,7 @@ const DEFAULT_SHIFT_TEMPLATES = [
 ];
 
 function getShiftTemplateSheet_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet_();
   let sheet = ss.getSheetByName(SHEET_SHIFT_TEMPLATES);
 
   if (!sheet) {

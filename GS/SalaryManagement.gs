@@ -342,7 +342,7 @@ function jsonResponse(ok, data, message, code) {
  *  取得或建立員工薪資設定試算表（完整版）
  */
 function getEmployeeSalarySheet() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet_();
   let sheet = ss.getSheetByName(SHEET_SALARY_CONFIG_ENHANCED);
   
   if (!sheet) {
@@ -409,7 +409,7 @@ function ensureTrailingColumns_(sheet, columnNames) {
  *  取得或建立月薪資記錄試算表（完整版）
  */
 function getMonthlySalarySheetEnhanced() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet_();
   let sheet = ss.getSheetByName(SHEET_MONTHLY_SALARY_ENHANCED);
   
   if (!sheet) {
@@ -513,7 +513,7 @@ function repairMonthlySalaryHeaders_(sheet) {
 
 function rebuildMonthlySalarySheet() {
   // 刪除舊表（如果存在）
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet_();
   const oldSheet = ss.getSheetByName('月薪資記錄');
   if (oldSheet) {
     ss.deleteSheet(oldSheet);
@@ -1417,7 +1417,7 @@ function getAllMonthlySalary(yearMonth) {
  */
 function getEmployeeOvertimeRecords(employeeId, yearMonth) {
   try {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("加班申請");
+    const sheet = getSpreadsheet_().getSheetByName("加班申請");
     
     if (!sheet) {
       return { success: true, data: [] };
@@ -3010,7 +3010,7 @@ function rebuildMonthlySalarySheetComplete() {
   try {
     Logger.log(' 開始重建月薪資記錄試算表...');
 
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getSpreadsheet_();
 
     // 1. 刪除舊表（會一併刪掉所有薪資單，這是刻意的：這支是重建工具）
     const oldSheet = ss.getSheetByName(SHEET_MONTHLY_SALARY_ENHANCED);
@@ -3094,7 +3094,7 @@ function rebuildEmployeeSalarySheet() {
   try {
     Logger.log(' 開始重建員工薪資設定試算表...');
     
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getSpreadsheet_();
     
     // 1. 刪除舊表（如果存在）
     const oldSheet = ss.getSheetByName('員工薪資設定');
@@ -3483,7 +3483,7 @@ function calculateWeeklySalary(employeeId, yearMonth) {
 // ==================== 三節獎金 ====================
 
 function getBonusRecordSheet() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet_();
   var sheet = ss.getSheetByName(SHEET_BONUS_RECORDS);
   if (!sheet) {
     sheet = ss.insertSheet(SHEET_BONUS_RECORDS);
