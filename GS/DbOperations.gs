@@ -1998,9 +1998,19 @@ function deleteEmployeeBasicInfo(employeeId) {
 /**
  *  檢查 Session（自動延期）- 修正版
  */
+// 同一個請求裡重複檢查同一個 token（路由檢查一次、handler 又檢查一次）直接用第一次的結果，
+// 不必再讀一次 Session 表、員工名單
+const _sessionCheckCache = {};
+
 function checkSession_(sessionToken) {
   if (!sessionToken) return { ok: false, code: "MISSING_SESSION_TOKEN" };
+  if (_sessionCheckCache[sessionToken]) return _sessionCheckCache[sessionToken];
+  const result = checkSessionUncached_(sessionToken);
+  if (result.ok) _sessionCheckCache[sessionToken] = result;
+  return result;
+}
 
+function checkSessionUncached_(sessionToken) {
   const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_SESSION);
   if (!sh) return { ok: false, code: "SESSION_SHEET_NOT_FOUND" };
 
@@ -2012,9 +2022,12 @@ function checkSession_(sessionToken) {
         return { ok: false, code: "ERR_SESSION_EXPIRED" };
       }
       
-      // 延長 Session
-      const newExpiredAt = new Date(new Date().getTime() + SESSION_TTL_MS);
-      sh.getRange(i + 1, 4).setValue(newExpiredAt);
+      // 延長 Session：只在剩不到一半時才寫。每個請求都寫一次試算表的話，
+      // 寫入後要等試算表重算，管理員讀資料、員工打卡都因此變慢
+      const remaining = expiredAt ? new Date(expiredAt).getTime() - Date.now() : 0;
+      if (!(remaining > SESSION_TTL_MS / 2)) {
+        sh.getRange(i + 1, 4).setValue(new Date(new Date().getTime() + SESSION_TTL_MS));
+      }
       
       // 查詢員工資料
       const employee = findEmployeeByLineUserId_(userId);

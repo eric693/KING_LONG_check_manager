@@ -48,14 +48,13 @@ window.fetch = async (url) => {
     }
     return { ok: false, status: 404, json: async () => ({}) };
   }
-  return {
-    ok: true,
-    json: async () => ({
-      ok: true, success: true, data: [], records: [], locations: [], users: [],
-      holidays: ['2026-01-01'], user: { userId: 'U1', name: '測試', dept: '管理員' },
-      announcements: [], requests: []
-    })
+  const body = {
+    ok: true, success: true, data: [], records: [], locations: [], users: [],
+    holidays: ['2026-01-01'], user: { userId: 'U1', name: '測試', dept: '管理員' },
+    announcements: [], requests: []
   };
+  // 跟真的 Response 一樣有 json() 和 text()（api.js 先讀文字，才能在回錯誤頁時說出原因）
+  return { ok: true, status: 200, json: async () => body, text: async () => JSON.stringify(body) };
 };
 window.tailwind = { config: {} }; // 測試環境沒有載入 tailwind CDN
 window.alert = () => {};

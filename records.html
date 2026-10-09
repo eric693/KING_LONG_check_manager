@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#4169E1">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="出勤管家">
+    <title data-i18n="RECORDS_PAGE_TITLE">資料管理 - 出勤系統</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .rec-container { max-width: 1200px; margin: 20px auto; padding: 0 16px 40px; }
+        .rec-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 8px; }
+        .rec-header h1 { margin: 0; font-size: 28px; color: #222; }
+        .rec-intro { color: #666; margin: 0 0 16px; line-height: 1.6; }
+        .rec-tabs { display: flex; gap: 4px; border-bottom: 2px solid #e5e7eb; margin-bottom: 20px; overflow-x: auto; }
+        .rec-tab { padding: 12px 20px; border: none; background: none; cursor: pointer; font-size: 16px; color: #555; border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; }
+        .rec-tab.active { color: #4285f4; border-bottom-color: #4285f4; font-weight: 600; }
+        .rec-panel { display: none; }
+        .rec-panel.active { display: block; }
+        .rec-card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .rec-card h2 { margin: 0 0 6px; font-size: 20px; color: #222; }
+        .rec-desc { color: #666; margin: 0 0 16px; line-height: 1.6; font-size: 14px; }
+        .rec-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; align-items: end; }
+        .rec-field { display: flex; flex-direction: column; gap: 6px; }
+        .rec-field label { font-size: 14px; font-weight: 500; color: #333; }
+        .rec-field input, .rec-field select { padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; background: #fff; color: #222; min-width: 0; }
+        .rec-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+        .rec-btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; }
+        .rec-btn-primary { background: #4285f4; color: #fff; }
+        .rec-btn-primary:hover { background: #357ae8; }
+        .rec-btn-secondary { background: #e5e7eb; color: #333; }
+        .rec-btn-secondary:hover { background: #d1d5db; }
+        .rec-btn-danger { background: #ea4335; color: #fff; }
+        .rec-btn-danger:hover { background: #d93025; }
+        .rec-btn-sm { padding: 6px 12px; font-size: 13px; }
+        .rec-btn:disabled { opacity: 0.6; cursor: wait; }
+        .rec-scroll { overflow-x: auto; }
+        .rec-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .rec-table th { background: #1f4e79; color: #fff; padding: 10px 8px; text-align: left; white-space: nowrap; font-weight: 600; }
+        .rec-table td { border-bottom: 1px solid #e5e7eb; padding: 8px; vertical-align: middle; color: #222; }
+        .rec-table td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .rec-table tr.date-start td { border-top: 2px solid #c7d2fe; }
+        .rec-table .ops { white-space: nowrap; text-align: right; }
+        .rec-table .ops .rec-btn + .rec-btn { margin-left: 6px; }
+        .rec-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+        .rec-badge-in { background: #dcfce7; color: #166534; }
+        .rec-badge-out { background: #ffedd5; color: #9a3412; }
+        .rec-badge-muted { background: #f3f4f6; color: #4b5563; }
+        .rec-badge-warn { background: #fef3c7; color: #92400e; }
+        .rec-badge-bad { background: #fee2e2; color: #991b1b; }
+        .rec-summary { color: #555; font-size: 14px; margin: 12px 0 8px; }
+        .rec-empty { color: #777; padding: 24px 8px; text-align: center; }
+        .rec-form { border: 2px solid #c7d2fe; background: #f5f7ff; }
+        .rec-hidden { display: none !important; }
+        .rec-leave-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+        .rec-days { font-size: 12px; color: #666; }
+        .rec-warning { margin-top: 14px; padding: 10px 14px; border-radius: 8px; background: #fef3c7; color: #78350f; font-size: 14px; line-height: 1.5; }
+        .rec-error { margin-top: 14px; padding: 10px 14px; border-radius: 8px; background: #fee2e2; color: #991b1b; font-size: 14px; line-height: 1.5; }
+        .rec-pager { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+        .rec-pager .rec-summary { margin: 0; }
+        .rec-pager-btns { display: flex; gap: 8px; }
+        .rec-sheet-table td { max-width: 260px; overflow-wrap: anywhere; }
+        .rec-sheet-table .rownum { color: #94a3b8; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .rec-sheet-table th.sticky-ops, .rec-sheet-table td.ops { position: sticky; right: 0; background: #fff; box-shadow: -6px 0 6px -6px rgba(0,0,0,.15); }
+        .rec-sheet-table th.sticky-ops { background: #1f4e79; }
+        .rec-dialog { position: fixed; inset: 0; background: rgba(15,23,42,.55); z-index: 900; display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px; overflow-y: auto; }
+        .rec-dialog-box { background: #fff; border-radius: 12px; padding: 20px; width: 100%; max-width: 640px; box-shadow: 0 20px 40px rgba(0,0,0,.25); }
+        .rec-dialog-box h2 { margin: 0 0 6px; font-size: 20px; }
+        .rec-dialog-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+        .rec-dialog-fields .rec-field span.rec-days { font-size: 12px; }
+        html.dark .rec-dialog-box { background: #1f2937; }
+        html.dark .rec-sheet-table td.ops { background: #1f2937; }
+        .rec-hours-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+        .rec-hours-total { font-size: 15px; color: #334155; }
+        .rec-hours-total strong { font-size: 22px; color: #1d4ed8; margin: 0 4px; }
+        .rec-table tr.rec-incomplete td { background: #fff7ed; }
+        .rec-table tr.rec-weekend td:first-child { color: #dc2626; }
+        @media print {
+            .rec-header button, .rec-intro, .rec-tabs, #panel-hours > .rec-card:first-child, .rec-message { display: none !important; }
+            .rec-card { box-shadow: none; break-inside: avoid; padding: 8px 0; }
+            body { background: #fff; }
+        }
+        .rec-message { position: fixed; top: 16px; right: 16px; left: 16px; margin-left: auto; max-width: 420px; padding: 14px 18px; border-radius: 8px; color: #fff; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .rec-message.success { background: #2e7d32; }
+        .rec-message.error { background: #c62828; }
+
+        html.dark body { background: #111827; }
+        html.dark .rec-header h1, html.dark .rec-card h2 { color: #f3f4f6; }
+        html.dark .rec-intro, html.dark .rec-desc, html.dark .rec-summary, html.dark .rec-days { color: #9ca3af; }
+        html.dark .rec-card { background: #1f2937; box-shadow: none; }
+        html.dark .rec-form { background: #1e2540; border-color: #4f46e5; }
+        html.dark .rec-field label { color: #d1d5db; }
+        html.dark .rec-field input, html.dark .rec-field select { background: #111827; color: #f3f4f6; border-color: #4b5563; }
+        html.dark .rec-table td { color: #e5e7eb; border-color: #374151; }
+        html.dark .rec-tab { color: #9ca3af; }
+        html.dark .rec-tab.active { color: #93c5fd; border-bottom-color: #93c5fd; }
+        html.dark .rec-tabs { border-color: #374151; }
+        html.dark .rec-btn-secondary { background: #374151; color: #e5e7eb; }
+    </style>
+</head>
+<body>
+    <div class="rec-container">
+        <div class="rec-header">
+            <h1 data-i18n="RECORDS_TITLE">資料管理</h1>
+            <button type="button" class="rec-btn rec-btn-secondary" onclick="window.location.href='index.html'" data-i18n="BTN_BACK">返回</button>
+        </div>
+        <p class="rec-intro" data-i18n="RECORDS_INTRO">直接在這裡查看和修改資料，不用打開 Google 試算表。所有修改都會留下管理操作記錄。</p>
+
+        <div id="records-denied" class="rec-card rec-hidden">
+            <p data-i18n="RECORDS_ADMIN_ONLY">這個頁面只有管理員可以使用。</p>
+        </div>
+
+        <div id="records-main" class="rec-hidden">
+            <div class="rec-tabs">
+                <button type="button" class="rec-tab active" data-tab="punches" data-i18n="RECORDS_TAB_PUNCHES">打卡紀錄</button>
+                <button type="button" class="rec-tab" data-tab="hours" data-i18n="RECORDS_TAB_HOURS">工時明細</button>
+                <button type="button" class="rec-tab" data-tab="leave" data-i18n="RECORDS_TAB_LEAVE">假期餘額</button>
+                <button type="button" class="rec-tab" data-tab="leaves" data-i18n="RECORDS_TAB_LEAVES">請假紀錄</button>
+                <button type="button" class="rec-tab" data-tab="overtime" data-i18n="RECORDS_TAB_OVERTIME">加班紀錄</button>
+                <button type="button" class="rec-tab" data-tab="browse" data-i18n="RECORDS_TAB_BROWSE">所有資料表</button>
+            </div>
+
+            <!-- 打卡紀錄 -->
+            <section id="panel-punches" class="rec-panel active">
+                <div class="rec-card">
+                    <h2 data-i18n="RECORDS_PUNCH_SEARCH">查詢打卡紀錄</h2>
+                    <div class="rec-row">
+                        <div class="rec-field">
+                            <label for="punch-start" data-i18n="SHIFT_START_DATE">開始日期</label>
+                            <input type="date" id="punch-start">
+                        </div>
+                        <div class="rec-field">
+                            <label for="punch-end" data-i18n="SHIFT_END_DATE">結束日期</label>
+                            <input type="date" id="punch-end">
+                        </div>
+                        <div class="rec-field">
+                            <label for="punch-employee" data-i18n="SHIFT_EMPLOYEE_LABEL">員工</label>
+                            <select id="punch-employee"><option value="" data-i18n="OPTION_ALL">全部</option></select>
+                        </div>
+                    </div>
+                    <div class="rec-actions">
+                        <button type="button" id="punch-search-btn" class="rec-btn rec-btn-primary" data-i18n="RECORDS_SEARCH">查詢</button>
+                        <button type="button" id="punch-add-btn" class="rec-btn rec-btn-secondary" data-i18n="RECORDS_PUNCH_ADD">新增打卡</button>
+                    </div>
+                </div>
+
+                <!-- 新增／修改一筆打卡 -->
+                <div id="punch-form" class="rec-card rec-form rec-hidden">
+                    <h2 id="punch-form-title" data-i18n="RECORDS_PUNCH_ADD">新增打卡</h2>
+                    <p class="rec-desc" data-i18n="RECORDS_PUNCH_FORM_DESC">管理員新增或修改的打卡直接算數，不需要再審核，工時和薪資會照新的時間計算。</p>
+                    <div class="rec-row">
+                        <div class="rec-field">
+                            <label for="pf-employee" data-i18n="SHIFT_EMPLOYEE_LABEL">員工</label>
+                            <select id="pf-employee"></select>
+                        </div>
+                        <div class="rec-field">
+                            <label for="pf-date" data-i18n="RECORDS_DATE">日期</label>
+                            <input type="date" id="pf-date">
+                        </div>
+                        <div class="rec-field">
+                            <label for="pf-time" data-i18n="RECORDS_TIME">時間</label>
+                            <input type="time" id="pf-time">
+                        </div>
+                        <div class="rec-field">
+                            <label for="pf-type" data-i18n="RECORDS_TYPE">上班／下班</label>
+                            <select id="pf-type">
+                                <option value="上班" data-i18n="PUNCH_IN">上班</option>
+                                <option value="下班" data-i18n="PUNCH_OUT">下班</option>
+                            </select>
+                        </div>
+                        <div class="rec-field">
+                            <label for="pf-location" data-i18n="SHIFT_LOCATION_LABEL">地點</label>
+                            <select id="pf-location"><option value="" data-i18n="SHIFT_WEEKLY_NO_LOCATION">不指定</option></select>
+                        </div>
+                        <div class="rec-field">
+                            <label for="pf-note" data-i18n="RECORDS_NOTE">備註</label>
+                            <input type="text" id="pf-note" maxlength="200">
+                        </div>
+                    </div>
+                    <div class="rec-actions">
+                        <button type="button" id="pf-save" class="rec-btn rec-btn-primary" data-i18n="RECORDS_SAVE">儲存</button>
+                        <button type="button" id="pf-cancel" class="rec-btn rec-btn-secondary" data-i18n="RECORDS_CANCEL">取消</button>
+                    </div>
+                </div>
+
+                <div class="rec-card">
+                    <div id="punch-summary" class="rec-summary"></div>
+                    <div class="rec-scroll">
+                        <table class="rec-table">
+                            <thead>
+                                <tr>
+                                    <th data-i18n="RECORDS_DATE">日期</th>
+                                    <th data-i18n="RECORDS_TIME">時間</th>
+                                    <th data-i18n="SHIFT_EMPLOYEE_LABEL">員工</th>
+                                    <th data-i18n="RECORDS_TYPE">上班／下班</th>
+                                    <th data-i18n="SHIFT_LOCATION_LABEL">地點</th>
+                                    <th data-i18n="RECORDS_STATUS">狀態</th>
+                                    <th data-i18n="RECORDS_NOTE">備註</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="punch-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 工時明細：算薪水用，跟薪資計算同一套工時 -->
+            <section id="panel-hours" class="rec-panel">
+                <div class="rec-card">
+                    <h2 data-i18n="RECORDS_HOURS_TITLE">工時明細</h2>
+                    <p class="rec-desc" data-i18n="RECORDS_HOURS_DESC">算薪水看這裡：每位員工每天的上下班時段與工時、整月合計。工時跟薪資計算用的是同一套算法（休息時段已扣除）。</p>
+                    <div class="rec-row">
+                        <div class="rec-field"><label for="hr-month" data-i18n="RECORDS_MONTH">月份</label><input type="month" id="hr-month"></div>
+                        <div class="rec-field"><label for="hr-employee" data-i18n="SHIFT_EMPLOYEE_LABEL">員工</label><select id="hr-employee" class="employee-filter"><option value="" data-i18n="OPTION_ALL">全部</option></select></div>
+                    </div>
+                    <div class="rec-actions">
+                        <button type="button" id="hr-search" class="rec-btn rec-btn-primary" data-i18n="RECORDS_SEARCH">查詢</button>
+                        <button type="button" id="hr-download" class="rec-btn rec-btn-secondary" data-i18n="RECORDS_DOWNLOAD">下載 CSV</button>
+                        <button type="button" id="hr-print" class="rec-btn rec-btn-secondary" data-i18n="RECORDS_PRINT">列印</button>
+                    </div>
+                </div>
+                <div id="hr-result"></div>
+            </section>
+
+            <!-- 假期餘額 -->
+            <section id="panel-leave" class="rec-panel">
+                <div id="leave-form" class="rec-card rec-form rec-hidden">
+                    <h2 id="leave-form-title"></h2>
+                    <p class="rec-desc" data-i18n="RECORDS_LEAVE_FORM_DESC">單位是小時（8 小時 = 1 天）。這裡填的是「剩餘」的時數，請假核准時系統會從這裡扣。</p>
+                    <div class="rec-row" style="margin-bottom: 12px;">
+                        <div class="rec-field">
+                            <label for="lf-hire" data-i18n="RECORDS_HIRE_DATE">到職日</label>
+                            <input type="date" id="lf-hire">
+                        </div>
+                    </div>
+                    <div id="leave-inputs" class="rec-leave-grid"></div>
+                    <div class="rec-actions">
+                        <button type="button" id="lf-save" class="rec-btn rec-btn-primary" data-i18n="RECORDS_SAVE">儲存</button>
+                        <button type="button" id="lf-cancel" class="rec-btn rec-btn-secondary" data-i18n="RECORDS_CANCEL">取消</button>
+                    </div>
+                </div>
+
+                <div class="rec-card">
+                    <h2 data-i18n="RECORDS_LEAVE_TITLE">員工假期餘額</h2>
+                    <p class="rec-desc" data-i18n="RECORDS_LEAVE_DESC">列出常用假別的剩餘時數，按「調整」可以修改全部假別和到職日。</p>
+                    <div class="rec-scroll">
+                        <table class="rec-table">
+                            <thead>
+                                <tr>
+                                    <th data-i18n="SHIFT_EMPLOYEE_LABEL">員工</th>
+                                    <th data-i18n="RECORDS_HIRE_DATE">到職日</th>
+                                    <th data-i18n="ANNUAL_LEAVE">特休假</th>
+                                    <th data-i18n="COMP_TIME_OFF">加班補休假</th>
+                                    <th data-i18n="PERSONAL_LEAVE">事假</th>
+                                    <th data-i18n="SICK_LEAVE">未住院病假</th>
+                                    <th data-i18n="RECORDS_UPDATED_AT">更新時間</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="leave-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 請假紀錄 -->
+            <section id="panel-leaves" class="rec-panel">
+                <div class="rec-card">
+                    <h2 data-i18n="RECORDS_LEAVES_TITLE">請假紀錄</h2>
+                    <p class="rec-desc" data-i18n="RECORDS_LEAVES_DESC">列出請假期間落在這段日期的申請。取消已核准的請假，時數會退回假期餘額；要改時數或假別，請取消後讓員工重新申請。</p>
+                    <div class="rec-row">
+                        <div class="rec-field"><label for="lv-start" data-i18n="SHIFT_START_DATE">開始日期</label><input type="date" id="lv-start"></div>
+                        <div class="rec-field"><label for="lv-end" data-i18n="SHIFT_END_DATE">結束日期</label><input type="date" id="lv-end"></div>
+                        <div class="rec-field"><label for="lv-employee" data-i18n="SHIFT_EMPLOYEE_LABEL">員工</label><select id="lv-employee" class="employee-filter"><option value="" data-i18n="OPTION_ALL">全部</option></select></div>
+                        <div class="rec-field"><label for="lv-status" data-i18n="RECORDS_STATUS">狀態</label>
+                            <select id="lv-status">
+                                <option value="" data-i18n="OPTION_ALL">全部</option>
+                                <option value="PENDING" data-i18n="RECORDS_ST_PENDING">待審核</option>
+                                <option value="APPROVED" data-i18n="RECORDS_ST_APPROVED">已核准</option>
+                                <option value="REJECTED" data-i18n="RECORDS_ST_REJECTED">已駁回</option>
+                                <option value="CANCELLED" data-i18n="RECORDS_ST_CANCELLED">已取消</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="rec-actions"><button type="button" id="lv-search" class="rec-btn rec-btn-primary" data-i18n="RECORDS_SEARCH">查詢</button></div>
+                </div>
+                <div class="rec-card">
+                    <div id="lv-summary" class="rec-summary"></div>
+                    <div class="rec-scroll">
+                        <table class="rec-table">
+                            <thead><tr>
+                                <th data-i18n="SHIFT_EMPLOYEE_LABEL">員工</th>
+                                <th data-i18n="RECORDS_LEAVE_TYPE">假別</th>
+                                <th data-i18n="RECORDS_FROM">開始</th>
+                                <th data-i18n="RECORDS_TO">結束</th>
+                                <th data-i18n="RECORDS_HOURS">時數</th>
+                                <th data-i18n="RECORDS_STATUS">狀態</th>
+                                <th data-i18n="RECORDS_REASON">原因</th>
+                                <th></th>
+                            </tr></thead>
+                            <tbody id="lv-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 加班紀錄 -->
+            <section id="panel-overtime" class="rec-panel">
+                <div class="rec-card">
+                    <h2 data-i18n="RECORDS_OT_TITLE">加班紀錄</h2>
+                    <p class="rec-desc" data-i18n="RECORDS_OT_DESC">可以修改加班的時間與時數，或取消。已核准的加班改過或取消後，會自動重算那個月的薪資。</p>
+                    <div class="rec-row">
+                        <div class="rec-field"><label for="ot-start" data-i18n="SHIFT_START_DATE">開始日期</label><input type="date" id="ot-start"></div>
+                        <div class="rec-field"><label for="ot-end" data-i18n="SHIFT_END_DATE">結束日期</label><input type="date" id="ot-end"></div>
+                        <div class="rec-field"><label for="ot-employee" data-i18n="SHIFT_EMPLOYEE_LABEL">員工</label><select id="ot-employee" class="employee-filter"><option value="" data-i18n="OPTION_ALL">全部</option></select></div>
+                        <div class="rec-field"><label for="ot-status" data-i18n="RECORDS_STATUS">狀態</label>
+                            <select id="ot-status">
+                                <option value="" data-i18n="OPTION_ALL">全部</option>
+                                <option value="pending" data-i18n="RECORDS_ST_PENDING">待審核</option>
+                                <option value="approved" data-i18n="RECORDS_ST_APPROVED">已核准</option>
+                                <option value="rejected" data-i18n="RECORDS_ST_REJECTED">已駁回</option>
+                                <option value="cancelled" data-i18n="RECORDS_ST_CANCELLED">已取消</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="rec-actions"><button type="button" id="ot-search" class="rec-btn rec-btn-primary" data-i18n="RECORDS_SEARCH">查詢</button></div>
+                </div>
+                <div id="ot-form" class="rec-card rec-form rec-hidden">
+                    <h2 id="ot-form-title"></h2>
+                    <div class="rec-row">
+                        <div class="rec-field"><label for="otf-start" data-i18n="RECORDS_FROM">開始</label><input type="time" id="otf-start"></div>
+                        <div class="rec-field"><label for="otf-end" data-i18n="RECORDS_TO">結束</label><input type="time" id="otf-end"></div>
+                        <div class="rec-field"><label for="otf-hours" data-i18n="RECORDS_HOURS">時數</label><input type="number" id="otf-hours" min="0.5" max="24" step="0.5"></div>
+                    </div>
+                    <div class="rec-actions">
+                        <button type="button" id="otf-save" class="rec-btn rec-btn-primary" data-i18n="RECORDS_SAVE">儲存</button>
+                        <button type="button" id="otf-cancel" class="rec-btn rec-btn-secondary" data-i18n="RECORDS_CANCEL">取消</button>
+                    </div>
+                </div>
+                <div class="rec-card">
+                    <div id="ot-summary" class="rec-summary"></div>
+                    <div class="rec-scroll">
+                        <table class="rec-table">
+                            <thead><tr>
+                                <th data-i18n="RECORDS_DATE">日期</th>
+                                <th data-i18n="SHIFT_EMPLOYEE_LABEL">員工</th>
+                                <th data-i18n="RECORDS_TIME">時間</th>
+                                <th data-i18n="RECORDS_HOURS">時數</th>
+                                <th data-i18n="RECORDS_STATUS">狀態</th>
+                                <th data-i18n="RECORDS_REASON">原因</th>
+                                <th></th>
+                            </tr></thead>
+                            <tbody id="ot-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 資料表：試算表裡的每一張工作表，可以新增、修改、刪除、篩選、搜尋 -->
+            <section id="panel-browse" class="rec-panel">
+                <div class="rec-card">
+                    <h2 data-i18n="RECORDS_BROWSE_TITLE">資料表</h2>
+                    <p class="rec-desc" data-i18n="RECORDS_BROWSE_DESC">試算表裡的每一張工作表都在這裡，最新的資料在最上面。可以直接新增、修改、刪除，所有修改都會留下管理操作記錄。</p>
+                    <div class="rec-row">
+                        <div class="rec-field"><label for="br-sheet" data-i18n="RECORDS_BROWSE_SHEET">工作表</label><select id="br-sheet"></select></div>
+                        <div class="rec-field"><label for="br-keyword" data-i18n="RECORDS_BROWSE_KEYWORD">搜尋（整列）</label><input type="search" id="br-keyword"></div>
+                        <div class="rec-field"><label for="br-column" data-i18n="RECORDS_BROWSE_FILTER_COL">篩選欄位</label><select id="br-column"></select></div>
+                        <div class="rec-field"><label for="br-value" data-i18n="RECORDS_BROWSE_FILTER_VALUE">欄位包含</label><input type="search" id="br-value"></div>
+                    </div>
+                    <div class="rec-actions">
+                        <button type="button" id="br-search" class="rec-btn rec-btn-primary" data-i18n="RECORDS_SEARCH">查詢</button>
+                        <button type="button" id="br-clear" class="rec-btn rec-btn-secondary" data-i18n="RECORDS_CLEAR_FILTER">清除條件</button>
+                        <button type="button" id="br-add" class="rec-btn rec-btn-secondary" data-i18n="RECORDS_ADD_ROW">新增一筆</button>
+                        <button type="button" id="br-download" class="rec-btn rec-btn-secondary" data-i18n="RECORDS_DOWNLOAD">下載 CSV</button>
+                    </div>
+                    <div id="br-warning" class="rec-warning rec-hidden"></div>
+                    <div id="br-error" class="rec-error rec-hidden" role="alert"></div>
+                </div>
+                <div class="rec-card">
+                    <div class="rec-pager">
+                        <div id="br-summary" class="rec-summary"></div>
+                        <div class="rec-pager-btns">
+                            <button type="button" id="br-prev" class="rec-btn rec-btn-secondary rec-btn-sm" data-i18n="RECORDS_PREV_PAGE">上一頁</button>
+                            <button type="button" id="br-next" class="rec-btn rec-btn-secondary rec-btn-sm" data-i18n="RECORDS_NEXT_PAGE">下一頁</button>
+                        </div>
+                    </div>
+                    <div class="rec-scroll">
+                        <table class="rec-table rec-sheet-table">
+                            <thead id="br-head"></thead>
+                            <tbody id="br-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 新增／修改一筆（任何工作表） -->
+            <div id="br-dialog" class="rec-dialog rec-hidden" role="dialog" aria-modal="true" aria-labelledby="br-dialog-title">
+                <div class="rec-dialog-box">
+                    <h2 id="br-dialog-title"></h2>
+                    <p class="rec-desc" data-i18n="RECORDS_ROW_FORM_DESC">日期用 2026-10-05，時間用 18:30。空白就是不填。</p>
+                    <div id="br-fields" class="rec-dialog-fields"></div>
+                    <div class="rec-actions">
+                        <button type="button" id="br-save" class="rec-btn rec-btn-primary" data-i18n="RECORDS_SAVE">儲存</button>
+                        <button type="button" id="br-cancel" class="rec-btn rec-btn-secondary" data-i18n="RECORDS_CANCEL">取消</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="api.js"></script>
+    <script src="utils.js"></script>
+    <script src="i18n.js"></script>
+    <script src="records.js"></script>
+    <script src="pwa.js"></script>
+</body>
+</html>

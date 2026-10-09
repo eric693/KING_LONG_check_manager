@@ -24,6 +24,7 @@ let _postUnsupported = false;
  *                          後面接的查詢字串會被拆成表單欄位。
  * @param {Object} [options]
  * @param {boolean} [options.allowRetry] - 逾時是否可以重試；預設只有唯讀查詢才重試
+ * @param {number} [options.timeoutMs] - 等待上限（預設 API_TIMEOUT_MS）；讀整張表的管理查詢可以給長一點
  * @returns {Promise<Response>} 原始的 fetch Response
  */
 async function apiRequest(action, options = {}) {
@@ -117,7 +118,15 @@ async function apiRequestJson(action, options = {}) {
         throw new Error(`HTTP 錯誤: ${response.status}`);
     }
 
-    const data = await response.json();
+    // Google 偶爾會回錯誤頁（HTML）而不是 JSON：把頁面標題帶出來，畫面上才看得出原因
+    const text = await response.text();
+    let data;
+    try {
+        data = JSON.parse(text);
+    } catch (error) {
+        const title = (text.match(/<title>([^<]*)<\/title>/i) || [])[1] || text.replace(/<[^>]*>/g, ' ').trim().slice(0, 60);
+        throw new Error(`伺服器回應異常：${title || '空白'}`);
+    }
 
     if (data.success !== undefined && data.ok === undefined) data.ok = data.success;
     if (data.ok !== undefined && data.success === undefined) data.success = data.ok;

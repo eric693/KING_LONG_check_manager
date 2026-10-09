@@ -40,7 +40,25 @@ const ROUTE_ACCESS = {
   deleteManualPayslip: 'admin',
   getPayrollRelease: 'admin',
   releasePayroll: 'admin',
-  unreleasePayroll: 'admin'
+  unreleasePayroll: 'admin',
+  // 資料管理頁（records.html，見 RecordsAdmin.gs）
+  adminListPunches: 'admin',
+  adminAddPunch: 'admin',
+  adminUpdatePunch: 'admin',
+  adminDeletePunch: 'admin',
+  adminGetLeaveBalances: 'admin',
+  adminSetLeaveBalance: 'admin',
+  adminListLeaves: 'admin',
+  adminCancelLeave: 'admin',
+  adminListOvertime: 'admin',
+  adminUpdateOvertime: 'admin',
+  adminCancelOvertime: 'admin',
+  adminListSheets: 'admin',
+  adminBrowseSheet: 'admin',
+  adminMonthlyHours: 'admin',
+  adminUpdateSheetRow: 'admin',
+  adminAddSheetRow: 'admin',
+  adminDeleteSheetRow: 'admin'
 };
 
 /**
@@ -59,7 +77,8 @@ const DEPLOY_CHECKS = [
   ['DatabaseSetup.gs', () => typeof setupLeaveSystemDatabase === 'function'],
   ['DbOperations.gs', () => typeof isEmployeeRowMisaligned_ === 'function' && typeof deleteLocation === 'function' && typeof writeSession_ === 'function' &&
                             String(writeSession_).indexOf('createSessionForUser_') !== -1 &&
-                            String(punchAdjusted).indexOf('ERR_ADJUST_PUNCH_LIMIT') !== -1],
+                            String(punchAdjusted).indexOf('ERR_ADJUST_PUNCH_LIMIT') !== -1 &&
+                            typeof checkSessionUncached_ === 'function'],
   ['EmployeeSheetRepair.gs', () => typeof readOriginalLockedNames_ === 'function'],
   ['Expense.gs', () => typeof handleReviewExpense === 'function'],
   ['Handlers.gs', () => typeof handleGetLoginUrl === 'function' && handleGetLoginUrl.length >= 1 &&
@@ -82,6 +101,8 @@ const DEPLOY_CHECKS = [
   ['Offboarding.gs', () => typeof handleOffboardEmployee === 'function' &&
                             String(handleAcknowledgePayslip).indexOf('isPayrollReleased_') !== -1],
   ['OvertimeOperations.gs', () => typeof initOvertimeSheet === 'function'],
+  ['RecordsAdmin.gs', () => typeof handleAdminUpdatePunch === 'function' && typeof handleAdminUpdateSheetRow === 'function' &&
+                           typeof handleAdminMonthlyHours === 'function'],
   ['PayrollRelease.gs', () => typeof handleReleasePayroll === 'function' && typeof isPayrollReleased_ === 'function'],
   ['PayrollSheet.gs', () => typeof exportPayrollSheet_ === 'function' && typeof prorateAttendanceBonus_ === 'function'],
   ['PayrollRules.gs', () => typeof applyPayrollRules_ === 'function' && typeof payrollAttendanceZh_ === 'function' &&
@@ -329,6 +350,41 @@ function doGet(e) {
         return respond1(handleSaveShiftTemplates(e.parameter));
       case "savePayrollAdjustments":
         return respond1(handleSavePayrollAdjustments(e.parameter));
+      // ==================== 資料管理（records.html，見 RecordsAdmin.gs） ====================
+      case "adminListPunches":
+        return respond1(handleAdminListPunches(e.parameter));
+      case "adminAddPunch":
+        return respond1(handleAdminAddPunch(e.parameter));
+      case "adminUpdatePunch":
+        return respond1(handleAdminUpdatePunch(e.parameter));
+      case "adminDeletePunch":
+        return respond1(handleAdminDeletePunch(e.parameter));
+      case "adminGetLeaveBalances":
+        return respond1(handleAdminGetLeaveBalances(e.parameter));
+      case "adminSetLeaveBalance":
+        return respond1(handleAdminSetLeaveBalance(e.parameter));
+      case "adminListLeaves":
+        return respond1(handleAdminListLeaves(e.parameter));
+      case "adminCancelLeave":
+        return respond1(handleAdminCancelLeave(e.parameter));
+      case "adminListOvertime":
+        return respond1(handleAdminListOvertime(e.parameter));
+      case "adminUpdateOvertime":
+        return respond1(handleAdminUpdateOvertime(e.parameter));
+      case "adminCancelOvertime":
+        return respond1(handleAdminCancelOvertime(e.parameter));
+      case "adminListSheets":
+        return respond1(handleAdminListSheets(e.parameter));
+      case "adminBrowseSheet":
+        return respond1(handleAdminBrowseSheet(e.parameter));
+      case "adminMonthlyHours":
+        return respond1(handleAdminMonthlyHours(e.parameter));
+      case "adminUpdateSheetRow":
+        return respond1(handleAdminUpdateSheetRow(e.parameter));
+      case "adminAddSheetRow":
+        return respond1(handleAdminAddSheetRow(e.parameter));
+      case "adminDeleteSheetRow":
+        return respond1(handleAdminDeleteSheetRow(e.parameter));
       case "getManualPayslip":
         return respond1(handleGetManualPayslip(e.parameter));
       case "saveManualPayslip":
