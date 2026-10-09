@@ -72,7 +72,7 @@ const DEPLOY_CHECKS = [
   ['AdminTools.gs', () => typeof batchInitializeAllEmployeesLeave === 'function'],
   ['Attachments.gs', () => typeof getAttachmentSheet_ === 'function'],
   ['AuditLog.gs', () => typeof logAdminAction_ === 'function' && typeof getSalaryAuditSheet_ === 'function'],
-  ['Constants.gs', () => typeof getLeaveTypeInfo === 'function'],
+  ['Constants.gs', () => typeof getLeaveTypeInfo === 'function' && typeof getSpreadsheet_ === 'function'],
   ['Dailysalary.gs', () => typeof calculateDailySalary === 'function'],
   ['DatabaseSetup.gs', () => typeof setupLeaveSystemDatabase === 'function'],
   ['DbOperations.gs', () => typeof isEmployeeRowMisaligned_ === 'function' && typeof deleteLocation === 'function' && typeof writeSession_ === 'function' &&
@@ -126,7 +126,7 @@ const DEPLOY_CHECKS = [
 ];
 
 // 每次後端有更新就改這個日期，健康檢查會回報，從外面就知道正式區部署到哪一版
-const BACKEND_VERSION = '2026-10-10';
+const BACKEND_VERSION = '2026-10-10b';
 
 function handleHealthCheck() {
   const problems = [];
@@ -139,6 +139,8 @@ function handleHealthCheck() {
     ok: problems.length === 0,
     version: BACKEND_VERSION,
     checked: DEPLOY_CHECKS.length,
+    // 實際讀寫的試算表；舊版 Constants.gs 沒有 SPREADSHEET_ID，會回 null
+    spreadsheetId: typeof SPREADSHEET_ID === 'string' ? SPREADSHEET_ID : null,
     // 這些檔不存在、或還是舊版：請從 GitHub 複製最新的內容覆蓋
     missingOrOutdated: problems
   };
