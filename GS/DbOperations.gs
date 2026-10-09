@@ -961,27 +961,115 @@ function getApprovedOvertimeRecords(monthParam, userIdParam) {
 }
 
 // ==================== 地點管理 ====================
+//
+// 「打卡地點表」：A ID、B 地點名稱、C 緯度、D 經度、E 容許誤差（公尺）。
+// 打卡（punch）、LINE 打卡、QR 打卡都依位置讀 B～E，這裡不能改欄位順序。
+// 以前新增時 ID 留白，編輯、刪除要靠 ID 找列，所以讀取時會把空白的 ID 補上。
+
+const LOCATION_MIN_RADIUS = 30;
+const LOCATION_MAX_RADIUS = 2000;
+const LOCATION_DEFAULT_RADIUS = 200;
+const LOCATION_MAX_NAME = 50;
+
+/** 檢查並整理地點欄位；回傳 { ok, location } 或 { ok: false, code, msg } */
+function normalizeLocationInput_(name, lat, lng, radius) {
+  const cleanName = String(name || '').trim();
+  const latNum = Number(lat);
+  const lngNum = Number(lng);
+  if (!cleanName || cleanName.length > LOCATION_MAX_NAME) {
+    return { ok: false, code: 'ERR_INVALID_INPUT', msg: `地點名稱必填，最多 ${LOCATION_MAX_NAME} 字` };
+  }
+  if (lat === '' || lng === '' || !isFinite(latNum) || !isFinite(lngNum) ||
+      Math.abs(latNum) > 90 || Math.abs(lngNum) > 180 || (latNum === 0 && lngNum === 0)) {
+    return { ok: false, code: 'ERR_INVALID_INPUT', msg: '經緯度不正確' };
+  }
+  const r = parseInt(radius, 10);
+  const finalRadius = isNaN(r) ? LOCATION_DEFAULT_RADIUS : Math.max(LOCATION_MIN_RADIUS, Math.min(LOCATION_MAX_RADIUS, r));
+  return { ok: true, location: { name: cleanName, lat: latNum, lng: lngNum, radius: finalRadius } };
+}
+
+function newLocationId_() {
+  return 'LOC' + Utilities.getUuid().replace(/-/g, '').substring(0, 8).toUpperCase();
+}
+
+/**
+ * 讀出所有地點列（含列號），空白的 ID 補上後寫回。
+ * @returns {Array<{ row: number, id, name, lat, lng, radius }>}
+ */
+function readLocationRows_(sheet) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return [];
+  const range = sheet.getRange(2, 1, lastRow - 1, 5);
+  const values = range.getValues();
+  let filled = false;
+  values.forEach(row => {
+    if (row[1] && !String(row[0]).trim()) {
+      row[0] = newLocationId_();
+      filled = true;
+    }
+  });
+  if (filled) sheet.getRange(2, 1, values.length, 1).setValues(values.map(row => [row[0]]));
+
+  const list = [];
+  values.forEach((row, i) => {
+    if (!row[1]) return;
+    list.push({ row: i + 2, id: String(row[0]).trim(), name: String(row[1]),
+                lat: Number(row[2]) || 0, lng: Number(row[3]) || 0, radius: Number(row[4]) || 100 });
+  });
+  return list;
+}
+
+function withLocationLock_(fn) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_LOCATIONS);
+    if (!sheet) return { ok: false, code: 'ERR_NO_LOCATIONS', msg: '找不到打卡地點表' };
+    return fn(sheet);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 /**
  * 新增打卡地點
- * @param {string} name - 地點名稱
- * @param {number} lat - 緯度
- * @param {number} lng - 經度
  * @param {number} radius - 打卡範圍（公尺），預設 200，範圍 30-2000
  */
 function addLocation(name, lat, lng, radius) {
-  if (!name || !lat || !lng) {
-    return { ok: false, code: "ERR_INVALID_INPUT" };
-  }
-  
-  // 驗證 radius 參數，確保在合理範圍內
-  const validRadius = radius && !isNaN(radius) ? parseInt(radius) : 200;
-  const finalRadius = Math.max(30, Math.min(2000, validRadius)); // 限制在 30-2000 之間
-  
-  const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_LOCATIONS);
-  sh.appendRow(["", name, lat, lng, finalRadius]);
-  
-  Logger.log(` 新增地點：${name}，範圍：${finalRadius}公尺`);
-  return { ok: true, code: "LOCATION_ADD_SUCCESS" };
+  const checked = normalizeLocationInput_(name, lat, lng, radius);
+  if (!checked.ok) return checked;
+  const loc = checked.location;
+  return withLocationLock_(sheet => {
+    const id = newLocationId_();
+    sheet.appendRow([id, loc.name, loc.lat, loc.lng, loc.radius]);
+    Logger.log(` 新增地點：${loc.name}，範圍：${loc.radius}公尺`);
+    return { ok: true, code: "LOCATION_ADD_SUCCESS", id: id };
+  });
+}
+
+/** 修改打卡地點（名稱、座標、範圍） */
+function updateLocation(id, name, lat, lng, radius) {
+  const checked = normalizeLocationInput_(name, lat, lng, radius);
+  if (!checked.ok) return checked;
+  const loc = checked.location;
+  return withLocationLock_(sheet => {
+    const found = readLocationRows_(sheet).find(l => l.id === String(id || '').trim());
+    if (!found) return { ok: false, code: 'ERR_LOCATION_NOT_FOUND', msg: '找不到這個地點，可能已被刪除，請重新整理' };
+    sheet.getRange(found.row, 2, 1, 4).setValues([[loc.name, loc.lat, loc.lng, loc.radius]]);
+    Logger.log(` 修改地點：${found.name} → ${loc.name}，範圍：${loc.radius}公尺`);
+    return { ok: true, code: 'LOCATION_UPDATE_SUCCESS' };
+  });
+}
+
+/** 刪除打卡地點 */
+function deleteLocation(id) {
+  return withLocationLock_(sheet => {
+    const found = readLocationRows_(sheet).find(l => l.id === String(id || '').trim());
+    if (!found) return { ok: false, code: 'ERR_LOCATION_NOT_FOUND', msg: '找不到這個地點，可能已被刪除，請重新整理' };
+    sheet.deleteRow(found.row);
+    Logger.log(` 刪除地點：${found.name}`);
+    return { ok: true, code: 'LOCATION_DELETE_SUCCESS', name: found.name };
+  });
 }
 
 /**
@@ -989,23 +1077,20 @@ function addLocation(name, lat, lng, radius) {
  */
 function getLocation() {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_LOCATIONS);
-  const values = sheet.getDataRange().getValues();
-  
-  if (values.length === 0) {
-    return { ok: true, locations: [] };
+  if (!sheet) return { ok: true, locations: [] };
+
+  // 有空白 ID 要補時才鎖；平常只是讀
+  let rows;
+  const needsIds = sheet.getLastRow() >= 2 &&
+    sheet.getRange(2, 1, sheet.getLastRow() - 1, 2).getValues().some(r => r[1] && !String(r[0]).trim());
+  if (needsIds) {
+    const result = withLocationLock_(sh => ({ ok: true, rows: readLocationRows_(sh) }));
+    rows = result.rows || [];
+  } else {
+    rows = readLocationRows_(sheet);
   }
-  
-  const headers = values.shift();
-  const locations = values
-    .filter(row => row[1])
-    .map(row => ({
-      id: row[headers.indexOf('ID')] || '',
-      name: row[headers.indexOf('地點名稱')] || '',
-      lat: row[headers.indexOf('GPS(緯度)')] || 0,
-      lng: row[headers.indexOf('GPS(經度)')] || 0,
-      scope: row[headers.indexOf('容許誤差(公尺)')] || 100
-    }));
-  
+
+  const locations = rows.map(l => ({ id: l.id, name: l.name, lat: l.lat, lng: l.lng, scope: l.radius }));
   return { ok: true, locations: locations };
 }
 

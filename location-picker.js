@@ -195,3 +195,169 @@ function initRadiusSlider() {
         }
     });
 }
+
+// ==================== 打卡地點清單：編輯、刪除 ====================
+// 新增和編輯共用上面那張表單：按「編輯」把地點帶進表單，按鈕變成「儲存修改」。
+
+let editingLocationId = null;
+let locationListCache = [];
+
+function locationText(key, fallback) {
+    const text = t(key);
+    return text === key ? fallback : text;
+}
+
+async function loadLocationList() {
+    const list = document.getElementById('location-list');
+    const status = document.getElementById('location-list-status');
+    if (!list) return;
+    if (status) status.textContent = locationText('LOADING', '載入中...');
+    try {
+        const res = await callApifetch('getLocations');
+        if (!res.ok) throw new Error(res.msg || res.code || '');
+        locationListCache = Array.isArray(res.locations) ? res.locations : [];
+        renderLocationList();
+    } catch (err) {
+        console.error('載入打卡地點失敗:', err);
+        if (status) status.textContent = locationText('NOTIF_LOCATIONS_FAILED_NET', '載入打卡地點失敗');
+    }
+}
+
+function renderLocationList() {
+    const list = document.getElementById('location-list');
+    const status = document.getElementById('location-list-status');
+    if (!list) return;
+    list.innerHTML = '';
+    if (status) {
+        status.textContent = locationListCache.length
+            ? ''
+            : locationText('LOCATION_LIST_EMPTY', '還沒有設定打卡地點，員工目前無法打卡。請在下方新增。');
+    }
+    locationListCache.forEach(loc => {
+        const li = document.createElement('li');
+        li.className = 'flex flex-wrap items-center justify-between gap-2 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50' +
+            (loc.id === editingLocationId ? ' ring-2 ring-indigo-500' : '');
+
+        const info = document.createElement('div');
+        info.className = 'min-w-0';
+        const name = document.createElement('div');
+        name.className = 'font-semibold text-gray-800 dark:text-white';
+        name.textContent = loc.name;
+        const meta = document.createElement('div');
+        meta.className = 'text-xs text-gray-500 dark:text-gray-400';
+        meta.textContent = locationText('LOCATION_LIST_META', '範圍 {radius} 公尺 · {lat}, {lng}')
+            .replace('{radius}', loc.scope)
+            .replace('{lat}', Number(loc.lat).toFixed(6))
+            .replace('{lng}', Number(loc.lng).toFixed(6));
+        info.appendChild(name);
+        info.appendChild(meta);
+
+        const actions = document.createElement('div');
+        actions.className = 'flex gap-2';
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = 'px-3 py-1.5 text-sm rounded-lg btn-secondary';
+        editBtn.textContent = locationText('BTN_EDIT', '編輯');
+        editBtn.onclick = () => startEditLocation(loc);
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'px-3 py-1.5 text-sm rounded-lg bg-red-600 hover:bg-red-700 text-white';
+        delBtn.textContent = locationText('BTN_DELETE', '刪除');
+        delBtn.onclick = () => removeLocation(loc, delBtn);
+        actions.appendChild(editBtn);
+        actions.appendChild(delBtn);
+
+        li.appendChild(info);
+        li.appendChild(actions);
+        list.appendChild(li);
+    });
+}
+
+function setLocationRadius(radius) {
+    const slider = document.getElementById('location-radius');
+    const display = document.getElementById('radius-value');
+    if (slider) slider.value = radius;
+    if (display) display.textContent = slider ? slider.value : radius;
+}
+
+function startEditLocation(loc) {
+    editingLocationId = loc.id;
+    document.getElementById('location-name').value = loc.name;
+    setLocationRadius(loc.scope);
+    setPickerLocation(Number(loc.lat), Number(loc.lng));
+
+    const title = document.getElementById('location-form-title');
+    if (title) title.textContent = locationText('EDIT_LOCATION_TITLE', '編輯打卡地點：{name}').replace('{name}', loc.name);
+    const saveBtn = document.getElementById('add-location-btn');
+    if (saveBtn) {
+        saveBtn.textContent = locationText('SAVE_LOCATION_BTN', '儲存修改');
+        saveBtn.disabled = false;
+    }
+    const cancelBtn = document.getElementById('cancel-edit-location-btn');
+    if (cancelBtn) cancelBtn.style.display = '';
+
+    renderLocationList();
+    document.getElementById('location-form-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/** 表單回到「新增」狀態（新增成功、儲存修改、取消編輯都會用到） */
+function resetLocationForm() {
+    editingLocationId = null;
+    ['location-name', 'location-lat', 'location-lng', 'location-search'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    setLocationRadius(200);
+
+    const title = document.getElementById('location-form-title');
+    if (title) title.textContent = locationText('ADD_LOCATION_TITLE', '新增打卡地點');
+    const saveBtn = document.getElementById('add-location-btn');
+    if (saveBtn) {
+        saveBtn.textContent = locationText('ADD_LOCATION_BTN', '新增地點');
+        saveBtn.disabled = true;
+    }
+    const cancelBtn = document.getElementById('cancel-edit-location-btn');
+    if (cancelBtn) cancelBtn.style.display = 'none';
+    const getBtn = document.getElementById('get-location-btn');
+    if (getBtn) {
+        getBtn.textContent = locationText('GET_LOCATION_BTN', '取得當前位置');
+        getBtn.disabled = false;
+    }
+    if (typeof circle !== 'undefined' && circle && mapInstance) {
+        mapInstance.removeLayer(circle);
+        circle = null;
+    }
+    renderLocationList();
+}
+
+async function removeLocation(loc, button) {
+    let message = locationText('LOCATION_DELETE_CONFIRM', '確定要刪除打卡地點「{name}」嗎？員工之後不能在這裡打卡。')
+        .replace('{name}', loc.name);
+    if (locationListCache.length === 1) {
+        message += '\n\n' + locationText('LOCATION_DELETE_LAST_WARNING', '這是最後一個打卡地點，刪除後所有員工都無法打卡。');
+    }
+    if (!confirm(message)) return;
+
+    if (button) button.disabled = true;
+    try {
+        const res = await callApifetch(`deleteLocation&id=${encodeURIComponent(loc.id)}`);
+        if (res.ok) {
+            showNotification(locationText('NOTIF_LOCATION_DELETED', '已刪除打卡地點'), 'success');
+            if (editingLocationId === loc.id) resetLocationForm();
+            await loadLocationList();
+            if (typeof window.refreshLocationsOnMap === 'function') window.refreshLocationsOnMap();
+        } else {
+            showNotification(res.msg || locationText('NOTIF_LOCATION_DELETE_FAILED', '刪除打卡地點失敗'), 'error');
+            if (button) button.disabled = false;
+        }
+    } catch (err) {
+        console.error('刪除打卡地點失敗:', err);
+        showNotification(locationText('NOTIF_LOCATION_DELETE_FAILED', '刪除打卡地點失敗'), 'error');
+        if (button) button.disabled = false;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('cancel-edit-location-btn')?.addEventListener('click', resetLocationForm);
+    document.getElementById('refresh-locations-btn')?.addEventListener('click', loadLocationList);
+});

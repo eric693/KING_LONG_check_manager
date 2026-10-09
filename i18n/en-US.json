@@ -1478,5 +1478,22 @@
   "PAYROLL_RELEASE_SUCCESS": "Payslips for month {month} released; {notified} notified on LINE",
   "PAYROLL_RELEASE_FAILED": "Release failed",
   "PAYROLL_UNRELEASE_CONFIRM": "Undo the release for month {month}? Employees will no longer see it, and LINE notifications already sent can't be recalled.",
-  "PAYROLL_UNRELEASE_SUCCESS": "Release undone"
+  "PAYROLL_UNRELEASE_SUCCESS": "Release undone",
+  "LOCATION_LIST_TITLE": "Punch locations",
+  "LOCATION_LIST_DESCRIPTION": "Employees can only punch within range of these locations.",
+  "BTN_REFRESH": "Refresh",
+  "LOCATION_LIST_EMPTY": "No punch locations yet, so nobody can punch. Add one below.",
+  "LOCATION_LIST_META": "Range {radius} m · {lat}, {lng}",
+  "EDIT_LOCATION_TITLE": "Edit punch location: {name}",
+  "SAVE_LOCATION_BTN": "Save changes",
+  "LOCATION_CANCEL_EDIT": "Cancel editing",
+  "NOTIF_LOCATION_UPDATED": "Location updated",
+  "LOCATION_DELETE_CONFIRM": "Delete the punch location \"{name}\"? Employees will no longer be able to punch there.",
+  "LOCATION_DELETE_LAST_WARNING": "This is the last punch location. After deleting it, nobody can punch.",
+  "NOTIF_LOCATION_DELETED": "Punch location deleted",
+  "NOTIF_LOCATION_DELETE_FAILED": "Couldn't delete the punch location",
+  "AUDIT_ACTION_UPDATE_LOCATION": "Edit punch location",
+  "AUDIT_ACTION_DELETE_LOCATION": "Delete punch location",
+  "AUDIT_ACTION_RELEASE_PAYROLL": "Release payslips",
+  "AUDIT_ACTION_UNRELEASE_PAYROLL": "Undo payslip release"
 }

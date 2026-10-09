@@ -1497,5 +1497,22 @@
   "PAYROLL_RELEASE_SUCCESS": "已發放 {month} 月薪資條，LINE 通知 {notified} 人",
   "PAYROLL_RELEASE_FAILED": "發放失敗",
   "PAYROLL_UNRELEASE_CONFIRM": "確定要取消發放 {month} 月薪資條嗎？員工會看不到這個月的薪資單，已經送出的 LINE 通知收不回來。",
-  "PAYROLL_UNRELEASE_SUCCESS": "已取消發放"
+  "PAYROLL_UNRELEASE_SUCCESS": "已取消發放",
+  "LOCATION_LIST_TITLE": "打卡地點",
+  "LOCATION_LIST_DESCRIPTION": "員工要在這些地點的範圍內才能打卡。",
+  "BTN_REFRESH": "重新整理",
+  "LOCATION_LIST_EMPTY": "還沒有設定打卡地點，員工目前無法打卡。請在下方新增。",
+  "LOCATION_LIST_META": "範圍 {radius} 公尺 · {lat}, {lng}",
+  "EDIT_LOCATION_TITLE": "編輯打卡地點：{name}",
+  "SAVE_LOCATION_BTN": "儲存修改",
+  "LOCATION_CANCEL_EDIT": "取消編輯",
+  "NOTIF_LOCATION_UPDATED": "地點已更新",
+  "LOCATION_DELETE_CONFIRM": "確定要刪除打卡地點「{name}」嗎？員工之後不能在這裡打卡。",
+  "LOCATION_DELETE_LAST_WARNING": "這是最後一個打卡地點，刪除後所有員工都無法打卡。",
+  "NOTIF_LOCATION_DELETED": "已刪除打卡地點",
+  "NOTIF_LOCATION_DELETE_FAILED": "刪除打卡地點失敗",
+  "AUDIT_ACTION_UPDATE_LOCATION": "修改打卡地點",
+  "AUDIT_ACTION_DELETE_LOCATION": "刪除打卡地點",
+  "AUDIT_ACTION_RELEASE_PAYROLL": "發放薪資條",
+  "AUDIT_ACTION_UNRELEASE_PAYROLL": "取消發放薪資條"
 }

@@ -9,6 +9,8 @@ const ROUTE_ACCESS = {
   approveReview: 'admin',
   rejectReview: 'admin',
   addLocation: 'admin',
+  updateLocation: 'admin',
+  deleteLocation: 'admin',
   updateEmployeeName: 'admin',
   getEmployeeSalaryTW: 'admin',
   setEmployeeSalaryTW: 'admin',
@@ -55,7 +57,7 @@ const DEPLOY_CHECKS = [
   ['Constants.gs', () => typeof getLeaveTypeInfo === 'function'],
   ['Dailysalary.gs', () => typeof calculateDailySalary === 'function'],
   ['DatabaseSetup.gs', () => typeof setupLeaveSystemDatabase === 'function'],
-  ['DbOperations.gs', () => typeof isEmployeeRowMisaligned_ === 'function' && typeof writeSession_ === 'function' &&
+  ['DbOperations.gs', () => typeof isEmployeeRowMisaligned_ === 'function' && typeof deleteLocation === 'function' && typeof writeSession_ === 'function' &&
                             String(writeSession_).indexOf('createSessionForUser_') !== -1 &&
                             String(punchAdjusted).indexOf('ERR_ADJUST_PUNCH_LIMIT') !== -1],
   ['EmployeeSheetRepair.gs', () => typeof readOriginalLockedNames_ === 'function'],
@@ -65,6 +67,7 @@ const DEPLOY_CHECKS = [
                          String(handleLinePunchWithToken).indexOf('data.done') !== -1 &&
                          String(handleCalculateMonthlySalary).indexOf('readManualPayslip_') !== -1 &&
                          String(handleCalculateMonthlySalary).indexOf('isPayrollReleased_') !== -1 &&
+                         typeof handleUpdateLocation === 'function' && String(handleAddLocation).indexOf('radius') !== -1 &&
                          String(handleSetEmployeeSalaryTW).indexOf('PAYROLL_SHEET_CONFIG_FIELDS') !== -1 &&
                          String(handleSetEmployeeSalaryTW).indexOf("existing.data['到職日期']") !== -1],
   ['LeaveManagement.gs', () => typeof submitLeaveRequest === 'function'],
@@ -211,6 +214,10 @@ function doGet(e) {
         return respond1(handleAddLocation(e.parameter));
       case "getLocations":
         return respond1(handleGetLocation());
+      case "updateLocation":
+        return respond1(handleUpdateLocation(e.parameter));
+      case "deleteLocation":
+        return respond1(handleDeleteLocation(e.parameter));
       
       case "setEmployeeBasicInfo":
         return respond1(handleSetEmployeeBasicInfo(e.parameter));

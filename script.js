@@ -1778,7 +1778,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     // 處理新增打卡地點
     document.getElementById('add-location-btn')?.addEventListener('click', async () => {
-        const name = document.getElementById('location-name').value;
+        const name = document.getElementById('location-name').value.trim();
         const lat = document.getElementById('location-lat').value;
         const lng = document.getElementById('location-lng').value;
         const radius = document.getElementById('location-radius').value; // 新增
@@ -1788,37 +1788,32 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
         
+        // 正在編輯既有地點就改用 updateLocation（見 location-picker.js）
+        const editingId = typeof editingLocationId !== 'undefined' ? editingLocationId : null;
+        const fields = `&name=${encodeURIComponent(name)}&lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}&radius=${encodeURIComponent(radius)}`;
+        addLocationBtn.disabled = true;
+        
         try {
-            // 加入 radius 參數
-            const res = await callApifetch(`addLocation&name=${encodeURIComponent(name)}&lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}&radius=${radius}`);
+            const res = editingId
+                ? await callApifetch(`updateLocation&id=${encodeURIComponent(editingId)}${fields}`)
+                : await callApifetch(`addLocation${fields}`);
             if (res.ok) {
-                showNotification(t('NOTIF_LOCATION_ADDED'), "success");
-                
-                // 清空輸入欄位
-                document.getElementById('location-name').value = '';
-                document.getElementById('location-lat').value = '';
-                document.getElementById('location-lng').value = '';
-                document.getElementById('location-search').value = ''; // 新增
-                document.getElementById('location-radius').value = 200; // 新增
-                document.getElementById('radius-value').textContent = '200'; // 新增
-                
-                // 重設按鈕狀態
-                getLocationBtn.textContent = '取得當前位置';
-                getLocationBtn.disabled = false;
-                addLocationBtn.disabled = true;
-                
-                // 新增：清除地圖上的圓形
-                if (circle) {
-                    mapInstance.removeLayer(circle);
-                    circle = null;
-                }
+                showNotification(editingId ? locationText('NOTIF_LOCATION_UPDATED', '地點已更新') : t('NOTIF_LOCATION_ADDED'), "success");
+                // 表單清空（含地圖上的藍色圓圈），回到「新增」狀態：見 location-picker.js 的 resetLocationForm
+                if (typeof resetLocationForm === 'function') resetLocationForm();
+                if (typeof loadLocationList === 'function') loadLocationList();
+                if (mapInstance) fetchAndRenderLocationsOnMap();
             } else {
-                showNotification(t('NOTIF_ADD_LOCATION_FAILED_MSG') + res.msg, "error");
+                showNotification(t('NOTIF_ADD_LOCATION_FAILED_MSG') + (res.msg || res.code || ''), "error");
+                addLocationBtn.disabled = false;
             }
         } catch (err) {
             console.error(err);
+            addLocationBtn.disabled = false;
         }
     });
+    // 地點清單改了之後，定位分頁的地圖也要重畫（location-picker.js 會呼叫）
+    window.refreshLocationsOnMap = () => { if (mapInstance) fetchAndRenderLocationsOnMap(); };
     // UI切換邏輯
     const TAB_RELOAD_INTERVAL_MS = 30000; // 同一分頁 30 秒內不重複載入
     const tabLoadedAt = {};
@@ -1887,6 +1882,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (typeof initKioskAdmin === 'function') initKioskAdmin();
             if (typeof initAdminAuditLog === 'function') initAdminAuditLog();
             refreshLocationPicker();
+            if (typeof loadLocationList === 'function') loadLocationList();
         } else if (tabId === 'overtime-view') {
             initOvertimeTab();
         } else if (tabId === 'leave-view') {

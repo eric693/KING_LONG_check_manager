@@ -206,6 +206,8 @@ const ADMIN_AUDIT_ACTIONS = {
   reviewWorklog: '審核工作日誌',
   deleteWorklog: '刪除工作日誌',
   addLocation: '新增打卡地點',
+  updateLocation: '修改打卡地點',
+  deleteLocation: '刪除打卡地點',
   updateUserRole: '變更權限',
   deleteUser: '刪除員工',
   updateEmployeeName: '修改員工姓名',

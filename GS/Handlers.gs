@@ -505,8 +505,17 @@ function handleGetAttendanceDetails(params) {
 // ==================== 地點管理相關 ====================
 
 function handleAddLocation(params) {
-  const { name, lat, lng } = params;
-  return addLocation(name, lat, lng);
+  const { name, lat, lng, radius } = params;
+  // 以前沒把 radius 傳下去，畫面上調的打卡範圍一律變成 200 公尺
+  return addLocation(name, lat, lng, radius);
+}
+
+function handleUpdateLocation(params) {
+  return updateLocation(params.id, params.name, params.lat, params.lng, params.radius);
+}
+
+function handleDeleteLocation(params) {
+  return deleteLocation(params.id);
 }
 
 function handleGetLocation() {

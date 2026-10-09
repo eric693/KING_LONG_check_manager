@@ -1403,8 +1403,26 @@
                         </div>
                     </div>
                     
+                    <!-- 已設定的打卡地點：編輯、刪除（location-picker.js） -->
                     <div class="card p-6 mt-6">
-                        <h2 data-i18n="ADD_LOCATION_TITLE" 
+                        <div class="flex items-center justify-between mb-2">
+                            <h2 data-i18n="LOCATION_LIST_TITLE"
+                                class="text-xl font-bold text-gray-800 dark:text-white">
+                                打卡地點
+                            </h2>
+                            <button type="button" id="refresh-locations-btn" data-i18n="BTN_REFRESH"
+                                    class="px-3 py-1.5 text-sm rounded-lg btn-secondary">重新整理</button>
+                        </div>
+                        <p data-i18n="LOCATION_LIST_DESCRIPTION"
+                           class="text-gray-500 dark:text-gray-400 mb-4">
+                            員工要在這些地點的範圍內才能打卡。
+                        </p>
+                        <div id="location-list-status" class="text-sm text-gray-500 dark:text-gray-400"></div>
+                        <ul id="location-list" class="space-y-2"></ul>
+                    </div>
+
+                    <div class="card p-6 mt-6" id="location-form-card">
+                        <h2 data-i18n="ADD_LOCATION_TITLE" id="location-form-title"
                             class="text-xl font-bold text-gray-800 dark:text-white mb-2">
                             新增打卡地點
                         </h2>
@@ -1521,6 +1539,10 @@
                                         class="w-full py-3 px-4 rounded-lg font-bold btn-primary" 
                                         disabled>
                                     新增地點
+                                </button>
+                                <button type="button" id="cancel-edit-location-btn" data-i18n="LOCATION_CANCEL_EDIT"
+                                        class="w-full py-3 px-4 rounded-lg font-bold btn-secondary" style="display: none;">
+                                    取消編輯
                                 </button>
                             </div>
                         </div>
