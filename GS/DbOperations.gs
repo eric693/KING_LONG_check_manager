@@ -1363,11 +1363,12 @@ function updateReviewStatusLocked_(rowNumber, status, note) {
         // 打卡紀錄裡已經有同一人、同一時間、同一種卡，就不再寫一次
         const tz = Session.getScriptTimeZone();
         const targetKey = Utilities.formatDate(punchDateTime, tz, 'yyyy-MM-dd HH:mm');
-        const alreadyPunched = attendanceSheet.getDataRange().getValues().slice(1).some(r =>
-          r[0] instanceof Date &&
-          String(r[1]).trim() === String(userId).trim() &&
-          String(r[4]).trim() === String(punchType).trim() &&
-          Utilities.formatDate(r[0], tz, 'yyyy-MM-dd HH:mm') === targetKey);
+        // 時間欄可能是日期，也可能是手動輸入的文字，兩種都要能比對
+        const alreadyPunched = attendanceSheet.getDataRange().getValues().slice(1).some(r => {
+          if (!r[0] || String(r[1]).trim() !== String(userId).trim() || String(r[4]).trim() !== String(punchType).trim()) return false;
+          const time = typeof r[0].getTime === 'function' ? r[0] : new Date(r[0]);
+          return !isNaN(time.getTime()) && Utilities.formatDate(time, tz, 'yyyy-MM-dd HH:mm') === targetKey;
+        });
 
         if (alreadyPunched) {
           Logger.log(' 打卡紀錄已有相同的' + punchType + '卡，略過寫入: ' + targetKey);

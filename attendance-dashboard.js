@@ -90,7 +90,10 @@ async function loadAttendanceDashboard() {
     if (requestId !== attDashRequest) return;
     tiles.classList.remove('opacity-50');
 
-    if (!res || !res.ok) {
+    // 舊版後端沒有這支 API、或回應不完整，都當成載入失敗
+    const complete = res && res.ok && ['clockedIn', 'notPunched', 'late', 'onLeave', 'clockedOut', 'overtime']
+        .every(key => Array.isArray(res[key]));
+    if (!complete) {
         attDashData = null;
         tiles.innerHTML = '';
         document.getElementById('att-dash-summary').innerHTML = '';

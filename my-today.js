@@ -21,7 +21,11 @@ async function fetchMyToday() {
     } catch (error) {
         return;   // 卡片只是輔助資訊，抓不到就維持原樣，不跳錯誤
     }
-    if (!res || !res.ok) return;
+    // 舊版後端沒有這支 API、或回應不完整：卡片維持隱藏，不影響其他功能
+    if (!res || !res.ok || !/^\d{4}-\d{2}-\d{2}$/.test(res.date || '')) return;
+    res.punches = res.punches || [];
+    res.week = res.week || [];
+    res.leave = res.leave || [];
     renderMyToday(res);
     card.style.display = '';
 }

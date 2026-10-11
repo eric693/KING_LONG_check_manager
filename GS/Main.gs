@@ -133,7 +133,7 @@ const DEPLOY_CHECKS = [
 ];
 
 // 每次後端有更新就改這個日期，健康檢查會回報，從外面就知道正式區部署到哪一版
-const BACKEND_VERSION = '2026-10-11b';
+const BACKEND_VERSION = '2026-10-11c';
 
 function handleHealthCheck() {
   const problems = [];

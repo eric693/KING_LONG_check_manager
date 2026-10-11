@@ -81,6 +81,8 @@ const _scriptPromises = {};
 
 function loadScriptOnce(src) {
     if (_scriptPromises[src]) return _scriptPromises[src];
+    // 頁面本身已經用 <script src> 載入（例如 salary.html 直接載 salary.js），再載一次會重複宣告
+    if (document.querySelector(`script[src="${src}"]`)) return (_scriptPromises[src] = Promise.resolve());
     _scriptPromises[src] = new Promise((resolve, reject) => {
         const script = document.createElement('script');
         script.src = src;

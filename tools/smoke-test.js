@@ -60,6 +60,8 @@ window.tailwind = { config: {} }; // 測試環境沒有載入 tailwind CDN
 window.alert = () => {};
 window.confirm = () => true;
 window.print = () => {};
+window.scrollTo = () => {};                                  // jsdom 沒有實作捲動
+window.HTMLElement.prototype.scrollIntoView = function () {};
 window.open = () => null;
 window.matchMedia = window.matchMedia || (() => ({ matches: false, addListener(){}, removeListener(){} }));
 window.navigator.geolocation = { getCurrentPosition: (ok) => ok({ coords: { latitude: 25, longitude: 121 } }) };
@@ -73,6 +75,20 @@ window.addEventListener('unhandledrejection', e => errors.push('unhandledRejecti
 
 const { window } = dom;
 console.log('載入腳本:', scripts.join(', '));
+
+// 切到分頁才載入的模組（libs.js MODULE_SCRIPTS）：測試環境不連網，改成讀本地檔案內嵌執行
+const lazyLoaded = [];
+if (typeof window.loadScriptOnce === 'function') {
+  window.loadScriptOnce = (src) => {
+    if (!lazyLoaded.includes(src) && !scripts.includes(src)) {
+      const el = window.document.createElement('script');
+      el.textContent = fs.readFileSync(path.join(ROOT, src), 'utf8');
+      window.document.body.appendChild(el);
+      lazyLoaded.push(src);
+    }
+    return Promise.resolve();
+  };
+}
 
 (async () => {
   window.document.dispatchEvent(new window.Event('DOMContentLoaded', { bubbles: true }));
@@ -88,6 +104,17 @@ console.log('載入腳本:', scripts.join(', '));
   await new Promise(r => setTimeout(r, 300));
   clickAll('.shift-tab, .tab-btn');
   await new Promise(r => setTimeout(r, 300));
+  // 管理員頁子分頁、手機底部導覽列（含「更多」選單）
+  clickAll('#admin-group-tabs [data-admin-tab]');
+  await new Promise(r => setTimeout(r, 300));
+  clickAll('#bottom-nav [data-nav-tab], #bottom-nav-more-btn, #bottom-nav-more [data-nav-tab]');
+  await new Promise(r => setTimeout(r, 300));
+
+  // 延後載入的模組全部載一次，下面的函式檢查才看得到
+  if (page === 'index.html' && typeof window.loadModules === 'function') {
+    for (const key of window.eval('Object.keys(MODULE_SCRIPTS)')) await window.loadModules(key);
+    console.log('延後載入的模組:', lazyLoaded.join(', '));
+  }
 
   // 幾個關鍵函式直接呼叫
   const common = ['todayStr', 'toLocalDateStr', 'escapeHtml', 'escapeJsAttr', 'generalButtonState',
