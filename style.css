@@ -194,6 +194,29 @@ html.dark .day-cell:hover {
     box-shadow: 0 2px 4px -1px rgb(255 255 255 / 0.1), 0 1px 2px -1px rgb(255 255 255 / 0.05);
 }
 
+/* 選中的日子 */
+.day-cell.selected-day { box-shadow: 0 0 0 2px #4f46e5; }
+html.dark .day-cell.selected-day { box-shadow: 0 0 0 2px #818cf8; }
+
+/* 日期下面的小圓點：請假、加班（沒有時佔位，格子高度才一致） */
+.day-cell .cal-dots { display: flex; justify-content: center; gap: 3px; height: 6px; margin-top: 2px; }
+.cal-dot { display: inline-block; width: 6px; height: 6px; border-radius: 9999px; }
+.cal-dot-leave { background-color: #3b82f6; }
+.cal-dot-overtime { background-color: #f97316; }
+
+/* 圖例色塊：沿用日曆格子的顏色 class */
+.cal-legend { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
+.cal-legend.day-off { background-color: #ccfbf1; border: 1px solid #5eead4; }
+.cal-legend.abnormal-day { background-color: #fecaca; border: 1px solid #f87171; }
+.cal-legend.pending-virtual { background-color: #e9d5ff; border: 1px solid #c084fc; }
+.cal-legend.approved-virtual { background-color: #bfdbfe; border: 1px solid #60a5fa; }
+.cal-legend.pending-adjustment { background-color: #fde68a; border: 1px solid #fbbf24; }
+html.dark .cal-legend.day-off { background-color: #065f46; }
+html.dark .cal-legend.abnormal-day { background-color: #991b1b; }
+html.dark .cal-legend.pending-virtual { background-color: #581c87; }
+html.dark .cal-legend.approved-virtual { background-color: #1e40af; }
+html.dark .cal-legend.pending-adjustment { background-color: #92400e; }
+
 /* --- Map Styles --- */
 #map {
     background: #1e1e1e;

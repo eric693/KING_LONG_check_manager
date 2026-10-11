@@ -6,7 +6,7 @@
 //
 // 改版時記得把 CACHE_VERSION 加一，舊快取會在 activate 時清掉。
 
-const CACHE_VERSION = 'v9';
+const CACHE_VERSION = 'v10';
 const CACHE_NAME = `attendance-shell-${CACHE_VERSION}`;
 
 // 安裝時先抓下來的「外殼」：沒有網路也能把畫面畫出來的最小集合
@@ -40,6 +40,7 @@ const PRECACHE_URLS = [
   './attachments.js',
   './location-picker.js',
   './analytics.js',
+  './attendance-dashboard.js',
   './biometric.js',
   './reports.js',
   './overtime.js',

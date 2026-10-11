@@ -446,74 +446,42 @@
                 <!-- Monthly View -->
                 <section id="monthly-view" class="space-y-6" style="display: none;">
 
-                    <!--  本月統計區塊 -->
-                    <div class="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-xl shadow-lg p-6 mb-6 border border-gray-200 dark:border-gray-700">
-                        <div class="flex items-center mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
-                            <div class="w-1 h-6 bg-indigo-600 dark:bg-indigo-400 rounded-full mr-3"></div>
-                            <h3 data-i18n="MONTHLY_STATS_TITLE" class="text-lg font-bold text-gray-800 dark:text-white">
-                                本月出勤統計
-                            </h3>
+                    <!-- 本月出勤統計：四格數字 + 有異常的日子（script.js updateMonthlyStats） -->
+                    <div class="card p-6">
+                        <h3 data-i18n="MONTHLY_STATS_TITLE" class="text-lg font-bold text-gray-800 dark:text-white mb-4">本月出勤統計</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div class="rounded-lg border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-900/20 p-3 text-center">
+                                <p data-i18n="STATS_ATTEND_DAYS" class="text-xs text-gray-500 dark:text-gray-400">出勤天數</p>
+                                <p class="mt-1"><span id="stats-attend-days-value" class="text-2xl font-semibold text-gray-800 dark:text-white">0</span><span data-i18n="UNIT_DAYS" class="text-xs text-gray-500 dark:text-gray-400 ml-1">天</span></p>
+                            </div>
+                            <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 text-center">
+                                <p data-i18n="STATS_ABNORMAL_COUNT" class="text-xs text-gray-500 dark:text-gray-400">異常記錄</p>
+                                <p class="mt-1"><span id="stats-abnormal-count-value" class="text-2xl font-semibold text-gray-800 dark:text-white">0</span><span data-i18n="UNIT_RECORDS" class="text-xs text-gray-500 dark:text-gray-400 ml-1">筆</span></p>
+                            </div>
+                            <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 text-center">
+                                <p data-i18n="STATS_LEAVE_DAYS" class="text-xs text-gray-500 dark:text-gray-400">請假</p>
+                                <p class="mt-1"><span id="stats-leave-days-value" class="text-2xl font-semibold text-gray-800 dark:text-white">0</span><span data-i18n="UNIT_DAYS" class="text-xs text-gray-500 dark:text-gray-400 ml-1">天</span></p>
+                            </div>
+                            <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 text-center">
+                                <p data-i18n="STATS_OVERTIME_HOURS" class="text-xs text-gray-500 dark:text-gray-400">加班時數</p>
+                                <p class="mt-1"><span id="stats-overtime-hours-value" class="text-2xl font-semibold text-gray-800 dark:text-white">0</span><span data-i18n="UNIT_HOURS" class="text-xs text-gray-500 dark:text-gray-400 ml-1">小時</span></p>
+                            </div>
                         </div>
-                        
-                        <!-- 統計數據列表（四行垂直排列） -->
-                        <div class="space-y-3">
-                            
-                            <!--  出勤時數 - 隱藏 -->
-                            <div class="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/20 rounded-lg border border-green-200 dark:border-green-700/50 transition-all hover:shadow-md" 
-                                    style="display: none;">
-                                <span data-i18n="STATS_WORK_HOURS" class="text-sm font-medium text-gray-700 dark:text-gray-300">出勤時數</span>
-                                <div class="flex items-baseline">
-                                    <span id="stats-work-days-value" class="text-2xl font-bold text-green-600 dark:text-green-400">0</span>
-                                    <span data-i18n="UNIT_HOURS" class="text-sm font-medium text-green-500 dark:text-green-400 ml-1">小時</span>
-                                </div>
-                            </div>
-                           
-                            <!-- 異常記錄 -->
-                            <div class="flex items-center justify-between p-4 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/20 rounded-lg border border-red-200 dark:border-red-700/50 transition-all hover:shadow-md">
-                                <span data-i18n="STATS_ABNORMAL_COUNT" class="text-sm font-medium text-gray-700 dark:text-gray-300">異常記錄</span>
-                                <div class="flex items-baseline">
-                                    <span id="stats-abnormal-count-value" class="text-2xl font-bold text-red-600 dark:text-red-400">0</span>
-                                    <span data-i18n="UNIT_RECORDS" class="text-sm font-medium text-red-500 dark:text-red-400 ml-1">筆</span>
-                                </div>
-                            </div>
-                            
-                            <!--  正常打卡時數 - 隱藏 -->
-                            <div class="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/20 rounded-lg border border-blue-200 dark:border-blue-700/50 transition-all hover:shadow-md" 
-                                    style="display: none;">
-                                <span data-i18n="STATS_NORMAL_HOURS" class="text-sm font-medium text-gray-700 dark:text-gray-300">正常打卡時數</span>
-                                <div class="flex items-baseline">
-                                    <span id="stats-normal-days-value" class="text-2xl font-bold text-blue-600 dark:text-blue-400">0</span>
-                                    <span data-i18n="UNIT_HOURS" class="text-sm font-medium text-blue-500 dark:text-blue-400 ml-1">小時</span>
-                                </div>
-                            </div>
-
-                            <!-- 加班時數 -->
-                            <div class="flex items-center justify-between p-4 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/20 rounded-lg border border-orange-200 dark:border-orange-700/50 transition-all hover:shadow-md">
-                                <span data-i18n="STATS_OVERTIME_HOURS" class="text-sm font-medium text-gray-700 dark:text-gray-300">加班時數</span>
-                                <div class="flex items-baseline">
-                                    <span id="stats-overtime-hours-value" class="text-2xl font-bold text-orange-600 dark:text-orange-400">0</span>
-                                    <span data-i18n="UNIT_HOURS" class="text-sm font-medium text-orange-500 dark:text-orange-400 ml-1">小時</span>
-                                </div>
-                            </div>
+                        <!-- 有異常的日子：點一下直接打開那天 -->
+                        <div id="stats-abnormal-dates" class="mt-4" style="display: none;">
+                            <p data-i18n="STATS_ABNORMAL_HINT" class="text-xs text-gray-500 dark:text-gray-400 mb-2">有異常的日子，點一下查看當天紀錄：</p>
+                            <div id="stats-abnormal-dates-list" class="flex flex-wrap gap-2"></div>
                         </div>
                     </div>
 
                     <!-- 日曆卡片 -->
                     <div class="card p-6">
                         <div class="flex justify-between items-center mb-4">
-                            <button id="prev-month" class="text-gray-600 dark:text-gray-400 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">&lt;</button>
+                            <button id="prev-month" class="text-gray-600 dark:text-gray-400 px-3 py-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">&lt;</button>
                             <h3 id="month-title" class="font-bold text-xl text-gray-800 dark:text-white"></h3>
-                            <button id="next-month" class="text-gray-600 dark:text-gray-400 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">&gt;</button>
+                            <button id="next-month" class="text-gray-600 dark:text-gray-400 px-3 py-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">&gt;</button>
                         </div>
 
-                        <div class="mb-4">
-                            <button id="export-attendance-btn" 
-                                    data-i18n="EXPORT_ATTENDANCE_BTN"
-                                    class="w-full py-2 px-4 rounded-lg font-bold btn-secondary hover:opacity-90 transition-opacity">
-                                匯出本月出勤報表
-                            </button>
-                        </div>
-                        
                         <div class="grid grid-cols-7 text-center text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">
                             <span data-i18n="WEEK_SUNDAY">日</span>
                             <span data-i18n="WEEK_MONDAY">一</span>
@@ -524,6 +492,23 @@
                             <span data-i18n="WEEK_SATURDAY">六</span>
                         </div>
                         <div id="calendar-grid" class="grid grid-cols-7 gap-1"></div>
+
+                        <!-- 圖例：顏色對應 renderCalendarWithData 的 class -->
+                        <div class="flex flex-wrap gap-x-4 gap-y-2 mt-4 text-xs text-gray-600 dark:text-gray-400">
+                            <span class="flex items-center gap-1"><span class="cal-legend day-off"></span><span data-i18n="CAL_LEGEND_NORMAL">正常</span></span>
+                            <span class="flex items-center gap-1"><span class="cal-legend abnormal-day"></span><span data-i18n="CAL_LEGEND_ABNORMAL">缺卡</span></span>
+                            <span class="flex items-center gap-1"><span class="cal-legend pending-virtual"></span><span data-i18n="CAL_LEGEND_REPAIR_PENDING">補卡審核中</span></span>
+                            <span class="flex items-center gap-1"><span class="cal-legend approved-virtual"></span><span data-i18n="CAL_LEGEND_REPAIR_APPROVED">補卡通過</span></span>
+                            <span class="flex items-center gap-1"><span class="cal-legend pending-adjustment"></span><span data-i18n="CAL_LEGEND_OTHER">其他待處理</span></span>
+                            <span class="flex items-center gap-1"><span class="cal-dot cal-dot-leave"></span><span data-i18n="CAL_LEGEND_LEAVE">請假</span></span>
+                            <span class="flex items-center gap-1"><span class="cal-dot cal-dot-overtime"></span><span data-i18n="CAL_LEGEND_OVERTIME">加班</span></span>
+                        </div>
+
+                        <button id="export-attendance-btn"
+                                data-i18n="EXPORT_ATTENDANCE_BTN"
+                                class="w-full mt-4 py-2 px-4 rounded-lg text-sm font-semibold border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                            匯出本月出勤報表
+                        </button>
                     </div>
                     
                     <!--  新增：每日記錄卡片 -->
@@ -1160,6 +1145,30 @@
                 </section>
                 <!-- Admin View -->
                 <section id="admin-view" class="space-y-6" style="display: none;">
+                    <!-- 即時出勤數據：一週日期列 + 六格統計，點一格看名單（attendance-dashboard.js） -->
+                    <div id="att-dash-card" class="card p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 data-i18n="ATT_DASH_TITLE" class="text-xl font-bold text-gray-800 dark:text-white">即時出勤數據</h2>
+                            <div class="flex items-center gap-2">
+                                <span id="att-dash-loading" class="text-xs text-gray-400" style="display: none;" data-i18n="LOADING">載入中...</span>
+                                <button type="button" onclick="attDashGoToday()" data-i18n="ATT_DASH_TODAY"
+                                        class="px-3 py-1 rounded-lg text-sm font-semibold text-indigo-600 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-indigo-900/30">今天</button>
+                                <button type="button" onclick="loadAttendanceDashboard()" data-i18n="ATT_DASH_REFRESH"
+                                        class="px-3 py-1 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">重新整理</button>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1 mb-3">
+                            <button type="button" onclick="attDashShiftWeek(-1)" aria-label="‹"
+                                    class="px-2 py-4 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white">‹</button>
+                            <div id="att-dash-week" class="grid grid-cols-7 gap-1 flex-1"></div>
+                            <button type="button" onclick="attDashShiftWeek(1)" aria-label="›"
+                                    class="px-2 py-4 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white">›</button>
+                        </div>
+                        <div id="att-dash-summary" class="text-xs text-gray-500 dark:text-gray-400 mb-3"></div>
+                        <div id="att-dash-tiles" class="grid grid-cols-2 gap-3 transition-opacity"></div>
+                        <p data-i18n="ATT_DASH_TAP_HINT" class="text-xs text-gray-400 dark:text-gray-500 mt-2">點一格就會在下面列出是誰。</p>
+                        <div id="att-dash-detail" class="mt-3 border-t border-gray-100 dark:border-gray-700 pt-3"></div>
+                    </div>
                     <!-- 資料管理：打卡紀錄、工時、假期、請假、加班、所有資料表（records.html，不用打開試算表） -->
                     <div class="card p-6">
                         <h2 data-i18n="RECORDS_TITLE" class="text-xl font-bold text-gray-800 dark:text-white mb-2">資料管理</h2>
@@ -1967,6 +1976,7 @@
         <script src="attachments.js"></script>
         <script src="location-picker.js"></script>
         <script src="analytics.js"></script>
+        <script src="attendance-dashboard.js"></script>
         <script src="biometric.js"></script>
         <script src="reports.js"></script>
         <!--  加班與請假功能 -->

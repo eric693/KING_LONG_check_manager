@@ -58,7 +58,9 @@ const ROUTE_ACCESS = {
   adminMonthlyHours: 'admin',
   adminUpdateSheetRow: 'admin',
   adminAddSheetRow: 'admin',
-  adminDeleteSheetRow: 'admin'
+  adminDeleteSheetRow: 'admin',
+  // 即時出勤數據（AttendanceDashboard.gs）
+  adminDailyAttendance: 'admin'
 };
 
 /**
@@ -71,6 +73,7 @@ const ROUTE_ACCESS = {
 const DEPLOY_CHECKS = [
   ['AdminTools.gs', () => typeof batchInitializeAllEmployeesLeave === 'function'],
   ['Attachments.gs', () => typeof getAttachmentSheet_ === 'function'],
+  ['AttendanceDashboard.gs', () => typeof handleAdminDailyAttendance === 'function'],
   ['AuditLog.gs', () => typeof logAdminAction_ === 'function' && typeof getSalaryAuditSheet_ === 'function'],
   ['Constants.gs', () => typeof getLeaveTypeInfo === 'function' && typeof getSpreadsheet_ === 'function'],
   ['Dailysalary.gs', () => typeof calculateDailySalary === 'function'],
@@ -127,7 +130,7 @@ const DEPLOY_CHECKS = [
 ];
 
 // 每次後端有更新就改這個日期，健康檢查會回報，從外面就知道正式區部署到哪一版
-const BACKEND_VERSION = '2026-10-10c';
+const BACKEND_VERSION = '2026-10-11';
 
 function handleHealthCheck() {
   const problems = [];
@@ -388,6 +391,8 @@ function doGet(e) {
         return respond1(handleAdminAddSheetRow(e.parameter));
       case "adminDeleteSheetRow":
         return respond1(handleAdminDeleteSheetRow(e.parameter));
+      case "adminDailyAttendance":
+        return respond1(handleAdminDailyAttendance(e.parameter));
       case "getManualPayslip":
         return respond1(handleGetManualPayslip(e.parameter));
       case "saveManualPayslip":
