@@ -281,26 +281,27 @@ helpLangs.slice(1).forEach(lang => {
 
 report('操作說明模組', helpProblems);
 
-// ---------- 薪資頁 Tailwind 產出檔 ----------
-// salary.html 用事先編好的 tailwind.salary.css，不是 CDN。新增 class 後忘了重編，
+// ---------- 事先編好的 Tailwind 產出檔 ----------
+// salary.html、index.html 用事先編好的 tailwind.*.css，不是 CDN。新增 class 後忘了重編，
 // 那個 class 就不會有樣式，畫面也不會報錯，所以在這裡把它抓出來。
-const twProblems = [];
-const twConfig = require('./tailwind.salary.config.js');
-const twCss = fs.existsSync(path.join(ROOT, 'tailwind.salary.css')) ? read('tailwind.salary.css') : null;
-if (!twCss) {
-  twProblems.push('找不到 tailwind.salary.css，請執行 bash tools/build-tailwind.sh');
-} else {
-  const TW = new RegExp('^(?:(?:sm|md|lg|xl|2xl|dark|hover|focus|active|disabled|group-hover|first|last):)*-?(?:' +
-    '(?:text|bg|border|border-[trblxy]|p[xytrbl]?|m[xytrbl]?|w|h|min-w|max-w|min-h|max-h|gap|gap-[xy]|space-[xy]|' +
-    'rounded(?:-[trbl]{1,2})?|font|shadow|grid-cols|col-span|items|justify|self|leading|tracking|opacity|z|inset|' +
-    'top|left|right|bottom|divide|ring|from|to|via|overflow|overflow-[xy]|whitespace|cursor|duration|ease|order|' +
-    'flex|basis|grow|shrink|list|align|object|translate-[xy]|scale|rotate)-[\\w./%\\[\\]#-]+' +
-    '|flex|grid|hidden|block|inline|inline-block|inline-flex|table|truncate|uppercase|lowercase|italic|underline|' +
-    'relative|absolute|fixed|sticky|transition|rounded|shadow|border|container|sr-only|grow|shrink)$');
-  // salary.html 自己 <style> 裡定義的 class 不算
-  const pageCss = (read('salary.html').match(/<style>[\s\S]*?<\/style>/g) || []).join('\n');
+const TW = new RegExp('^(?:(?:sm|md|lg|xl|2xl|dark|hover|focus|active|disabled|group-hover|first|last):)*-?(?:' +
+  '(?:text|bg|border|border-[trblxy]|p[xytrbl]?|m[xytrbl]?|w|h|min-w|max-w|min-h|max-h|gap|gap-[xy]|space-[xy]|' +
+  'rounded(?:-[trbl]{1,2})?|font|shadow|grid-cols|col-span|items|justify|self|leading|tracking|opacity|z|inset|' +
+  'top|left|right|bottom|divide|ring|from|to|via|overflow|overflow-[xy]|whitespace|cursor|duration|ease|order|' +
+  'flex|basis|grow|shrink|list|align|object|translate-[xy]|scale|rotate)-[\\w./%\\[\\]#-]+' +
+  '|flex|grid|hidden|block|inline|inline-block|inline-flex|table|truncate|uppercase|lowercase|italic|underline|' +
+  'relative|absolute|fixed|sticky|transition|rounded|shadow|border|container|sr-only|grow|shrink)$');
+const escapeSel = t => t.replace(/([:/.[\]%#])/g, '\\$1');
+
+function checkTailwindBuild(page) {
+  const twProblems = [];
+  const cssFile = `tailwind.${page}.css`;
+  const twConfig = require(`./tailwind.${page}.config.js`);
+  const twCss = fs.existsSync(path.join(ROOT, cssFile)) ? read(cssFile) : null;
+  if (!twCss) return [`找不到 ${cssFile}，請執行 bash tools/build-tailwind.sh`];
+  // 頁面自己 <style> 和 style.css 裡定義的 class 不算
+  const pageCss = (read(`${page}.html`).match(/<style>[\s\S]*?<\/style>/g) || []).join('\n') + read('style.css');
   const custom = new Set([...pageCss.matchAll(/\.([a-zA-Z][\w-]*)/g)].map(m => m[1]));
-  const escapeSel = t => t.replace(/([:/.[\]%#])/g, '\\$1');
   const seen = new Map();   // class -> 出現的檔案
   twConfig.content.forEach(file => {
     const src = read(file);
@@ -316,9 +317,14 @@ if (!twCss) {
     });
   });
   seen.forEach((file, tok) =>
-    twProblems.push(`${file} 用了 ${tok}，但 tailwind.salary.css 沒有，請執行 bash tools/build-tailwind.sh`));
+    twProblems.push(`${file} 用了 ${tok}，但 ${cssFile} 沒有，請執行 bash tools/build-tailwind.sh`));
+  return twProblems;
 }
-report('薪資頁 Tailwind 產出檔', twProblems);
+report('薪資頁 Tailwind 產出檔', checkTailwindBuild('salary'));
+report('主頁 Tailwind 產出檔', checkTailwindBuild('index'));
+if (read('index.html').includes('cdn.tailwindcss.com')) {
+  report('主頁 Tailwind 來源', ['index.html 又載入了 cdn.tailwindcss.com，請改用 tailwind.index.css']);
+}
 
 // ---------- 總結 ----------
 console.log('\n════════════════════════════════');

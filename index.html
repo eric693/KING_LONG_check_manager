@@ -33,14 +33,7 @@
         <meta name="keywords" content="出勤,打卡,排班,薪資,加班,請假,考勤管理">
         <meta name="author" content="0J">
         
-        <script src="https://cdn.tailwindcss.com"></script>
         <script>
-            tailwind.config = {
-                darkMode: 'class',
-                theme: {
-                    extend: {}
-                }
-            }
             document.addEventListener('DOMContentLoaded', () => {
                 const toggleButton = document.getElementById('theme-toggle');
                 const htmlElement = document.documentElement;
@@ -106,7 +99,11 @@
                 color: white;
             }
         </style>
-    </head>
+            <!-- 事先編好的 Tailwind（tools/build-tailwind.sh 產生）。要放在所有樣式表最後面：
+             CDN 版會把樣式插在 head 最後，style.css 裡 .notification 之類的底色才會被 bg-red-500 蓋過。
+             改了主頁或它載入的 js 的 class 之後要重新產生，node tools/wiring-check.js 會提醒。 -->
+        <link rel="stylesheet" href="tailwind.index.css">
+</head>
     <body class="flex items-center justify-center min-h-screen p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
         <div id="app-container" class="w-full max-w-md mx-auto">
             <!-- User Profile & Header -->
