@@ -241,6 +241,7 @@ async function ensureLogin()
         setElementDisplay('login-section', 'none');
         setElementDisplay('user-header', 'flex');
         setElementDisplay('main-app', 'block');
+        if (typeof loadMyToday === 'function') loadMyToday();   // 首頁「今天」卡片
         
         // 背景驗證（不阻塞 UI）
         checkSessionInBackground(token);
@@ -278,6 +279,7 @@ async function ensureLogin()
           setElementDisplay('login-section', 'none');
           setElementDisplay('user-header', 'flex');
           setElementDisplay('main-app', 'block');
+          if (typeof loadMyToday === 'function') loadMyToday();   // 首頁「今天」卡片
           
           renderAbnormalRecords(res.abnormalRecords);
           
@@ -393,6 +395,7 @@ async function applyLoginResult(res) {
     setElementDisplay('login-section', 'none');
     setElementDisplay('user-header', 'flex');
     setElementDisplay('main-app', 'block');
+    if (typeof loadMyToday === 'function') loadMyToday();   // 首頁「今天」卡片
 
     if (res.abnormalRecords) {
         renderAbnormalRecords(res.abnormalRecords);

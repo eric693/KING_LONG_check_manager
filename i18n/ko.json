@@ -1569,5 +1569,20 @@
   "ADMIN_GROUP_PEOPLE": "직원",
   "ADMIN_GROUP_SETTINGS": "설정",
   "ADMIN_GROUP_REPORTS": "보고서",
-  "NAV_MORE": "더보기"
+  "NAV_MORE": "더보기",
+  "MY_TODAY_TITLE": "오늘",
+  "MY_TODAY_SHIFT": "오늘 근무",
+  "MY_TODAY_NO_SHIFT": "오늘은 근무 없음",
+  "MY_TODAY_NEXT": "다음 기록",
+  "MY_TODAY_NEXT_IN": "출근",
+  "MY_TODAY_NEXT_OUT": "퇴근",
+  "MY_TODAY_DONE": "오늘 기록 완료",
+  "MY_TODAY_ON_DUTY": "근무 중・{time}부터",
+  "MY_TODAY_NOT_YET": "미출근",
+  "MY_TODAY_OFF": "퇴근함",
+  "MY_TODAY_PUNCHES": "오늘 기록",
+  "MY_TODAY_NO_PUNCH": "오늘 아직 기록 없음",
+  "MY_TODAY_PENDING": "승인 대기",
+  "MY_TODAY_LEAVE": "오늘 휴가",
+  "MY_TODAY_WEEK": "이번 주 {hours}시간"
 }

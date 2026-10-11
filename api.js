@@ -184,6 +184,13 @@ function isBusyPunchFailure(res) {
  * @returns {Promise<Object>} 後端回應；連線層失敗時是 { ok:false, code:'ERR_NETWORK' }
  */
 async function punchWithRetry(action, punchType, onRetry) {
+    const res = await punchWithRetryInner_(action, punchType, onRetry);
+    // 首頁「今天」卡片（my-today.js）跟著更新：所有打卡入口（按鈕、生物辨識、QR、LINE 連結）都經過這裡
+    if (res && res.ok && typeof loadMyToday === 'function') loadMyToday();
+    return res;
+}
+
+async function punchWithRetryInner_(action, punchType, onRetry) {
     const typeKey = punchType === '上班' ? 'PUNCH_IN' : (punchType === '下班' ? 'PUNCH_OUT' : '');
     let last = null;
     let hadFailure = false;
@@ -221,6 +228,13 @@ async function punchWithRetry(action, punchType, onRetry) {
  * @returns {Promise<{ok: boolean, message: string}>}
  */
 async function submitAdjustPunchRequest(params) {
+    const result = await submitAdjustPunchRequestInner_(params);
+    // 今天的補打卡送出後，「今天」卡片會列出審核中的那一張
+    if (result && result.ok && typeof loadMyToday === 'function') loadMyToday();
+    return result;
+}
+
+async function submitAdjustPunchRequestInner_(params) {
     const action = `adjustPunch&${params.toString()}`;
     let hadFailure = false;
     let last = null;

@@ -19,6 +19,7 @@ module.exports = {
     './worktime.js',
     './help.js',
     './script.js',
+    './my-today.js',
     './announcements.js',
     './audit-log.js',
     './expense.js',

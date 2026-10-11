@@ -42,6 +42,7 @@ const PRECACHE_URLS = [
   './location-picker.js',
   './analytics.js',
   './attendance-dashboard.js',
+  './my-today.js',
   './biometric.js',
   './reports.js',
   './overtime.js',

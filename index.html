@@ -215,6 +215,17 @@
 
                 <!-- Dashboard View -->
                 <main id="dashboard-view" class="space-y-6">
+                    <!-- 今天：班表、狀態、下一張卡、今天的打卡、這週工時（my-today.js，資料來自 getMyToday） -->
+                    <div id="my-today-card" class="card p-6" style="display: none;">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-xl font-bold text-gray-800 dark:text-white">
+                                <span data-i18n="MY_TODAY_TITLE">今天</span>
+                                <span id="my-today-date" class="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1"></span>
+                            </h2>
+                            <span id="my-today-status"></span>
+                        </div>
+                        <div id="my-today-body"></div>
+                    </div>
                     <!--  佈告欄區塊 -->
                     <div class="card p-6 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border-2 border-indigo-200 dark:border-indigo-700">
                         <h2 data-i18n="ANNOUNCEMENT_TITLE" class="text-xl font-bold text-gray-800 dark:text-white mb-4">
@@ -2005,6 +2016,7 @@
         <script src="worktime.js"></script>
         <script src="help.js"></script>
         <script src="script.js"></script>
+        <script src="my-today.js"></script>
         <script src="announcements.js"></script>
         <script src="users.js"></script>
         <script src="punch-adjust.js"></script>

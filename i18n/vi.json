@@ -1625,5 +1625,20 @@
   "ADMIN_GROUP_PEOPLE": "Nhân sự",
   "ADMIN_GROUP_SETTINGS": "Cài đặt",
   "ADMIN_GROUP_REPORTS": "Báo cáo",
-  "NAV_MORE": "Thêm"
+  "NAV_MORE": "Thêm",
+  "MY_TODAY_TITLE": "Hôm nay",
+  "MY_TODAY_SHIFT": "Ca hôm nay",
+  "MY_TODAY_NO_SHIFT": "Hôm nay không có ca",
+  "MY_TODAY_NEXT": "Lần chấm tiếp theo",
+  "MY_TODAY_NEXT_IN": "Chấm vào",
+  "MY_TODAY_NEXT_OUT": "Chấm ra",
+  "MY_TODAY_DONE": "Hôm nay đã chấm đủ",
+  "MY_TODAY_ON_DUTY": "Đang làm từ {time}",
+  "MY_TODAY_NOT_YET": "Chưa chấm công",
+  "MY_TODAY_OFF": "Đã chấm ra",
+  "MY_TODAY_PUNCHES": "Chấm công hôm nay",
+  "MY_TODAY_NO_PUNCH": "Hôm nay chưa chấm công",
+  "MY_TODAY_PENDING": "chờ duyệt",
+  "MY_TODAY_LEAVE": "Nghỉ phép hôm nay",
+  "MY_TODAY_WEEK": "Tuần này {hours} giờ"
 }

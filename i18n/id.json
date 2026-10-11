@@ -1569,5 +1569,20 @@
   "ADMIN_GROUP_PEOPLE": "Karyawan",
   "ADMIN_GROUP_SETTINGS": "Pengaturan",
   "ADMIN_GROUP_REPORTS": "Laporan",
-  "NAV_MORE": "Lainnya"
+  "NAV_MORE": "Lainnya",
+  "MY_TODAY_TITLE": "Hari ini",
+  "MY_TODAY_SHIFT": "Shift hari ini",
+  "MY_TODAY_NO_SHIFT": "Tidak ada shift hari ini",
+  "MY_TODAY_NEXT": "Absen berikutnya",
+  "MY_TODAY_NEXT_IN": "Masuk",
+  "MY_TODAY_NEXT_OUT": "Pulang",
+  "MY_TODAY_DONE": "Absen hari ini selesai",
+  "MY_TODAY_ON_DUTY": "Bekerja sejak {time}",
+  "MY_TODAY_NOT_YET": "Belum absen",
+  "MY_TODAY_OFF": "Sudah pulang",
+  "MY_TODAY_PUNCHES": "Absen hari ini",
+  "MY_TODAY_NO_PUNCH": "Belum ada absen hari ini",
+  "MY_TODAY_PENDING": "menunggu",
+  "MY_TODAY_LEAVE": "Cuti hari ini",
+  "MY_TODAY_WEEK": "{hours} jam minggu ini"
 }

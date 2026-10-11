@@ -1655,5 +1655,20 @@
   "ADMIN_GROUP_PEOPLE": "人員",
   "ADMIN_GROUP_SETTINGS": "設定",
   "ADMIN_GROUP_REPORTS": "報表",
-  "NAV_MORE": "更多"
+  "NAV_MORE": "更多",
+  "MY_TODAY_TITLE": "今天",
+  "MY_TODAY_SHIFT": "今天的班",
+  "MY_TODAY_NO_SHIFT": "今天沒有排班",
+  "MY_TODAY_NEXT": "下一張卡",
+  "MY_TODAY_NEXT_IN": "上班卡",
+  "MY_TODAY_NEXT_OUT": "下班卡",
+  "MY_TODAY_DONE": "今天的卡都打完了",
+  "MY_TODAY_ON_DUTY": "上班中・{time} 起",
+  "MY_TODAY_NOT_YET": "還沒打卡",
+  "MY_TODAY_OFF": "已下班",
+  "MY_TODAY_PUNCHES": "今天的打卡",
+  "MY_TODAY_NO_PUNCH": "今天還沒有打卡",
+  "MY_TODAY_PENDING": "審核中",
+  "MY_TODAY_LEAVE": "今天請假",
+  "MY_TODAY_WEEK": "本週 {hours} 小時"
 }

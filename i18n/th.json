@@ -1628,5 +1628,20 @@
   "ADMIN_GROUP_PEOPLE": "พนักงาน",
   "ADMIN_GROUP_SETTINGS": "ตั้งค่า",
   "ADMIN_GROUP_REPORTS": "รายงาน",
-  "NAV_MORE": "เพิ่มเติม"
+  "NAV_MORE": "เพิ่มเติม",
+  "MY_TODAY_TITLE": "วันนี้",
+  "MY_TODAY_SHIFT": "กะวันนี้",
+  "MY_TODAY_NO_SHIFT": "วันนี้ไม่มีกะ",
+  "MY_TODAY_NEXT": "ลงเวลาถัดไป",
+  "MY_TODAY_NEXT_IN": "เข้างาน",
+  "MY_TODAY_NEXT_OUT": "ออกงาน",
+  "MY_TODAY_DONE": "ลงเวลาวันนี้ครบแล้ว",
+  "MY_TODAY_ON_DUTY": "กำลังทำงาน ตั้งแต่ {time}",
+  "MY_TODAY_NOT_YET": "ยังไม่ลงเวลา",
+  "MY_TODAY_OFF": "ออกงานแล้ว",
+  "MY_TODAY_PUNCHES": "การลงเวลาวันนี้",
+  "MY_TODAY_NO_PUNCH": "วันนี้ยังไม่มีการลงเวลา",
+  "MY_TODAY_PENDING": "รออนุมัติ",
+  "MY_TODAY_LEAVE": "ลาวันนี้",
+  "MY_TODAY_WEEK": "สัปดาห์นี้ {hours} ชม."
 }

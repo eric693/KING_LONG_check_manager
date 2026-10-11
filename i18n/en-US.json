@@ -1636,5 +1636,20 @@
   "ADMIN_GROUP_PEOPLE": "People",
   "ADMIN_GROUP_SETTINGS": "Settings",
   "ADMIN_GROUP_REPORTS": "Reports",
-  "NAV_MORE": "More"
+  "NAV_MORE": "More",
+  "MY_TODAY_TITLE": "Today",
+  "MY_TODAY_SHIFT": "Today's shift",
+  "MY_TODAY_NO_SHIFT": "No shift today",
+  "MY_TODAY_NEXT": "Next punch",
+  "MY_TODAY_NEXT_IN": "Clock in",
+  "MY_TODAY_NEXT_OUT": "Clock out",
+  "MY_TODAY_DONE": "All punches done today",
+  "MY_TODAY_ON_DUTY": "On duty since {time}",
+  "MY_TODAY_NOT_YET": "Not clocked in",
+  "MY_TODAY_OFF": "Clocked out",
+  "MY_TODAY_PUNCHES": "Today's punches",
+  "MY_TODAY_NO_PUNCH": "No punches yet today",
+  "MY_TODAY_PENDING": "pending",
+  "MY_TODAY_LEAVE": "On leave today",
+  "MY_TODAY_WEEK": "{hours} h this week"
 }

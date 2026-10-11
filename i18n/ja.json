@@ -1569,5 +1569,20 @@
   "ADMIN_GROUP_PEOPLE": "スタッフ",
   "ADMIN_GROUP_SETTINGS": "設定",
   "ADMIN_GROUP_REPORTS": "レポート",
-  "NAV_MORE": "その他"
+  "NAV_MORE": "その他",
+  "MY_TODAY_TITLE": "今日",
+  "MY_TODAY_SHIFT": "今日のシフト",
+  "MY_TODAY_NO_SHIFT": "今日はシフトなし",
+  "MY_TODAY_NEXT": "次の打刻",
+  "MY_TODAY_NEXT_IN": "出勤",
+  "MY_TODAY_NEXT_OUT": "退勤",
+  "MY_TODAY_DONE": "今日の打刻は完了",
+  "MY_TODAY_ON_DUTY": "勤務中・{time} から",
+  "MY_TODAY_NOT_YET": "未打刻",
+  "MY_TODAY_OFF": "退勤済み",
+  "MY_TODAY_PUNCHES": "今日の打刻",
+  "MY_TODAY_NO_PUNCH": "今日はまだ打刻がありません",
+  "MY_TODAY_PENDING": "承認待ち",
+  "MY_TODAY_LEAVE": "今日の休暇",
+  "MY_TODAY_WEEK": "今週 {hours} 時間"
 }
