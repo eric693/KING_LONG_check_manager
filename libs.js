@@ -57,3 +57,52 @@ function ensureLib(name) {
     
     return _libPromises[name];
 }
+
+// ==================== 分頁模組延遲載入 ====================
+// 薪資、加班、請假、費用、工作日誌、管理員分析這些只有切到那個分頁才用得到，
+// 原本主頁一開就全部下載、解析（約 30 萬字元），一般員工多半用不到。
+// 改成切到分頁（或管理員子分頁）時才載入；同一支只載一次，依順序載入。
+// 開頁就會用到的（打卡、補打卡、公告、基本資料、QR、地點選擇）仍在 index.html 直接載入。
+
+const MODULE_SCRIPTS = {
+    'monthly-view': ['reports.js'],
+    'overtime-view': ['attachments.js', 'overtime.js'],
+    'leave-view': ['attachments.js', 'leave.js'],
+    'salary-view': ['payslip.js', 'salary.js'],
+    'worklog-view': ['worklog.js'],
+    'expense-view': ['attachments.js', 'expense.js'],
+    // 管理員頁子分頁（script.js ADMIN_GROUP_LOADERS）
+    'admin:today': ['attendance-dashboard.js'],
+    'admin:review': ['attachments.js', 'overtime.js', 'leave.js', 'worklog.js', 'expense.js'],
+    'admin:reports': ['analytics.js', 'audit-log.js', 'reports.js', 'worklog.js']
+};
+
+const _scriptPromises = {};
+
+function loadScriptOnce(src) {
+    if (_scriptPromises[src]) return _scriptPromises[src];
+    _scriptPromises[src] = new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = () => resolve();
+        script.onerror = () => {
+            delete _scriptPromises[src];   // 網路恢復後還能重試
+            reject(new Error(`載入失敗: ${src}`));
+        };
+        document.body.appendChild(script);
+    });
+    return _scriptPromises[src];
+}
+
+/**
+ * 載入某個分頁需要的模組。沒有登記的分頁直接完成。
+ * 載入失敗會顯示連線錯誤，並把錯誤往外丟，呼叫端就不會去叫還沒定義的函式。
+ */
+async function loadModules(key) {
+    try {
+        for (const src of MODULE_SCRIPTS[key] || []) await loadScriptOnce(src);
+    } catch (error) {
+        if (typeof showNotification === 'function') showNotification(t('CONNECTION_FAILED'), 'error');
+        throw error;
+    }
+}

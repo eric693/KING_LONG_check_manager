@@ -103,9 +103,18 @@ function currentAdminGroup() {
     return ADMIN_GROUP_LOADERS[group] ? group : 'today';
 }
 
-function showAdminGroup(group) {
+let adminGroupRequest = 0;   // 快速連點子分頁時只採用最後一次
+
+async function showAdminGroup(group) {
     if (!ADMIN_GROUP_LOADERS[group]) group = 'today';
     try { localStorage.setItem('adminGroup', group); } catch (e) { /* 私密模式 */ }
+    const request = ++adminGroupRequest;
+    try {
+        await loadModules('admin:' + group);
+    } catch (error) {
+        return;   // loadModules 已經顯示連線錯誤
+    }
+    if (request !== adminGroupRequest) return;
     document.querySelectorAll('#admin-view [data-admin-group]').forEach(card => {
         card.classList.toggle('admin-group-off', card.dataset.adminGroup !== group);
     });
@@ -1315,7 +1324,7 @@ async function renderDailyRecords(dateKey) {
                                     </div>
                                 </div>
                                 <button 
-                                    onclick="quickApplyOvertime('${recordData.date}', '${punchInRecord.time}', '${punchOutRecord.time}', ${overtimeHours.toFixed(2)})"
+                                    onclick="loadModules('overtime-view').then(() => quickApplyOvertime('${recordData.date}', '${punchInRecord.time}', '${punchOutRecord.time}', ${overtimeHours.toFixed(2)}))"
                                     class="ml-4 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-sm font-bold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center space-x-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -1939,6 +1948,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (now - (tabLoadedAt[tabId] || 0) < TAB_RELOAD_INTERVAL_MS) return;
         tabLoadedAt[tabId] = now;
         
+        // 薪資、加班、請假等模組切到分頁時才載入（libs.js MODULE_SCRIPTS）
+        loadModules(tabId).then(() => {
         if (tabId === 'monthly-view') {
             renderCalendar(currentMonthDate);
         } else if (tabId === 'location-view') {
@@ -1961,7 +1972,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else if (tabId === 'expense-view') {
             if (typeof initExpenseTab === 'function') initExpenseTab();
         }
-        
+        }).catch(error => console.error('分頁模組載入失敗:', error));
     };
     
     // 初始化拉桿（薪資頁沒有載入 location-picker.js）
@@ -2329,13 +2340,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     tabMonthlyBtn?.addEventListener('click', () => switchTab('monthly-view'));
     tabOvertimeBtn?.addEventListener('click', () => {
         switchTab('overtime-view');
-        initOvertimeTab();
+        loadModules('overtime-view').then(() => initOvertimeTab()).catch(() => {});
     });
 
     //  新增請假按鈕事件
     tabLeaveBtn?.addEventListener('click', () => {
         switchTab('leave-view');
-        initLeaveTab();
+        loadModules('leave-view').then(() => initLeaveTab()).catch(() => {});
     });
 
     tabAdminBtn?.addEventListener('click', async () => {
@@ -2382,12 +2393,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     //  新增：綁定查詢按鈕
     const loadAnalysisBtn = document.getElementById('load-punch-analysis-btn');
     if (loadAnalysisBtn) {
-        loadAnalysisBtn?.addEventListener('click', loadPunchAnalysis);
+        loadAnalysisBtn?.addEventListener('click', () => loadModules('admin:reports').then(() => loadPunchAnalysis()).catch(() => {}));
     }
     //  新增：綁定匯出按鈕
     const exportEmployeePunchBtn = document.getElementById('export-employee-punch-btn');
     if (exportEmployeePunchBtn) {
-        exportEmployeePunchBtn?.addEventListener('click', exportEmployeePunchReport);
+        exportEmployeePunchBtn?.addEventListener('click', () => loadModules('admin:reports').then(() => exportEmployeePunchReport()).catch(() => {}));
     }
     // 月曆按鈕事件
     document.getElementById('prev-month')?.addEventListener('click', () => {
@@ -2403,7 +2414,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const exportAttendanceBtn = document.getElementById('export-attendance-btn');
     if (exportAttendanceBtn) {
         exportAttendanceBtn?.addEventListener('click', () => {
-            exportAttendanceReport(currentMonthDate);
+            loadModules('monthly-view').then(() => exportAttendanceReport(currentMonthDate)).catch(() => {});
         });
     }
 
@@ -2425,7 +2436,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
             
-            exportAllEmployeesReport(selectedMonth);
+            loadModules('admin:reports').then(() => exportAllEmployeesReport(selectedMonth)).catch(() => {});
         });
     }
     // 語系切換事件
