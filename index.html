@@ -159,7 +159,8 @@
             <!-- Main App Content -->
             <div id="main-app" class="fade-in" style="display: none;">
                 <!-- Tab Navigation -->
-                <div class="flex justify-center space-x-2 mb-6 flex-wrap gap-y-2">
+                <!-- 上方分頁按鈕：手機改用底部導覽列（#bottom-nav），這排只在平板、電腦顯示 -->
+                <div class="hidden sm:flex justify-center space-x-2 mb-6 flex-wrap gap-y-2">
                     <button id="tab-dashboard-btn" data-i18n="TAB_DASHBOARD" class="py-2 px-4 rounded-full font-bold text-sm text-white bg-indigo-600 dark:bg-indigo-500">儀表板</button>
                     <button id="tab-monthly-btn" data-i18n="TAB_MONTHLY" class="py-2 px-4 rounded-full font-bold text-sm text-gray-600 bg-gray-200 dark:text-gray-300 dark:bg-gray-700">出勤記錄</button>
                     <button id="tab-location-btn" data-i18n="TAB_LOCATION" class="py-2 px-4 rounded-full font-bold text-sm text-gray-600 bg-gray-200 dark:text-gray-300 dark:bg-gray-700">定位</button>
@@ -180,6 +181,38 @@
 
                 </div>
                 
+                <!-- 手機底部導覽列：按了就觸發上方對應的分頁按鈕，切換邏輯不變（script.js syncBottomNav） -->
+                <nav id="bottom-nav" class="bottom-nav sm:hidden">
+                    <button type="button" class="bottom-nav-item active" data-nav-tab="dashboard">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z"/></svg>
+                        <span data-i18n="TAB_DASHBOARD">TAB_DASHBOARD</span>
+                    </button>
+                    <button type="button" class="bottom-nav-item" data-nav-tab="monthly">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3M4 11h16M5 5h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z"/></svg>
+                        <span data-i18n="TAB_MONTHLY">TAB_MONTHLY</span>
+                    </button>
+                    <button type="button" class="bottom-nav-item" data-nav-tab="leave">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12h3m12 0h3M12 3v3m0 12v3M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1m0-12.8l-2.1 2.1m-8.6 8.6l-2.1 2.1M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                        <span data-i18n="TAB_LEAVE">TAB_LEAVE</span>
+                    </button>
+                    <button type="button" class="bottom-nav-item" data-nav-tab="salary">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.7 0-3 .9-3 2s1.3 2 3 2 3 .9 3 2-1.3 2-3 2m0-8c1.1 0 2.1.4 2.6 1M12 8V7m0 1v8m0 0v1m0-1c-1.1 0-2.1-.4-2.6-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span data-i18n="TAB_SALARY">TAB_SALARY</span>
+                    </button>
+                    <button type="button" class="bottom-nav-item" id="bottom-nav-more-btn" aria-haspopup="true" aria-expanded="false">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                        <span data-i18n="NAV_MORE">更多</span>
+                    </button>
+                </nav>
+                <div id="bottom-nav-more" class="bottom-nav-more sm:hidden" style="display: none;">
+                    <button type="button" class="bottom-nav-more-item" data-nav-tab="location" data-i18n="TAB_LOCATION">TAB_LOCATION</button>
+                    <button type="button" class="bottom-nav-more-item" data-nav-tab="shift" data-i18n="TAB_SHIFT">TAB_SHIFT</button>
+                    <button type="button" class="bottom-nav-more-item" data-nav-tab="overtime" data-i18n="TAB_OVERTIME">TAB_OVERTIME</button>
+                    <button type="button" class="bottom-nav-more-item" data-nav-tab="expense" data-i18n="TAB_EXPENSE">TAB_EXPENSE</button>
+                    <button type="button" class="bottom-nav-more-item" data-nav-tab="worklog" data-i18n="TAB_WORKLOG">TAB_WORKLOG</button>
+                    <button type="button" class="bottom-nav-more-item" data-nav-tab="admin" data-i18n="TAB_ADMIN">TAB_ADMIN</button>
+                </div>
+
                 <!-- Dashboard View -->
                 <main id="dashboard-view" class="space-y-6">
                     <!--  佈告欄區塊 -->

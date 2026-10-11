@@ -1568,5 +1568,6 @@
   "ADMIN_GROUP_REVIEW": "Persetujuan",
   "ADMIN_GROUP_PEOPLE": "Karyawan",
   "ADMIN_GROUP_SETTINGS": "Pengaturan",
-  "ADMIN_GROUP_REPORTS": "Laporan"
+  "ADMIN_GROUP_REPORTS": "Laporan",
+  "NAV_MORE": "Lainnya"
 }

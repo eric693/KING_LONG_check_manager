@@ -1627,5 +1627,6 @@
   "ADMIN_GROUP_REVIEW": "อนุมัติ",
   "ADMIN_GROUP_PEOPLE": "พนักงาน",
   "ADMIN_GROUP_SETTINGS": "ตั้งค่า",
-  "ADMIN_GROUP_REPORTS": "รายงาน"
+  "ADMIN_GROUP_REPORTS": "รายงาน",
+  "NAV_MORE": "เพิ่มเติม"
 }

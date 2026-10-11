@@ -1568,5 +1568,6 @@
   "ADMIN_GROUP_REVIEW": "승인",
   "ADMIN_GROUP_PEOPLE": "직원",
   "ADMIN_GROUP_SETTINGS": "설정",
-  "ADMIN_GROUP_REPORTS": "보고서"
+  "ADMIN_GROUP_REPORTS": "보고서",
+  "NAV_MORE": "더보기"
 }

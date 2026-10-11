@@ -1624,5 +1624,6 @@
   "ADMIN_GROUP_REVIEW": "Duyệt",
   "ADMIN_GROUP_PEOPLE": "Nhân sự",
   "ADMIN_GROUP_SETTINGS": "Cài đặt",
-  "ADMIN_GROUP_REPORTS": "Báo cáo"
+  "ADMIN_GROUP_REPORTS": "Báo cáo",
+  "NAV_MORE": "Thêm"
 }

@@ -1635,5 +1635,6 @@
   "ADMIN_GROUP_REVIEW": "Approvals",
   "ADMIN_GROUP_PEOPLE": "People",
   "ADMIN_GROUP_SETTINGS": "Settings",
-  "ADMIN_GROUP_REPORTS": "Reports"
+  "ADMIN_GROUP_REPORTS": "Reports",
+  "NAV_MORE": "More"
 }

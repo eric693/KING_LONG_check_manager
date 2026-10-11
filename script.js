@@ -141,6 +141,61 @@ document.addEventListener('click', (e) => {
     if (btn) showAdminGroup(btn.dataset.adminTab);
 });
 
+// ==================== 手機底部導覽列 ====================
+// 底部的按鈕只是去按上方對應的分頁按鈕（tab-xxx-btn），切換邏輯沿用 switchTab。
+// 「更多」裡的項目跟著上方按鈕顯示或隱藏（例如只有管理員看得到「管理員」）。
+
+const BOTTOM_NAV_MAIN = ['dashboard', 'monthly', 'leave', 'salary'];
+
+function syncBottomNav(tabId) {
+    const tab = String(tabId || '').replace('-view', '');
+    const inMore = !BOTTOM_NAV_MAIN.includes(tab);
+    document.querySelectorAll('#bottom-nav [data-nav-tab], #bottom-nav-more [data-nav-tab]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.navTab === tab);
+    });
+    const moreBtn = document.getElementById('bottom-nav-more-btn');
+    if (moreBtn) moreBtn.classList.toggle('active', inMore);
+    closeBottomNavMore();
+}
+
+function closeBottomNavMore() {
+    const menu = document.getElementById('bottom-nav-more');
+    const moreBtn = document.getElementById('bottom-nav-more-btn');
+    if (menu) menu.style.display = 'none';
+    if (moreBtn) moreBtn.setAttribute('aria-expanded', 'false');
+}
+
+function toggleBottomNavMore() {
+    const menu = document.getElementById('bottom-nav-more');
+    const moreBtn = document.getElementById('bottom-nav-more-btn');
+    if (!menu) return;
+    const opening = menu.style.display === 'none';
+    if (opening) {
+        menu.querySelectorAll('[data-nav-tab]').forEach(item => {
+            const source = document.getElementById(`tab-${item.dataset.navTab}-btn`);
+            item.style.display = source && source.style.display !== 'none' ? '' : 'none';
+        });
+    }
+    menu.style.display = opening ? 'block' : 'none';
+    if (moreBtn) moreBtn.setAttribute('aria-expanded', String(opening));
+}
+
+document.addEventListener('click', (e) => {
+    const navBtn = e.target.closest('#bottom-nav [data-nav-tab], #bottom-nav-more [data-nav-tab]');
+    if (navBtn) {
+        const source = document.getElementById(`tab-${navBtn.dataset.navTab}-btn`);
+        if (source) source.click();
+        closeBottomNavMore();
+        window.scrollTo({ top: 0 });
+        return;
+    }
+    if (e.target.closest('#bottom-nav-more-btn')) {
+        toggleBottomNavMore();
+        return;
+    }
+    if (!e.target.closest('#bottom-nav-more')) closeBottomNavMore();
+});
+
 // 確保登入
 // script.js - 完整替換 ensureLogin 函數
 async function ensureLogin() 
@@ -1875,6 +1930,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             newBtnElement.classList.remove('dark:text-gray-300', 'dark:bg-gray-700');
             newBtnElement.classList.add('dark:bg-indigo-500');
         }
+        syncBottomNav(tabId);
         
         // 5. 根據頁籤 ID 執行特定動作
         // 管理員分頁一次會打 7 支 API，來回切分頁很傷；

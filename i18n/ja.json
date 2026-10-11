@@ -1568,5 +1568,6 @@
   "ADMIN_GROUP_REVIEW": "承認",
   "ADMIN_GROUP_PEOPLE": "スタッフ",
   "ADMIN_GROUP_SETTINGS": "設定",
-  "ADMIN_GROUP_REPORTS": "レポート"
+  "ADMIN_GROUP_REPORTS": "レポート",
+  "NAV_MORE": "その他"
 }
