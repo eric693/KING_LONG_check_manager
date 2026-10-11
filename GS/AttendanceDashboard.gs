@@ -56,7 +56,7 @@ function dashboardShifts_(date) {
 
 /** 當天每個人的第一張上班卡、最後一張下班卡（HH:mm） */
 function dashboardPunches_(date, tz) {
-  const data = getSheetValues_(SHEET_ATTENDANCE);
+  const data = getAttendanceValuesForRange_(date, date);
   const byUser = {};
   for (let i = 1; i < data.length; i++) {
     const row = data[i];

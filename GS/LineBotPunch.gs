@@ -278,8 +278,8 @@ function sendMonthlyRecords(replyToken, userId, employeeName, yearMonth) {
 
 function getMonthlyPunchRecords(userId, yearMonth) {
   try {
-    const sheet = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE);
-    const values = sheet.getDataRange().getValues();
+    // 舊月份可能已經封存（AttendanceArchive.gs）
+    const values = getAttendanceValuesForRange_(...attendanceMonthRange_(yearMonth));
     
     Logger.log(' 開始查詢打卡記錄');
     Logger.log('   userId: ' + userId);

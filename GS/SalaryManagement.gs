@@ -1980,8 +1980,8 @@ function getEmployeeMonthlyAttendanceInternal(employeeId, yearMonth) {
     Logger.log('   員工ID: ' + employeeId);
     Logger.log('   年月: ' + yearMonth);
     
-    // 打卡紀錄是最大的一張表，批次計算時特別值得快取
-    const data = getSheetValues_(SHEET_ATTENDANCE);
+    // 打卡紀錄是最大的一張表，批次計算時特別值得快取；舊月份可能已經封存（AttendanceArchive.gs）
+    const data = getAttendanceValuesForRange_(...attendanceMonthRange_(yearMonth));
     
     if (data.length < 2) {
       Logger.log(' 找不到「打卡紀錄」工作表或無資料');

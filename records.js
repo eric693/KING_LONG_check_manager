@@ -271,7 +271,7 @@ async function savePunch() {
         return;
     }
     const editing = editingPunch;
-    if (editing) Object.assign(fields, { row: editing.row, key: editing.key });
+    if (editing) Object.assign(fields, { sheet: editing.sheet || '', row: editing.row, key: editing.key });
 
     await withButton(document.getElementById('pf-save'), async () => {
         try {
@@ -296,11 +296,11 @@ async function deletePunch(rec, button) {
     if (!confirm(t('RECORDS_PUNCH_DELETE_CONFIRM', { name: rec.name, date: rec.date, time: rec.time, type: typeLabel }))) return;
     await withButton(button, async () => {
         try {
-            const query = new URLSearchParams({ row: rec.row, key: rec.key }).toString();
+            const query = new URLSearchParams({ sheet: rec.sheet || '', row: rec.row, key: rec.key }).toString();
             const data = await apiRequestJson(`adminDeletePunch&${query}`);
             if (data.ok) {
                 recMessage(t('RECORDS_PUNCH_DELETED'), 'success');
-                if (editingPunch && editingPunch.row === rec.row) closePunchForm();
+                if (editingPunch && editingPunch.row === rec.row && editingPunch.sheet === rec.sheet) closePunchForm();
                 loadPunches();
             } else {
                 recMessage(data.msg || t('RECORDS_DELETE_FAILED'), 'error');

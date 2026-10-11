@@ -106,10 +106,11 @@ function handleAdminListPunches(params) {
     const tz = Session.getScriptTimeZone();
     const nameMap = getEmployeeNameMap_();
     const employeeId = String(params.employeeId || '').trim();
-    const data = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE).getDataRange().getValues();
     const records = [];
 
-    for (let i = 1; i < data.length; i++) {
+    // 舊的打卡可能在封存分頁（AttendanceArchive.gs），每筆記下在哪一張，修改、刪除才找得到
+    forEachAttendanceSheet_(params.startDate, params.endDate, (sheetName, data) => {
+     for (let i = 1; i < data.length; i++) {
       const row = data[i];
       if (!row[PUNCH_COL.time]) continue;
       const time = isDateValue_(row[PUNCH_COL.time]) ? row[PUNCH_COL.time] : new Date(row[PUNCH_COL.time]);
@@ -118,6 +119,7 @@ function handleAdminListPunches(params) {
       if (employeeId && uid !== employeeId) continue;
 
       records.push({
+        sheet: sheetName,
         row: i + 1,
         key: punchFingerprint_(row),
         date: Utilities.formatDate(time, tz, 'yyyy-MM-dd'),
@@ -129,7 +131,8 @@ function handleAdminListPunches(params) {
         note: String(row[PUNCH_COL.note] || ''),
         status: punchRowStatus_(row)
       });
-    }
+     }
+    });
 
     records.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time) || a.name.localeCompare(b.name));
     return { ok: true, records: records };
@@ -181,8 +184,15 @@ function handleAdminAddPunch(params) {
   }
 }
 
+/** 要改的那一筆在哪張打卡表：主表，或封存分頁（列表回傳的 sheet） */
+function punchSheetForEdit_(params) {
+  const name = String(params.sheet || SHEET_ATTENDANCE);
+  return isAttendanceSheetName_(name) ? getSpreadsheet_().getSheetByName(name) : null;
+}
+
 /** 找到列號且指紋相符的那一列；不符回傳錯誤 */
 function lockedPunchRow_(sheet, rowNumber, key) {
+  if (!sheet) return { ok: false, code: 'RECORDS_STALE', msg: '這筆資料已經變動，請重新查詢' };
   const row = Number(rowNumber);
   if (!Number.isInteger(row) || row < 2 || row > sheet.getLastRow()) {
     return { ok: false, code: 'RECORDS_STALE', msg: '這筆資料已經變動，請重新查詢' };
@@ -208,7 +218,7 @@ function handleAdminUpdatePunch(params) {
     const lock = LockService.getScriptLock();
     lock.waitLock(20000);
     try {
-      const sh = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE);
+      const sh = punchSheetForEdit_(params);
       const found = lockedPunchRow_(sh, params.row, params.key);
       if (!found.ok) return found;
       const old = found.values;
@@ -244,7 +254,7 @@ function handleAdminDeletePunch(params) {
     const lock = LockService.getScriptLock();
     lock.waitLock(20000);
     try {
-      const sh = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE);
+      const sh = punchSheetForEdit_(params);
       const found = lockedPunchRow_(sh, params.row, params.key);
       if (!found.ok) return found;
       const old = found.values;

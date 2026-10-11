@@ -542,8 +542,8 @@ function getEmployeeNameMap_() {
  * 這裡一律換成目前的姓名，報表才會一致；找不到員工（例如已刪除）才用紀錄上的名字。
  */
 function getAttendanceRecords(monthParam, userIdParam) {
-  const sheet = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE);
-  const values = sheet.getDataRange().getValues().slice(1);
+  // 舊月份可能已經封存（AttendanceArchive.gs）
+  const values = getAttendanceValuesForRange_(...attendanceMonthRange_(monthParam)).slice(1);
   const nameMap = getEmployeeNameMap_();
   
   return values.filter(row => {
@@ -1580,8 +1580,7 @@ function getEmployeeMonthlyPunchData(employeeId, yearMonth) {
     Logger.log('   員工ID: ' + employeeId);
     Logger.log('   月份: ' + yearMonth);
     
-    const sheet = getSpreadsheet_().getSheetByName(SHEET_ATTENDANCE);
-    const values = sheet.getDataRange().getValues();
+    const values = getAttendanceValuesForRange_(...attendanceMonthRange_(yearMonth));
     
     if (values.length <= 1) {
       return { 
