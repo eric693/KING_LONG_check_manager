@@ -1563,5 +1563,10 @@
   "CAL_LEGEND_REPAIR_APPROVED": "Koreksi disetujui",
   "CAL_LEGEND_OTHER": "Lainnya perlu dicek",
   "CAL_LEGEND_LEAVE": "Cuti",
-  "CAL_LEGEND_OVERTIME": "Lembur"
+  "CAL_LEGEND_OVERTIME": "Lembur",
+  "ADMIN_GROUP_TODAY": "Hari ini",
+  "ADMIN_GROUP_REVIEW": "Persetujuan",
+  "ADMIN_GROUP_PEOPLE": "Karyawan",
+  "ADMIN_GROUP_SETTINGS": "Pengaturan",
+  "ADMIN_GROUP_REPORTS": "Laporan"
 }

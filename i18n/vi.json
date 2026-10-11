@@ -1619,5 +1619,10 @@
   "CAL_LEGEND_REPAIR_APPROVED": "Đã duyệt bổ sung",
   "CAL_LEGEND_OTHER": "Khác cần kiểm tra",
   "CAL_LEGEND_LEAVE": "Nghỉ phép",
-  "CAL_LEGEND_OVERTIME": "Tăng ca"
+  "CAL_LEGEND_OVERTIME": "Tăng ca",
+  "ADMIN_GROUP_TODAY": "Hôm nay",
+  "ADMIN_GROUP_REVIEW": "Duyệt",
+  "ADMIN_GROUP_PEOPLE": "Nhân sự",
+  "ADMIN_GROUP_SETTINGS": "Cài đặt",
+  "ADMIN_GROUP_REPORTS": "Báo cáo"
 }

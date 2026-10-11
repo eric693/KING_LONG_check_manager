@@ -67,6 +67,80 @@ const showNotification = (message, type = 'success') => {
     }, 3000);
 };
 
+// ==================== 管理員頁子分頁 ====================
+// 管理員頁的卡片依 data-admin-group 分成五組，一次只顯示、只載入一組。
+
+const ADMIN_GROUP_LOADERS = {
+    today: () => {
+        if (typeof initAttendanceDashboard === 'function') initAttendanceDashboard();
+    },
+    review: () => {
+        if (typeof window.fetchAndRenderReviewRequests === 'function') window.fetchAndRenderReviewRequests();
+        loadPendingOvertimeRequests();
+        loadPendingWorklogs();
+        loadPendingLeaveRequests();
+        if (typeof loadPendingExpenses === 'function') loadPendingExpenses();
+    },
+    people: () => {
+        if (typeof loadAllUsers === 'function') loadAllUsers();
+    },
+    settings: () => {
+        initWorkScheduleAdmin();
+        if (typeof displayAdminAnnouncements === 'function') displayAdminAnnouncements();
+        if (typeof initKioskAdmin === 'function') initKioskAdmin();
+        if (typeof loadLocationList === 'function') loadLocationList();
+        refreshLocationPicker();   // 地圖原本藏著，顯示後要重算大小
+    },
+    reports: () => {
+        initAdminAnalysis();
+        if (typeof initAdminAuditLog === 'function') initAdminAuditLog();
+    }
+};
+
+function currentAdminGroup() {
+    let group = null;
+    try { group = localStorage.getItem('adminGroup'); } catch (e) { /* 私密模式 */ }
+    return ADMIN_GROUP_LOADERS[group] ? group : 'today';
+}
+
+function showAdminGroup(group) {
+    if (!ADMIN_GROUP_LOADERS[group]) group = 'today';
+    try { localStorage.setItem('adminGroup', group); } catch (e) { /* 私密模式 */ }
+    document.querySelectorAll('#admin-view [data-admin-group]').forEach(card => {
+        card.classList.toggle('admin-group-off', card.dataset.adminGroup !== group);
+    });
+    document.querySelectorAll('#admin-group-tabs [data-admin-tab]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.adminTab === group);
+    });
+    ADMIN_GROUP_LOADERS[group]();
+}
+
+/** 「審核」分頁上的待審核數字。五種清單載入時都會叫，半秒內只發一次請求 */
+let adminPendingTimer = null;
+function loadAdminPendingCounts() {
+    clearTimeout(adminPendingTimer);
+    adminPendingTimer = setTimeout(fetchAdminPendingCounts, 500);
+}
+
+async function fetchAdminPendingCounts() {
+    const badge = document.getElementById('admin-pending-badge');
+    const adminBtn = document.getElementById('tab-admin-btn');
+    if (!badge || !adminBtn || adminBtn.style.display === 'none') return;   // 只有管理員看得到「審核」
+    try {
+        const res = await apiRequestJson('adminPendingCounts');
+        const total = res && res.ok ? res.counts.total : 0;
+        badge.textContent = total > 99 ? '99+' : String(total);
+        badge.style.display = total > 0 ? '' : 'none';
+    } catch (error) {
+        badge.style.display = 'none';   // 數字只是提示，抓不到就不顯示
+    }
+}
+
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('#admin-group-tabs [data-admin-tab]');
+    if (btn) showAdminGroup(btn.dataset.adminTab);
+});
+
 // 確保登入
 // script.js - 完整替換 ensureLogin 函數
 async function ensureLogin() 
@@ -1270,6 +1344,8 @@ async function renderDailyRecords(dateKey) {
 // 已移到 location-picker.js
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // 補打卡審核清單定義在這個函式裡，管理員頁子分頁（ADMIN_GROUP_LOADERS）在外面，要掛出去才叫得到
+    window.fetchAndRenderReviewRequests = fetchAndRenderReviewRequests;
     
     const loginBtn = document.getElementById('login-btn');
     const logoutBtn = document.getElementById('logout-btn');
@@ -1814,20 +1890,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else if (tabId === 'shift-view') { // 新增：排班分頁初始化
             initShiftTab();
         } else if (tabId === 'admin-view') {
-            fetchAndRenderReviewRequests();
-            loadPendingOvertimeRequests();
-            loadPendingWorklogs();  // 
-            loadPendingLeaveRequests();
-            if (typeof displayAdminAnnouncements === 'function') displayAdminAnnouncements();
-            initWorkScheduleAdmin();
-            initAdminAnalysis();
-            if (typeof initAttendanceDashboard === 'function') initAttendanceDashboard();
-            if (typeof loadAllUsers === 'function') loadAllUsers();
-            if (typeof loadPendingExpenses === 'function') loadPendingExpenses();
-            if (typeof initKioskAdmin === 'function') initKioskAdmin();
-            if (typeof initAdminAuditLog === 'function') initAdminAuditLog();
-            refreshLocationPicker();
-            if (typeof loadLocationList === 'function') loadLocationList();
+            // 只載入目前子分頁的資料；以前一打開就同時發十幾個請求
+            showAdminGroup(currentAdminGroup());
+            loadAdminPendingCounts();
         } else if (tabId === 'overtime-view') {
             initOvertimeTab();
         } else if (tabId === 'leave-view') {

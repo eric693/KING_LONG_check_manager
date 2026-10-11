@@ -786,3 +786,34 @@ html.dark .day-cell.leave-day.abnormal-day {
 .dark .attachment-btn {
     color: #a5b4fc;
 }
+
+/* ==================== 管理員頁子分頁 ==================== */
+.admin-group-off { display: none !important; }
+.admin-group-tabs { scrollbar-width: none; }
+.admin-group-tabs::-webkit-scrollbar { display: none; }
+.admin-group-btn {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #4b5563;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+}
+.admin-group-btn.active { color: #ffffff; background-color: #4f46e5; border-color: #4f46e5; }
+html.dark .admin-group-btn { color: #d1d5db; background-color: #1f2937; border-color: #374151; }
+html.dark .admin-group-btn.active { color: #ffffff; background-color: #6366f1; border-color: #6366f1; }
+.admin-badge {
+    min-width: 1.25rem;
+    padding: 0 0.375rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    line-height: 1.25rem;
+    text-align: center;
+    color: #ffffff;
+    background-color: #ef4444;
+}

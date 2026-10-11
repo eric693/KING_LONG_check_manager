@@ -168,6 +168,7 @@ async function loadMyExpenses() {
 // ==================== 管理員：待審核 ====================
 
 async function loadPendingExpenses() {
+    if (typeof loadAdminPendingCounts === 'function') loadAdminPendingCounts();  // 管理員頁「審核」的數字跟著更新
     const list = document.getElementById('pending-expense-list');
     const empty = document.getElementById('expense-pending-empty');
     if (!list) return;

@@ -1142,8 +1142,16 @@
                 </section>
                 <!-- Admin View -->
                 <section id="admin-view" class="space-y-6" style="display: none;">
+                    <!-- 管理員頁子分頁：只顯示、只載入選中那一組的卡片（script.js showAdminGroup） -->
+                    <nav id="admin-group-tabs" class="admin-group-tabs flex gap-2 overflow-x-auto pb-1">
+                        <button type="button" data-admin-tab="today" data-i18n="ADMIN_GROUP_TODAY" class="admin-group-btn">今日</button>
+                        <button type="button" data-admin-tab="review" class="admin-group-btn"><span data-i18n="ADMIN_GROUP_REVIEW">審核</span><span id="admin-pending-badge" class="admin-badge" style="display: none;"></span></button>
+                        <button type="button" data-admin-tab="people" data-i18n="ADMIN_GROUP_PEOPLE" class="admin-group-btn">人員</button>
+                        <button type="button" data-admin-tab="settings" data-i18n="ADMIN_GROUP_SETTINGS" class="admin-group-btn">設定</button>
+                        <button type="button" data-admin-tab="reports" data-i18n="ADMIN_GROUP_REPORTS" class="admin-group-btn">報表</button>
+                    </nav>
                     <!-- 即時出勤數據：一週日期列 + 六格統計，點一格看名單（attendance-dashboard.js） -->
-                    <div id="att-dash-card" class="card p-6">
+                    <div data-admin-group="today" id="att-dash-card" class="card p-6">
                         <div class="flex items-center justify-between mb-4">
                             <h2 data-i18n="ATT_DASH_TITLE" class="text-xl font-bold text-gray-800 dark:text-white">即時出勤數據</h2>
                             <div class="flex items-center gap-2">
@@ -1167,14 +1175,14 @@
                         <div id="att-dash-detail" class="mt-3 border-t border-gray-100 dark:border-gray-700 pt-3"></div>
                     </div>
                     <!-- 資料管理：打卡紀錄、工時、假期、請假、加班、所有資料表（records.html，不用打開試算表） -->
-                    <div class="card p-6">
+                    <div data-admin-group="today" class="card p-6">
                         <h2 data-i18n="RECORDS_TITLE" class="text-xl font-bold text-gray-800 dark:text-white mb-2">資料管理</h2>
                         <p data-i18n="RECORDS_ENTRY_DESC" class="text-gray-500 dark:text-gray-400 mb-4">查詢和修改打卡紀錄、假期餘額、請假和加班紀錄，也可以查看其他資料表。不用再打開 Google 試算表。</p>
                         <button type="button" onclick="window.location.href='records.html'" data-i18n="RECORDS_ENTRY_BTN"
                                 class="w-full py-3 px-4 rounded-lg font-bold btn-primary">進入資料管理</button>
                     </div>
                     <!--  工作時段設定 -->
-                    <div class="card p-6">
+                    <div data-admin-group="settings" class="card p-6">
                         <h2 data-i18n="WORK_SCHEDULE_TITLE"
                             class="text-xl font-bold text-gray-800 dark:text-white mb-2">
                             工作時段設定
@@ -1238,7 +1246,7 @@
                     </div>
 
                     <!--  公告管理 -->
-                    <div class="card p-6">
+                    <div data-admin-group="settings" class="card p-6">
                         <h2 data-i18n="ADMIN_ANNOUNCEMENT_MANAGEMENT" 
                             class="text-xl font-bold text-gray-800 dark:text-white mb-2">
                              公告管理
@@ -1275,7 +1283,7 @@
                         
                         <div id="admin-announcements-list" class="space-y-3"></div>
                     </div>
-                    <div class="card p-6">
+                    <div data-admin-group="review" class="card p-6">
                         <h2 data-i18n="PENDING_REQUESTS_TITLE" class="text-xl font-bold text-gray-800 dark:text-white mb-1">待審核請求</h2>
                         <p data-i18n="PENDING_REQUESTS_DESCRIPTION" class="text-gray-500 dark:text-gray-400 mb-4">請處理員工提出的補打卡或虛擬卡請求。</p>
                         <div id="pending-requests-container">
@@ -1289,7 +1297,7 @@
                     </div>
                     
                     <!--  新增：管理員匯出所有員工報表 -->
-                    <div class="card p-6">
+                    <div data-admin-group="reports" class="card p-6">
                         <h2 data-i18n="ADMIN_EXPORT_TITLE" 
                             class="text-xl font-bold text-gray-800 dark:text-white mb-2">
                             匯出報表
@@ -1321,7 +1329,7 @@
                         </div>
                     </div>
                     <!-- 費用申請審核 -->
-                    <div class="card p-6">
+                    <div data-admin-group="review" class="card p-6">
                         <h2 data-i18n="EXPENSE_PENDING_TITLE" class="text-xl font-bold text-gray-800 dark:text-white mb-2">待審核費用申請</h2>
                         <p data-i18n="EXPENSE_PENDING_DESCRIPTION" class="text-gray-500 dark:text-gray-400 mb-4">審核員工的預支與報銷申請</p>
                         <div id="expense-pending-empty" class="text-center text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 p-4 rounded-lg" style="display: none;">
@@ -1331,7 +1339,7 @@
                     </div>
 
                     <!-- 操作紀錄 -->
-                    <div id="admin-audit-section" class="card p-6">
+                    <div data-admin-group="reports" id="admin-audit-section" class="card p-6">
                         <h2 data-i18n="AUDIT_TITLE" class="text-xl font-bold text-gray-800 dark:text-white mb-1">操作紀錄</h2>
                         <p data-i18n="AUDIT_DESCRIPTION" class="text-gray-500 dark:text-gray-400 mb-4">查詢審核、權限、員工、排班與設定的變更，是誰在什麼時候做的。</p>
 
@@ -1359,7 +1367,7 @@
                     </div>
 
                     <!--  加班審核區塊 -->
-                    <div class="card p-6 mt-6">
+                    <div data-admin-group="review" class="card p-6 mt-6">
                         <h2 data-i18n="OVERTIME_PENDING_TITLE" 
                             class="text-xl font-bold text-gray-800 dark:text-white mb-2">
                             待審核加班申請
@@ -1388,7 +1396,7 @@
                     </div>
                     
                     <!--  請假審核區塊 -->
-                    <div class="card p-6 mt-6">
+                    <div data-admin-group="review" class="card p-6 mt-6">
                         <h2 data-i18n="LEAVE_PENDING_TITLE" 
                             class="text-xl font-bold text-gray-800 dark:text-white mb-2">
                             待審核請假申請
@@ -1417,7 +1425,7 @@
                     </div>
                     
                     <!-- 已設定的打卡地點：編輯、刪除（location-picker.js） -->
-                    <div class="card p-6 mt-6">
+                    <div data-admin-group="settings" class="card p-6 mt-6">
                         <div class="flex items-center justify-between mb-2">
                             <h2 data-i18n="LOCATION_LIST_TITLE"
                                 class="text-xl font-bold text-gray-800 dark:text-white">
@@ -1434,7 +1442,7 @@
                         <ul id="location-list" class="space-y-2"></ul>
                     </div>
 
-                    <div class="card p-6 mt-6" id="location-form-card">
+                    <div data-admin-group="settings" class="card p-6 mt-6" id="location-form-card">
                         <h2 data-i18n="ADD_LOCATION_TITLE" id="location-form-title"
                             class="text-xl font-bold text-gray-800 dark:text-white mb-2">
                             新增打卡地點
@@ -1561,7 +1569,7 @@
                         </div>
                     </div>
                     <!-- 在管理員頁面的適當位置加入 -->
-                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
+                    <div data-admin-group="people" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
                         <div class="flex items-center justify-between mb-4">
                             <h2 class="text-2xl font-bold text-gray-800 dark:text-white">
                                  用戶管理
@@ -1633,7 +1641,7 @@
                         <div id="users-list" class="space-y-3"></div>
                     </div>
                     <!-- 員工打卡分析區塊 -->
-                    <div class="card p-6 mt-6">
+                    <div data-admin-group="reports" class="card p-6 mt-6">
                         <h2 data-i18n="ADMIN_PUNCH_ANALYSIS_TITLE" 
                             class="text-xl font-bold text-gray-800 dark:text-white mb-2">
                             員工打卡分析
@@ -1724,7 +1732,7 @@
                     </div>
 
                     <!-- 管理員頁面中加入工作日誌審核區塊 -->
-                    <div class="card p-6 mt-6">
+                    <div data-admin-group="review" class="card p-6 mt-6">
                         <h2 data-i18n="WORKLOG_PENDING_TITLE" 
                             class="text-xl font-bold text-gray-800 dark:text-white mb-2">
                              待審核工作日誌
@@ -1753,7 +1761,7 @@
                     </div>
 
                     <!-- 管理員匯出工作日誌報表 -->
-                    <div class="card p-6 mt-6">
+                    <div data-admin-group="reports" class="card p-6 mt-6">
                         <h2 data-i18n="WORKLOG_EXPORT_TITLE" 
                             class="text-xl font-bold text-gray-800 dark:text-white mb-2">
                             匯出工作日誌報表
@@ -1800,7 +1808,7 @@
                         </div>
                     </div>
                     <!-- QR Code 打卡管理 -->
-                    <div class="card p-6 mt-6">
+                    <div data-admin-group="settings" class="card p-6 mt-6">
                         <h2 data-i18n="QR_ADMIN_TITLE" class="text-xl font-bold text-gray-800 dark:text-white mb-2">QR Code 打卡管理</h2>
                         <p data-i18n="QR_ADMIN_DESC" class="text-gray-500 dark:text-gray-400 mb-4">產生限時 QR Code，讓員工掃描打卡，無需 GPS 定位。</p>
 
@@ -1897,7 +1905,7 @@
                     </div>
 
                     <!-- 平板打卡：公司平板常駐顯示自動更新的 QR Code -->
-                    <div id="kiosk-admin-section" class="card p-6 mt-6">
+                    <div data-admin-group="settings" id="kiosk-admin-section" class="card p-6 mt-6">
                         <h2 data-i18n="KIOSK_ADMIN_TITLE" class="text-xl font-bold text-gray-800 dark:text-white mb-2">平板打卡</h2>
                         <p data-i18n="KIOSK_ADMIN_DESC" class="text-gray-500 dark:text-gray-400 mb-4">在公司平板開啟打卡頁後放著即可，畫面會同時顯示上班、下班 QR Code，每 30 秒自動更新，不必每天重新產生。</p>
 
@@ -1924,7 +1932,7 @@
                         <button id="kiosk-disable-btn" data-i18n="KIOSK_DISABLE_BTN" class="mt-4 w-full py-2 px-4 rounded-lg font-bold btn-warning" style="display:none;">停用平板打卡</button>
                     </div>
 
-                    <div class="card p-6 mt-6">
+                    <div data-admin-group="settings" class="card p-6 mt-6">
                         <h2 data-i18n="API_TEST_TITLE" class="text-xl font-bold text-gray-800 dark:text-white mb-2">API 測試區</h2>
                         <p data-i18n="API_TEST_DESCRIPTION" class="text-gray-500 dark:text-gray-400 mb-4">點擊下方按鈕以測試新的 API 功能。</p>
                         <div>

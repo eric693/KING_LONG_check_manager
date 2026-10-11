@@ -401,6 +401,7 @@ async function deleteWorklog(logId) {
  * 載入待審核的工作日誌
  */
 async function loadPendingWorklogs() {
+    if (typeof loadAdminPendingCounts === 'function') loadAdminPendingCounts();  // 管理員頁「審核」的數字跟著更新
     const loadingEl = document.getElementById('worklog-requests-loading');
     const emptyEl = document.getElementById('worklog-requests-empty');
     const listEl = document.getElementById('pending-worklog-list');

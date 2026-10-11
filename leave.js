@@ -733,6 +733,7 @@ function handleLeaveTypeChange(e) {
  * 載入待審核的請假申請（管理員用）
  */
 async function loadPendingLeaveRequests() {
+    if (typeof loadAdminPendingCounts === 'function') loadAdminPendingCounts();  // 管理員頁「審核」的數字跟著更新
     const loadingEl = document.getElementById('leave-requests-loading');
     const emptyEl = document.getElementById('leave-requests-empty');
     const listEl = document.getElementById('pending-leave-list');

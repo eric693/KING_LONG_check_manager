@@ -244,3 +244,36 @@ function handleAdminDailyAttendance(params) {
     return { ok: false, msg: error.toString() };
   }
 }
+
+/**
+ * API：各種待審核的筆數（僅管理員），給管理員頁「審核」分頁的數字標記用。
+ * 只數數字、不讀細節，打開管理員頁時不必把五種待審核清單全部載入。
+ */
+function handleAdminPendingCounts(params) {
+  try {
+    const admin = requireRecordsAdmin_(params.token);
+    if (!admin.ok) return admin;
+
+    const count = (sheetName, isPending) => {
+      const values = getSheetValues_(sheetName);
+      let n = 0;
+      for (let i = 1; i < values.length; i++) if (isPending(values[i], values[0])) n++;
+      return n;
+    };
+    const text = v => String(v === null || v === undefined ? '' : v).trim();
+
+    const counts = {
+      // 補打卡申請：用標題找「狀態」欄
+      adjustPunch: count(SHEET_ADJUST_PUNCH, (row, header) => text(row[header.indexOf('狀態')]) === '待審核'),
+      overtime: count(SHEET_OVERTIME, row => text(row[9]).toLowerCase() === 'pending'),
+      leave: count('請假紀錄', row => text(row[10]) === 'PENDING'),
+      worklog: count(SHEET_WORKLOG, row => text(row[7]) === WORKLOG_STATUS.PENDING),
+      expense: count(SHEET_EXPENSE, row => text(row[EXPENSE_COL.STATUS]) === EXPENSE_STATUS.PENDING)
+    };
+    counts.total = Object.keys(counts).reduce((sum, key) => sum + counts[key], 0);
+    return { ok: true, counts: counts };
+  } catch (error) {
+    Logger.log(' handleAdminPendingCounts 錯誤: ' + error.message);
+    return { ok: false, msg: error.toString() };
+  }
+}

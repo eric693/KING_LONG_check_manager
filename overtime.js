@@ -533,6 +533,7 @@ function showCompensatoryHoursInput(currentHours, requestHours, exceededHours) {
 // ==================== 管理員審核功能 ====================
 
 async function loadPendingOvertimeRequests() {
+    if (typeof loadAdminPendingCounts === 'function') loadAdminPendingCounts();  // 管理員頁「審核」的數字跟著更新
     //  Promise 單例：若已有進行中的請求，直接返回同一個 Promise（不重跑）
     // boolean 鎖在 await 之前就被跳過了（JS 是單執行緒，但 await 讓出控制權時鎖已設好）
     // 真正的問題是：兩次呼叫同時在事件循環佇列中，第一個 await 前鎖還沒設

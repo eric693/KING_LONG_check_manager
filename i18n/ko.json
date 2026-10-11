@@ -1563,5 +1563,10 @@
   "CAL_LEGEND_REPAIR_APPROVED": "정정 승인됨",
   "CAL_LEGEND_OTHER": "기타 확인 필요",
   "CAL_LEGEND_LEAVE": "휴가",
-  "CAL_LEGEND_OVERTIME": "초과근무"
+  "CAL_LEGEND_OVERTIME": "초과근무",
+  "ADMIN_GROUP_TODAY": "오늘",
+  "ADMIN_GROUP_REVIEW": "승인",
+  "ADMIN_GROUP_PEOPLE": "직원",
+  "ADMIN_GROUP_SETTINGS": "설정",
+  "ADMIN_GROUP_REPORTS": "보고서"
 }

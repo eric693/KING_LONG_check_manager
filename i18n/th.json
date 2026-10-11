@@ -1622,5 +1622,10 @@
   "CAL_LEGEND_REPAIR_APPROVED": "อนุมัติแก้ไขแล้ว",
   "CAL_LEGEND_OTHER": "อื่น ๆ ที่ต้องตรวจ",
   "CAL_LEGEND_LEAVE": "ลา",
-  "CAL_LEGEND_OVERTIME": "ทำงานล่วงเวลา"
+  "CAL_LEGEND_OVERTIME": "ทำงานล่วงเวลา",
+  "ADMIN_GROUP_TODAY": "วันนี้",
+  "ADMIN_GROUP_REVIEW": "อนุมัติ",
+  "ADMIN_GROUP_PEOPLE": "พนักงาน",
+  "ADMIN_GROUP_SETTINGS": "ตั้งค่า",
+  "ADMIN_GROUP_REPORTS": "รายงาน"
 }
