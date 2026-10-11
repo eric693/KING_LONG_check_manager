@@ -71,7 +71,7 @@ async function displayAdminAnnouncements() {
     list.innerHTML = '';
     
     if (announcements.length === 0) {
-        list.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-4">目前沒有公告</p>';
+        list.innerHTML = `<p class="text-gray-500 dark:text-gray-400 text-center py-4">${escapeHtml(t('ANNOUNCEMENT_EMPTY'))}</p>`;
         return;
     }
     
@@ -88,7 +88,7 @@ async function displayAdminAnnouncements() {
                 <button class="px-3 py-1 text-sm bg-red-500 hover:bg-red-600 text-white rounded ml-4" 
                         data-i18n="BTN_DELETE"
                         onclick="deleteAnnouncement('${a.id}')">
-                    刪除
+                    ${escapeHtml(t('BTN_DELETE'))}
                 </button>
             </div>
         `;
@@ -113,7 +113,7 @@ async function deleteAnnouncement(id) {
             displayAdminAnnouncements();
             displayAnnouncements();
         } else {
-            showNotification(res.msg || '刪除失敗', 'error');
+            showNotification(res.msg || t('DELETE_FAILED'), 'error');
         }
         
     } catch (error) {

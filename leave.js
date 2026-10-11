@@ -216,10 +216,10 @@ function updateWorkHoursPreview() {
     
     if (workHours <= 0) {
         hasError = true;
-        errorMsg = ' 結束時間必須晚於開始時間';
+        errorMsg = t('LEAVE_ERR_END_BEFORE_START');
     } else if (!Number.isInteger(workHours)) {
         hasError = true;
-        errorMsg = ` 請假時數必須是整數小時（目前為 ${workHours} 小時）\n請調整時間使其為整數小時`;
+        errorMsg = t('LEAVE_ERR_WHOLE_HOURS', { hours: workHours });
     }
     
     // 顯示警告訊息
@@ -255,10 +255,10 @@ function updateWorkHoursPreview() {
             
             let timeInfo = '';
             if (startHour < 9 || endHour > 18) {
-                timeInfo = '（包含非標準工作時段）';
+                timeInfo = t('LEAVE_NONSTANDARD_HOURS');
             }
             
-            warningEl.textContent = ` 時數計算正確${timeInfo}，可以提交申請`;
+            warningEl.textContent = t('LEAVE_HOURS_OK', { note: timeInfo });
         }
     }
 }
@@ -350,7 +350,7 @@ async function submitLeaveApplication() {
             
             if (workHours > availableHours) {
                 showNotification(
-                    `餘額不足！${t(leaveType)} 剩餘 ${availableHours} 小時，但您申請了 ${workHours} 小時`,
+                    t('LEAVE_BALANCE_SHORT', { type: t(leaveType), available: availableHours, requested: workHours }),
                     'error'
                 );
                 return;
@@ -363,7 +363,7 @@ async function submitLeaveApplication() {
     const button = document.getElementById('submit-leave-btn');
     if (button) {
         button.disabled = true;
-        button.textContent = '處理中...';
+        button.textContent = t('LOADING');
     }
     
     try {
@@ -396,7 +396,7 @@ async function submitLeaveApplication() {
             
             console.log(' 資料更新完成');
         } else {
-            showNotification(response.msg || '提交失敗', 'error');
+            showNotification(response.msg || t('SUBMIT_FAILED'), 'error');
         }
     } catch (error) {
         console.error(' 提交請假申請失敗:', error);
@@ -404,7 +404,7 @@ async function submitLeaveApplication() {
     } finally {
         if (button) {
             button.disabled = false;
-            button.textContent = '提交請假申請';
+            button.textContent = t('BTN_SUBMIT_LEAVE');
         }
     }
 }
@@ -530,7 +530,7 @@ function renderLeaveBalance(balance) {
             hoursSpan.className = leaveType === 'ABSENCE_WITHOUT_LEAVE' 
                 ? 'text-red-600 dark:text-red-400 font-bold'
                 : 'text-indigo-600 dark:text-indigo-400 font-bold';
-            hoursSpan.textContent = `${hours} 小時`;
+            hoursSpan.textContent = t('HOURS_N', { n: hours });
             
             item.appendChild(typeSpan);
             item.appendChild(hoursSpan);
@@ -598,7 +598,7 @@ async function loadLeaveRecords() {
  * 格式化日期時間顯示
  */
 function formatDateTime(isoString) {
-    if (!isoString) return '未設定';
+    if (!isoString) return t('NOT_SET');
     
     try {
         const date = new Date(isoString);
@@ -642,17 +642,17 @@ async function renderLeaveRecords(records) {
         card.className = 'card p-4 hover:shadow-lg transition-shadow';
         
         let statusClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
-        let statusText = '待審核';
+        let statusText = t('PENDING');
         
         if (record.status === 'APPROVED') {
             statusClass = 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-            statusText = '已核准';
+            statusText = t('APPROVED');
         } else if (record.status === 'REJECTED') {
             statusClass = 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-            statusText = '已拒絕';
+            statusText = t('REJECTED');
         }
         
-        const workHoursDisplay = record.workHours ? `${record.workHours} 小時` : '0 小時';
+        const workHoursDisplay = t('HOURS_N', { n: record.workHours || 0 });
         const startTime = formatDateTime(record.startDateTime || record.startTime);
         const endTime = formatDateTime(record.endDateTime || record.endTime);
         
@@ -697,8 +697,8 @@ async function renderLeaveRecords(records) {
                     <svg class="w-4 h-4 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
                     </svg>
-                    <span>請假原因:</span>
-                    <span class="ml-1">${escapeHtml(record.reason || '無')}</span>
+                    <span>${escapeHtml(t('LEAVE_REASON_LABEL_SHORT'))}</span>
+                    <span class="ml-1">${escapeHtml(record.reason || t('NONE'))}</span>
                 </div>
             </div>
         `;
@@ -780,17 +780,17 @@ async function renderPendingLeaveRequests(requests) {
             ? `${formatDateTime(req.startDateTime)} ~ ${formatDateTime(req.endDateTime)}`
             : req.startDate && req.endDate
             ? `${req.startDate} ~ ${req.endDate}`
-            : '時間未設定';
+            : t('LEAVE_TIME_NOT_SET');
         
         const durationDisplay = req.workHours
-            ? `${req.workHours} 小時`
+            ? t('HOURS_N', { n: req.workHours })
             : req.days
-            ? `${req.days} 天`
-            : '時數未知';
+            ? t('DAYS_N', { n: req.days })
+            : t('LEAVE_DURATION_UNKNOWN');
         
         const balanceWarning = req.insufficientBalance 
             ? `<p class="text-xs text-red-600 dark:text-red-400 mt-2 font-semibold">
-                    該員工餘額不足（剩餘 ${req.remainingBalance} 天）
+                    ${escapeHtml(t('LEAVE_EMPLOYEE_SHORT', { n: req.remainingBalance }))}
                </p>`
             : '';
         
@@ -809,7 +809,7 @@ async function renderPendingLeaveRequests(requests) {
                         </p>
                         ${req.reason ? `
                             <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                原因：${escapeHtml(req.reason)}
+                                ${escapeHtml(t('REASON_LABEL'))}：${escapeHtml(req.reason)}
                             </p>
                         ` : ''}
                         ${balanceWarning}
@@ -820,12 +820,12 @@ async function renderPendingLeaveRequests(requests) {
                     <button 
                         data-row="${req.rowNumber}" 
                         class="approve-leave-btn flex-1 px-3 py-2 rounded-md text-sm font-bold btn-primary">
-                        核准
+                        ${escapeHtml(t('ADMIN_APPROVE_BUTTON'))}
                     </button>
                     <button 
                         data-row="${req.rowNumber}" 
                         class="reject-leave-btn flex-1 px-3 py-2 rounded-md text-sm font-bold btn-warning">
-                        拒絕
+                        ${escapeHtml(t('ADMIN_REJECT_BUTTON'))}
                     </button>
                 </div>
             </div>
@@ -863,7 +863,7 @@ async function handleReviewLeave(button, action) {
     const rowNumber = button.dataset.row;
     
     const comment = action === 'reject' 
-        ? prompt('請輸入拒絕原因：') 
+        ? prompt(t('ENTER_REJECT_REASON')) 
         : '';
     
     if (action === 'reject' && !comment) {
@@ -872,7 +872,7 @@ async function handleReviewLeave(button, action) {
     }
     
     button.disabled = true;
-    button.textContent = '處理中...';
+    button.textContent = t('LOADING');
     
     try {
         const res = await callApifetch(
@@ -882,7 +882,7 @@ async function handleReviewLeave(button, action) {
         );
         
         if (res.ok) {
-            showNotification(action === 'approve' ? '已核准' : '已拒絕', 'success');
+            showNotification(action === 'approve' ? t('APPROVED') : t('REJECTED'), 'success');
             await new Promise(resolve => setTimeout(resolve, 500));
             loadPendingLeaveRequests();
         } else {
@@ -893,6 +893,6 @@ async function handleReviewLeave(button, action) {
         showNotification(t('NOTIF_NETWORK_ERROR'), 'error');
     } finally {
         button.disabled = false;
-        button.textContent = action === 'approve' ? '核准' : '拒絕';
+        button.textContent = action === 'approve' ? t('ADMIN_APPROVE_BUTTON') : t('ADMIN_REJECT_BUTTON');
     }
 }

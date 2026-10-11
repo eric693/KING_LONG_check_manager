@@ -55,17 +55,17 @@ async function initBiometricPunch() {
     
     // 檢查支援度：先看 API，再確認裝置真的有可用的生物辨識
     if (!checkBiometricSupport()) {
-        setupBtn.textContent = '此瀏覽器不支援生物辨識打卡';
+        setupBtn.textContent = t('BIO_UNSUPPORTED_BROWSER');
         setupBtn.disabled = true;
         setupBtn.classList.add('opacity-50', 'cursor-not-allowed');
         return;
     }
     
     if (!await checkPlatformAuthenticator()) {
-        setupBtn.textContent = '此裝置沒有可用的生物辨識';
+        setupBtn.textContent = t('BIO_NO_AUTHENTICATOR');
         setupBtn.disabled = true;
         setupBtn.classList.add('opacity-50', 'cursor-not-allowed');
-        setupBtn.title = '請改用系統瀏覽器開啟，或在裝置設定中啟用指紋／臉部辨識';
+        setupBtn.title = t('BIO_NO_AUTHENTICATOR_HINT');
         return;
     }
     

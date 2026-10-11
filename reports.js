@@ -1,6 +1,17 @@
 // Excel 報表匯出：全員月報表、單月出勤報表、員工打卡明細
 // 從 script.js 拆出。SheetJS 由 libs.js 的 ensureLib('xlsx') 延遲載入。
 
+// 欄位名稱跟著介面語言；中文的翻譯和原本寫死的欄位名稱一字不差，中文報表不變
+function reportColumns() {
+    return {
+        date: t('RPT_DATE'), weekday: t('RPT_WEEKDAY'),
+        inTime: t('RPT_IN_TIME'), inPlace: t('RPT_IN_PLACE'),
+        outTime: t('RPT_OUT_TIME'), outPlace: t('RPT_OUT_PLACE'),
+        workHours: t('RPT_WORK_HOURS'), hoursDecimal: t('RPT_HOURS_DECIMAL'),
+        status: t('RPT_STATUS'), notes: t('RPT_NOTES')
+    };
+}
+
 /**
  * 管理員匯出所有員工的出勤報表
  * @param {string} monthKey - 月份，格式: "YYYY-MM"
@@ -30,11 +41,12 @@ async function exportAllEmployeesReport(monthKey) {
         
         // 按員工分組
         const employeeData = {};
+        const col = reportColumns();
         
         res.records.forEach(record => {
             //  修正：確保正確讀取 userId 和 name
             const userId = record.userId || 'unknown';
-            const userName = record.name || '未知員工';
+            const userName = record.name || t('UNKNOWN_EMPLOYEE');
             
             if (!employeeData[userId]) {
                 employeeData[userId] = {
@@ -72,14 +84,14 @@ async function exportAllEmployeesReport(monthKey) {
                 : '';
             
             employeeData[userId].records.push({
-                '日期': record.date,
-                '上班時間': punchIn?.time || '-',
-                '上班地點': punchIn?.location || '-',
-                '下班時間': punchOut?.time || '-',
-                '下班地點': punchOut?.location || '-',
-                '工作時數': workHours,
-                '狀態': statusText,
-                '備註': notes || '-'
+                [col.date]: record.date,
+                [col.inTime]: punchIn?.time || '-',
+                [col.inPlace]: punchIn?.location || '-',
+                [col.outTime]: punchOut?.time || '-',
+                [col.outPlace]: punchOut?.location || '-',
+                [col.workHours]: workHours,
+                [col.status]: statusText,
+                [col.notes]: notes || '-'
             });
         });
         
@@ -108,7 +120,7 @@ async function exportAllEmployeesReport(monthKey) {
         }
         
         const [year, month] = monthKey.split('-');
-        const fileName = `所有員工出勤記錄_${year}年${month}月.xlsx`;
+        const fileName = `${t('RPT_FILE_ALL', { year: year, month: month })}.xlsx`;
         XLSX.writeFile(wb, fileName);
         
         showNotification(t('EXPORT_SUCCESS') || '報表已成功匯出！', 'success');
@@ -162,6 +174,7 @@ async function exportAttendanceReport(date) {
         
         // 整理資料為 Excel 格式
         const exportData = [];
+        const col = reportColumns();
         
         res.records.forEach(record => {
             // 找出上班和下班的記錄
@@ -193,14 +206,14 @@ async function exportAttendanceReport(date) {
                 .join('; ');
             
             exportData.push({
-                '日期': record.date,
-                '上班時間': punchIn?.time || '-',
-                '上班地點': punchIn?.location || '-',
-                '下班時間': punchOut?.time || '-',
-                '下班地點': punchOut?.location || '-',
-                '工作時數': workHours,
-                '狀態': statusText,
-                '備註': notes || '-'
+                [col.date]: record.date,
+                [col.inTime]: punchIn?.time || '-',
+                [col.inPlace]: punchIn?.location || '-',
+                [col.outTime]: punchOut?.time || '-',
+                [col.outPlace]: punchOut?.location || '-',
+                [col.workHours]: workHours,
+                [col.status]: statusText,
+                [col.notes]: notes || '-'
             });
         });
         
@@ -222,10 +235,10 @@ async function exportAttendanceReport(date) {
         
         // 建立工作簿
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, `${month}月出勤記錄`);
+        XLSX.utils.book_append_sheet(wb, ws, t('RPT_SHEET_MINE', { month: month }).slice(0, 31));
         
         // 下載檔案
-        const fileName = `出勤記錄_${year}年${month}月.xlsx`;
+        const fileName = `${t('RPT_FILE_MINE', { year: year, month: month })}.xlsx`;
         XLSX.writeFile(wb, fileName);
         
         showNotification(t('EXPORT_SUCCESS') || '報表已成功匯出！', 'success');
@@ -289,6 +302,7 @@ async function exportEmployeePunchReport() {
         
         // 整理資料為 Excel 格式
         const exportData = [];
+        const col = reportColumns();
         
         res.records.forEach(record => {
             // 找出上班和下班的記錄
@@ -324,7 +338,7 @@ async function exportEmployeePunchReport() {
                         workHoursDecimal = netWorkHours;
                         const hours = Math.floor(netWorkHours);
                         const minutes = Math.round((netWorkHours - hours) * 60);
-                        workHours = `${hours}小時${minutes}分`;
+                        workHours = t('RPT_HOURS_MINUTES', { h: hours, m: minutes });
                         
                         // 標記是否有加班
                         hasOvertime = overtimeHours > 0.5; // 超過 30 分鐘才算加班
@@ -339,7 +353,7 @@ async function exportEmployeePunchReport() {
                     }
                 } catch (e) {
                     console.error('計算工時失敗:', e);
-                    workHours = '計算錯誤';
+                    workHours = t('RPT_CALC_ERROR');
                 }
             }
                         
@@ -355,41 +369,41 @@ async function exportEmployeePunchReport() {
                 : '';
             
             exportData.push({
-                '日期': record.date,
-                '星期': getDayOfWeek(record.date),
-                '上班時間': punchInRecord ? `${punchInRecord.time}:00` : '-',
-                '上班地點': punchInRecord?.location || '-',
-                '下班時間': punchOutRecord ? `${punchOutRecord.time}:00` : '-',
-                '下班地點': punchOutRecord?.location || '-',
-                '工作時數': workHours,
-                '工時（小時）': workHoursDecimal > 0 ? workHoursDecimal.toFixed(2) : '-',
-                '狀態': statusText,
-                '備註': notes || '-'
+                [col.date]: record.date,
+                [col.weekday]: getDayOfWeek(record.date),
+                [col.inTime]: punchInRecord ? `${punchInRecord.time}:00` : '-',
+                [col.inPlace]: punchInRecord?.location || '-',
+                [col.outTime]: punchOutRecord ? `${punchOutRecord.time}:00` : '-',
+                [col.outPlace]: punchOutRecord?.location || '-',
+                [col.workHours]: workHours,
+                [col.hoursDecimal]: workHoursDecimal > 0 ? workHoursDecimal.toFixed(2) : '-',
+                [col.status]: statusText,
+                [col.notes]: notes || '-'
             });
         });
         
         // 計算統計資料
         const totalWorkHours = exportData.reduce((sum, row) => {
-            const hours = parseFloat(row['工時（小時）']);
+            const hours = parseFloat(row[col.hoursDecimal]);
             return sum + (isNaN(hours) ? 0 : hours);
         }, 0);
         
-        const totalDays = exportData.filter(row => row['工時（小時）'] !== '-').length;
+        const totalDays = exportData.filter(row => row[col.hoursDecimal] !== '-').length;
         const avgWorkHours = totalDays > 0 ? (totalWorkHours / totalDays).toFixed(2) : 0;
         
         // 新增統計行
         exportData.push({});
         exportData.push({
-            '日期': '統計',
-            '星期': '',
-            '上班時間': '',
-            '上班地點': '',
-            '下班時間': '',
-            '下班地點': '',
-            '工作時數': `共 ${totalDays} 天`,
-            '工時（小時）': totalWorkHours.toFixed(2),
-            '狀態': `平均: ${avgWorkHours}`,
-            '備註': ''
+            [col.date]: t('RPT_SUMMARY'),
+            [col.weekday]: '',
+            [col.inTime]: '',
+            [col.inPlace]: '',
+            [col.outTime]: '',
+            [col.outPlace]: '',
+            [col.workHours]: t('RPT_TOTAL_DAYS', { n: totalDays }),
+            [col.hoursDecimal]: totalWorkHours.toFixed(2),
+            [col.status]: t('RPT_AVERAGE', { n: avgWorkHours }),
+            [col.notes]: ''
         });
         
         // 使用 SheetJS 建立 Excel 檔案
@@ -412,11 +426,11 @@ async function exportEmployeePunchReport() {
         
         // 建立工作簿
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, `${yearMonth.split('-')[1]}月出勤`);
+        XLSX.utils.book_append_sheet(wb, ws, t('RPT_SHEET_EMPLOYEE', { month: yearMonth.split('-')[1] }).slice(0, 31));
         
         // 下載檔案
         const [year, month] = yearMonth.split('-');
-        const fileName = `${employeeName}_${year}年${month}月_打卡記錄.xlsx`;
+        const fileName = `${t('RPT_FILE_EMPLOYEE', { name: employeeName, year: year, month: month })}.xlsx`;
         XLSX.writeFile(wb, fileName);
         
         showNotification(t('EXPORT_SUCCESS') || '報表已成功匯出！', 'success');

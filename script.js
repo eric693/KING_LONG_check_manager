@@ -490,7 +490,7 @@ function renderAbnormalRecords(records) {
                     if (isTodayAdjust) {
                         // 當日修正：橘色標示
                         reasonClass = 'text-orange-600 dark:text-orange-400';
-                        displayReason = ` ${translatePunchTypes(record.punchTypes)}（當日修正）`;
+                        displayReason = ` ${translatePunchTypes(record.punchTypes)}（${t('ADJUST_KIND_TODAY')}）`;
                         buttonHtml = `
                             <span class="text-sm font-semibold text-orange-600 dark:text-orange-400">
                                 ⏳ ${displayReason}
@@ -499,7 +499,7 @@ function renderAbnormalRecords(records) {
                     } else if (isHistoryAdjust) {
                         // 歷史補打：黃色標示
                         reasonClass = 'text-yellow-600 dark:text-yellow-400';
-                        displayReason = ` ${translatePunchTypes(record.punchTypes)}（歷史補打）`;
+                        displayReason = ` ${translatePunchTypes(record.punchTypes)}（${t('ADJUST_KIND_HISTORY')}）`;
                         buttonHtml = `
                             <span class="text-sm font-semibold text-yellow-600 dark:text-yellow-400">
                                 ⏳ ${displayReason}
@@ -1546,7 +1546,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         ${req.note ? `
                             <div class="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 dark:border-yellow-600 rounded">
                                 <p class="text-sm font-semibold text-yellow-800 dark:text-yellow-300 mb-1">
-                                     補打卡理由：
+                                     ${escapeHtml(t('ADJUST_REASON_LABEL'))}：
                                 </p>
                                 <p class="text-sm text-yellow-700 dark:text-yellow-400">
                                     ${escapeHtml(req.note)}
@@ -1662,7 +1662,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         fillOpacity: 0.2,
                         radius: punchInRadius
                     });
-                    locationCircle.bindPopup(`<b>${escapeHtml(loc.name)}</b><br>可打卡範圍：${punchInRadius}公尺`);
+                    locationCircle.bindPopup(`<b>${escapeHtml(loc.name)}</b><br>${escapeHtml(t('MAP_PUNCH_RADIUS', { radius: punchInRadius }))}`);
                     locationCircles.addLayer(locationCircle);
                 });
                 
@@ -1780,7 +1780,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             fetchAndRenderLocationsOnMap();
         } else {
             showNotification(t('ERROR_BROWSER_NOT_SUPPORTED'), "error");
-            statusEl.textContent = '不支援定位';
+            statusEl.textContent = t('LOCATION_UNSUPPORTED');
         }
     }
     
@@ -1799,7 +1799,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 showNotification(t('NOTIF_API_TEST_OK') + JSON.stringify(res), "success");
             } else {
                 // 如果 res.ok 為 false，表示後端處理失敗
-                showNotification(t('NOTIF_API_TEST_FAILED') + (res ? res.msg : "無回應資料"), "error");
+                showNotification(t('NOTIF_API_TEST_FAILED') + (res ? res.msg : t('NO_RESPONSE_DATA')), "error");
             }
         } catch (error) {
             // 捕捉任何在 callApifetch 函式中拋出的錯誤（例如網路連線問題）
@@ -1814,7 +1814,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
         
-        getLocationBtn.textContent = '取得中...';
+        getLocationBtn.textContent = t('LOCATION_BTN_GETTING');
         getLocationBtn.disabled = true;
         
         navigator.geolocation.getCurrentPosition((pos) => {
@@ -1824,7 +1824,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             locationLatInput.value = lat.toFixed(6);
             locationLngInput.value = lng.toFixed(6);
-            getLocationBtn.textContent = '已取得';
+            getLocationBtn.textContent = t('LOCATION_BTN_GOT');
             addLocationBtn.disabled = false;
             
             // 同步到新增地點的選取器地圖（可再拖曳微調）
@@ -1859,7 +1859,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             showNotification(t('NOTIF_LOCATION_OK'), 'success');
         }, (err) => {
             showNotification(t("ERROR_GEOLOCATION", { msg: err.message }), "error");
-            getLocationBtn.textContent = '取得當前位置';
+            getLocationBtn.textContent = t('GET_LOCATION_BTN');
             getLocationBtn.disabled = false;
         });
     });
@@ -2494,7 +2494,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (typeof displayAdminAnnouncements === 'function') await displayAdminAnnouncements();
                     if (typeof displayAnnouncements === 'function') await displayAnnouncements();
                 } else {
-                    showNotification(res.msg || '發布失敗', 'error');
+                    showNotification(res.msg || t('NOTIF_PUBLISH_FAILED'), 'error');
                 }
                 
             } catch (error) {
@@ -2852,7 +2852,7 @@ async function doPunch(type) {
     }
     
     if (!navigator.geolocation) {
-        showNotification(t("ERROR_GEOLOCATION", { msg: "您的瀏覽器不支援地理位置功能。" }), "error");
+        showNotification(t("ERROR_GEOLOCATION", { msg: t('ERROR_BROWSER_NOT_SUPPORTED') }), "error");
         generalButtonState(button, 'idle');
         _isPunching = false;
         return;

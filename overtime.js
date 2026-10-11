@@ -81,7 +81,6 @@ async function loadEmployeeOvertimeRecords() {
  */
 function displayMonthlyOvertimeStats(approvedHours) {
     const now = new Date();
-    const monthName = `${now.getFullYear()}年${now.getMonth() + 1}月`;
     
     const remaining = Math.max(0, MAX_MONTHLY_OVERTIME - approvedHours);
     const exceeded = Math.max(0, approvedHours - MAX_MONTHLY_OVERTIME);
@@ -89,30 +88,30 @@ function displayMonthlyOvertimeStats(approvedHours) {
     const statsHtml = `
         <div class="mb-4 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border-2 border-indigo-200 dark:border-indigo-700 rounded-lg">
             <h3 class="text-sm font-bold text-indigo-800 dark:text-indigo-300 mb-3">
-                ${monthName} 加班統計
+                ${escapeHtml(t('OT_MONTH_STATS', { year: now.getFullYear(), month: now.getMonth() + 1 }))}
             </h3>
             <div class="grid grid-cols-2 gap-3">
                 <div class="text-center">
-                    <p class="text-xs text-gray-600 dark:text-gray-400">已核准時數</p>
+                    <p class="text-xs text-gray-600 dark:text-gray-400">${escapeHtml(t('OT_APPROVED_HOURS'))}</p>
                     <p class="text-2xl font-bold ${approvedHours > MAX_MONTHLY_OVERTIME ? 'text-red-600 dark:text-red-400' : 'text-indigo-600 dark:text-indigo-400'}">
                         ${approvedHours.toFixed(1)}
                     </p>
-                    <p class="text-xs text-gray-500">/ ${MAX_MONTHLY_OVERTIME} 小時</p>
+                    <p class="text-xs text-gray-500">${escapeHtml(t('OT_OF_MAX', { max: MAX_MONTHLY_OVERTIME }))}</p>
                 </div>
                 <div class="text-center">
                     <p class="text-xs text-gray-600 dark:text-gray-400">
-                        ${exceeded > 0 ? '超過時數' : '剩餘額度'}
+                        ${escapeHtml(exceeded > 0 ? t('OT_OVER_LIMIT_LABEL') : t('OT_REMAINING_LABEL'))}
                     </p>
                     <p class="text-2xl font-bold ${exceeded > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-green-600 dark:text-green-400'}">
                         ${exceeded > 0 ? exceeded.toFixed(1) : remaining.toFixed(1)}
                     </p>
-                    <p class="text-xs text-gray-500">小時</p>
+                    <p class="text-xs text-gray-500">${escapeHtml(t('UNIT_HOURS'))}</p>
                 </div>
             </div>
             ${exceeded > 0 ? `
                 <div class="mt-3 p-2 bg-orange-100 dark:bg-orange-900/30 border border-orange-300 dark:border-orange-700 rounded text-center">
                     <p class="text-xs font-semibold text-orange-800 dark:text-orange-300">
-                         已超過每月上限，超出部分需轉為補休
+                         ${escapeHtml(t('OT_OVER_LIMIT_NOTE'))}
                     </p>
                 </div>
             ` : ''}
@@ -215,11 +214,11 @@ async function renderOvertimeRecords(requests, container) {
                 <div>
                     <p class="font-semibold text-gray-800 dark:text-white">${req.overtimeDate}</p>
                     <p class="text-sm text-gray-600 dark:text-gray-400">
-                        ${startTime} - ${endTime} (${hours}小時)
+                        ${startTime} - ${endTime} (${escapeHtml(t('HOURS_N', { n: hours }))})
                     </p>
                     ${compHours > 0 ? `
                         <p class="text-sm text-orange-600 dark:text-orange-400 font-semibold mt-1">
-                            補休時數：${compHours} 小時
+                            ${escapeHtml(t('OT_COMP_HOURS'))}：${escapeHtml(t('HOURS_N', { n: compHours }))}
                         </p>
                     ` : ''}
                 </div>
@@ -228,11 +227,11 @@ async function renderOvertimeRecords(requests, container) {
                 </span>
             </div>
             <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                <strong>申請原因：</strong>${escapeHtml(req.reason)}
+                <strong>${escapeHtml(t('OVERTIME_REASON_LABEL'))}</strong>${escapeHtml(req.reason)}
             </p>
             ${req.reviewComment ? `
                 <p class="text-sm text-gray-500 dark:text-gray-400 italic">
-                    <strong>審核意見：</strong>${escapeHtml(req.reviewComment)}
+                    <strong>${escapeHtml(t('OVERTIME_REVIEW_COMMENT'))}</strong>${escapeHtml(req.reviewComment)}
                 </p>
             ` : ''}
         `;
@@ -433,27 +432,27 @@ function showCompensatoryHoursInput(currentHours, requestHours, exceededHours) {
     const formHtml = `
         <div id="compensatory-hours-form" class="mt-4 p-4 bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-300 dark:border-orange-700 rounded-lg">
             <h3 class="text-lg font-bold text-orange-800 dark:text-orange-300 mb-3">
-                 超過每月加班時數上限
+                 ${escapeHtml(t('OT_LIMIT_TITLE'))}
             </h3>
             
             <div class="space-y-2 mb-4 text-sm">
                 <p class="text-orange-700 dark:text-orange-400">
-                    <strong>本月已核准：</strong>${currentHours.toFixed(1)} 小時
+                    <strong>${escapeHtml(t('OT_THIS_MONTH_APPROVED'))}</strong>${escapeHtml(t('HOURS_N', { n: currentHours.toFixed(1) }))}
                 </p>
                 <p class="text-orange-700 dark:text-orange-400">
-                    <strong>本次申請：</strong>${requestHours.toFixed(1)} 小時
+                    <strong>${escapeHtml(t('OT_THIS_REQUEST'))}</strong>${escapeHtml(t('HOURS_N', { n: requestHours.toFixed(1) }))}
                 </p>
                 <p class="text-orange-700 dark:text-orange-400">
-                    <strong>合計：</strong>${(currentHours + requestHours).toFixed(1)} 小時
+                    <strong>${escapeHtml(t('OT_TOTAL'))}</strong>${escapeHtml(t('HOURS_N', { n: (currentHours + requestHours).toFixed(1) }))}
                 </p>
                 <p class="text-red-700 dark:text-red-400 font-bold">
-                    <strong>超過上限：</strong>${exceededHours.toFixed(1)} 小時
+                    <strong>${escapeHtml(t('OT_EXCEEDED'))}</strong>${escapeHtml(t('HOURS_N', { n: exceededHours.toFixed(1) }))}
                 </p>
             </div>
             
             <div class="bg-white dark:bg-gray-800 rounded-lg p-3 mb-4">
                 <label for="compensatory-hours" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    補休時數 <span class="text-red-500">*</span>
+                    ${escapeHtml(t('OT_COMP_HOURS'))} <span class="text-red-500">*</span>
                 </label>
                 <input type="number" 
                        id="compensatory-hours" 
@@ -463,18 +462,18 @@ function showCompensatoryHoursInput(currentHours, requestHours, exceededHours) {
                        value="${exceededHours.toFixed(1)}"
                        class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    超過上限的 ${exceededHours.toFixed(1)} 小時建議全數轉為補休
+                    ${escapeHtml(t('OT_COMP_SUGGEST', { hours: exceededHours.toFixed(1) }))}
                 </p>
             </div>
             
             <div class="grid grid-cols-2 gap-3">
                 <button id="cancel-compensatory-btn" 
                         class="py-2 px-4 rounded-lg font-bold bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200">
-                    取消
+                    ${escapeHtml(t('BTN_CANCEL'))}
                 </button>
                 <button id="confirm-compensatory-btn" 
                         class="py-2 px-4 rounded-lg font-bold btn-primary">
-                    確認提交
+                    ${escapeHtml(t('CONFIRM_SUBMIT'))}
                 </button>
             </div>
         </div>
@@ -622,7 +621,7 @@ async function renderPendingOvertimeRequests(requests, container) {
                             ${req.overtimeDate} | ${startTime} - ${endTime}
                         </p>
                         <p class="text-sm text-indigo-600 dark:text-indigo-400">
-                            <strong data-i18n="OVERTIME_HOURS_LABEL">加班時數：</strong>${hours} 小時
+                            <strong data-i18n="OVERTIME_HOURS_LABEL">加班時數：</strong>${escapeHtml(t('HOURS_N', { n: hours }))}
                         </p>
                     </div>
                 </div>

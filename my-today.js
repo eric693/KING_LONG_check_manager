@@ -33,7 +33,7 @@ function myTodayPunchLabel(type) {
 function renderMyToday(d) {
     const weekdayIndex = (myTodayParseDate(d.date).getDay() + 6) % 7;
     document.getElementById('my-today-date').textContent =
-        `${d.date.slice(5).replace('-', '/')}（${t(MY_TODAY_WEEKDAYS[weekdayIndex])}）`;
+        `${d.date.slice(5).replace('-', '/')} (${t(MY_TODAY_WEEKDAYS[weekdayIndex])})`;
 
     // 狀態：上班中／已下班／還沒打卡
     const status = document.getElementById('my-today-status');
@@ -57,7 +57,7 @@ function renderMyToday(d) {
 
     const leaveHtml = (d.leave || []).map(l =>
         `<p class="mt-3 text-sm rounded-lg px-3 py-2 bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
-            ${escapeHtml(t('MY_TODAY_LEAVE'))}：${escapeHtml(t(l.leaveType))} ${escapeHtml(l.start.slice(6))}–${escapeHtml(l.end.slice(6))}
+            ${escapeHtml(t('MY_TODAY_LEAVE'))}: ${escapeHtml(t(l.leaveType))} ${escapeHtml(l.start.slice(6))}–${escapeHtml(l.end.slice(6))}
         </p>`).join('');
 
     const punchesHtml = d.punches.length
@@ -69,7 +69,7 @@ function renderMyToday(d) {
                     ? 'bg-green-50 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-200 dark:border-green-800'
                     : 'bg-red-50 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-200 dark:border-red-800');
             return `<span class="inline-block px-2 py-1 rounded-md border text-xs ${tone}">
-                        ${escapeHtml(p.time)} ${escapeHtml(myTodayPunchLabel(p.type))}${pending ? '（' + escapeHtml(t('MY_TODAY_PENDING')) + '）' : ''}
+                        ${escapeHtml(p.time)} ${escapeHtml(myTodayPunchLabel(p.type))}${pending ? ' (' + escapeHtml(t('MY_TODAY_PENDING')) + ')' : ''}
                     </span>`;
         }).join(' ')
         : `<span class="text-sm text-gray-500 dark:text-gray-400">${escapeHtml(t('MY_TODAY_NO_PUNCH'))}</span>`;

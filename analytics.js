@@ -25,20 +25,20 @@ async function initAdminAnalysis() {
                 //  加入「請選擇員工」
                 const defaultOption = document.createElement('option');
                 defaultOption.value = '';
-                defaultOption.textContent = '-- 請選擇員工 --';
+                defaultOption.textContent = `-- ${t('SELECT_EMPLOYEE_PLACEHOLDER')} --`;
                 worklogExportSelect.appendChild(defaultOption);
                 
                 //  加入「全部員工」選項
                 const allOption = document.createElement('option');
                 allOption.value = 'ALL';
-                allOption.textContent = '全部員工';
+                allOption.textContent = t('ALL_EMPLOYEES');
                 worklogExportSelect.appendChild(allOption);
                 
                 //  加入每個員工
                 res.users.forEach(user => {
                     const option = document.createElement('option');
                     option.value = user.userId;
-                    option.textContent = `${user.name} (${user.dept || '未分類'})`;
+                    option.textContent = `${user.name} (${user.dept || t('UNCATEGORIZED')})`;
                     worklogExportSelect.appendChild(option);
                 });
                 
@@ -74,12 +74,12 @@ async function loadEmployeeListForAnalysis() {
             const select = document.getElementById('analysis-employee');
             if (!select) return;
             
-            select.innerHTML = '<option value="">請選擇員工</option>';
+            select.innerHTML = `<option value="">${escapeHtml(t('SELECT_EMPLOYEE_PLACEHOLDER'))}</option>`;
             
             res.users.forEach(user => {
                 const option = document.createElement('option');
                 option.value = user.userId;
-                option.textContent = `${user.name} (${user.dept || '未分類'})`;
+                option.textContent = `${user.name} (${user.dept || t('UNCATEGORIZED')})`;
                 select.appendChild(option);
             });
         }
@@ -164,7 +164,7 @@ function renderWorkHoursChart(dates, workHours) {
         data: {
             labels: dates,
             datasets: [{
-                label: '工作時數',
+                label: t('CHART_WORK_HOURS'),
                 data: workHours,
                 backgroundColor: 'rgba(79, 70, 229, 0.6)',
                 borderColor: 'rgba(79, 70, 229, 1)',
@@ -178,7 +178,7 @@ function renderWorkHoursChart(dates, workHours) {
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: '小時'
+                        text: t('CHART_HOURS_AXIS')
                     }
                 }
             },
@@ -189,7 +189,7 @@ function renderWorkHoursChart(dates, workHours) {
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            return `${context.parsed.y.toFixed(2)} 小時`;
+                            return t('HOURS_N', { n: context.parsed.y.toFixed(2) });
                         }
                     }
                 }
@@ -217,7 +217,7 @@ function renderPunchTimeChart(dates, punchInTimes, punchOutTimes) {
             labels: dates,
             datasets: [
                 {
-                    label: '上班打卡',
+                    label: t('BTN_PUNCH_IN'),
                     data: punchInTimes,
                     borderColor: 'rgba(34, 197, 94, 1)',
                     backgroundColor: 'rgba(34, 197, 94, 0.1)',
@@ -225,7 +225,7 @@ function renderPunchTimeChart(dates, punchInTimes, punchOutTimes) {
                     tension: 0.1
                 },
                 {
-                    label: '下班打卡',
+                    label: t('BTN_PUNCH_OUT'),
                     data: punchOutTimes,
                     borderColor: 'rgba(239, 68, 68, 1)',
                     backgroundColor: 'rgba(239, 68, 68, 0.1)',
@@ -248,7 +248,7 @@ function renderPunchTimeChart(dates, punchInTimes, punchOutTimes) {
                     },
                     title: {
                         display: true,
-                        text: '時間'
+                        text: t('CHART_TIME_AXIS')
                     }
                 }
             },
