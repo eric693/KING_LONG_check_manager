@@ -111,6 +111,12 @@ function renderTranslations(container = document) {
         if (translatedText !== key) element.textContent = translatedText;
     });
 
+    // 下拉選單的分組標題（<optgroup label>）
+    container.querySelectorAll('[data-i18n-label]').forEach(element => {
+        const translatedText = t(element.getAttribute('data-i18n-label'));
+        if (translatedText !== element.getAttribute('data-i18n-label')) element.label = translatedText;
+    });
+
     // 下拉選單的 option
     container.querySelectorAll('select').forEach(select => {
         select.querySelectorAll('option[data-i18n-option]').forEach(option => {

@@ -514,7 +514,7 @@ function checkSchedulingPermission(actionName) {
     console.log('   isScheduler:', isScheduler);
     
     if (!isAdmin && !isScheduler) {
-        showMessage(` 權限不足：只有管理員或排班人員可以${actionName}`, 'error');
+        showMessage(t('SHIFT_NO_PERMISSION_ACTION', { action: t(actionName) }), 'error');
         return false;
     }
     
@@ -669,12 +669,12 @@ function populateEmployeeSelect() {
     console.log('   員工數量:', allEmployees.length);
     
     // 清空並重設為預設選項
-    select.innerHTML = '<option value="">請選擇員工</option>';
+    select.innerHTML = `<option value="">${escapeHtml(t('SELECT_EMPLOYEE_PLACEHOLDER'))}</option>`;
     console.log(' 已重設為預設選項');
     
     if (allEmployees.length === 0) {
         console.warn(' 沒有員工可以填入');
-        select.innerHTML = '<option value="">目前沒有員工資料</option>';
+        select.innerHTML = `<option value="">${escapeHtml(t('SHIFT_NO_EMPLOYEES'))}</option>`;
         return;
     }
     
@@ -744,7 +744,7 @@ function populateEmployeeFilter() {
     console.log(' 開始填入員工篩選下拉框...');
     
     // 保留「全部」選項
-    filterSelect.innerHTML = '<option value="">全部</option>';
+    filterSelect.innerHTML = `<option value="">${escapeHtml(t('OPTION_ALL'))}</option>`;
     
     if (!allEmployees || allEmployees.length === 0) {
         console.warn(' 沒有員工可以填入篩選框');
@@ -842,8 +842,8 @@ function populateLocationSelects() {
         
         const currentValue = select.value;
         select.innerHTML = id === 'filter-location' ? 
-            '<option value="">全部</option>' : 
-            '<option value="">請選擇地點</option>';
+            `<option value="">${escapeHtml(t('OPTION_ALL'))}</option>` :
+            `<option value="">${escapeHtml(t('SHIFT_SELECT_LOCATION'))}</option>`;
         
         allLocations.forEach(loc => {
             const option = document.createElement('option');
@@ -1005,14 +1005,14 @@ function formatDate(dateString) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
-    const weekday = weekdays[date.getDay()];
+    const weekdays = ['WEEK_SUNDAY', 'WEEK_MONDAY', 'WEEK_TUESDAY', 'WEEK_WEDNESDAY', 'WEEK_THURSDAY', 'WEEK_FRIDAY', 'WEEK_SATURDAY'];
+    const weekday = t(weekdays[date.getDay()]);
     
     return `${year}/${month}/${day} (${weekday})`;
 }
 
 async function addShift() {
-    if (!checkSchedulingPermission('新增排班')) return;
+    if (!checkSchedulingPermission('SHIFT_ACTION_ADD')) return;
     const employeeSelect = document.getElementById('employee-select');
     const selectedOption = employeeSelect.selectedOptions[0];
     
@@ -1082,7 +1082,7 @@ async function addShift() {
 }
 
 async function editShift(shiftId) {
-    if (!checkSchedulingPermission('編輯排班')) return; 
+    if (!checkSchedulingPermission('SHIFT_ACTION_EDIT')) return; 
     const shift = currentShifts.find(s => s.shiftId === shiftId) ||
                   sameDayShifts.find(s => s.shiftId === shiftId);
     if (!shift) return;
@@ -1128,7 +1128,7 @@ async function editShift(shiftId) {
 
 async function updateShift(shiftId) {
     
-    if (!checkSchedulingPermission('編輯排班')) return;
+    if (!checkSchedulingPermission('SHIFT_ACTION_EDIT')) return;
     const employeeSelect = document.getElementById('employee-select');
     const selectedOption = employeeSelect.selectedOptions[0];
     
@@ -1175,7 +1175,7 @@ async function updateShift(shiftId) {
 }
 
 async function deleteShift(shiftId) {
-    if (!checkSchedulingPermission('刪除排班')) return;
+    if (!checkSchedulingPermission('SHIFT_ACTION_DELETE')) return;
     if (!confirm(t('SHIFT_DELETE_CONFIRM'))) return;
     
     try {
@@ -1259,13 +1259,13 @@ function exportShifts() {
     }
     
     const csv = convertToCSV(currentShifts);
-    const filename = `排班表_${todayStr()}.csv`;
+    const filename = `${t('SHIFT_EXPORT_FILE', { date: todayStr() })}.csv`;
     downloadCSV(csv, filename);
     showMessage(t('SHIFT_EXPORT_SUCCESS'), 'success');
 }
 
 function convertToCSV(data) {
-    const headers = ['排班ID', '員工ID', '員工姓名', '日期', '班別', '上班時間', '下班時間', '地點', '備註'];
+    const headers = t('SHIFT_CSV_HEADERS').split(',');
     const rows = data.map(shift => [
         shift.shiftId,
         shift.employeeId,
@@ -1505,13 +1505,13 @@ async function handleBatchFile(file) {
                 
             } catch (error) {
                 console.error('Excel 解析失敗:', error);
-                showMessage('Excel 檔案解析失敗，請確認格式正確', 'error');
+                showMessage(t('SHIFT_EXCEL_PARSE_FAILED'), 'error');
             }
         };
         reader.readAsArrayBuffer(file);
         
     } else {
-        showMessage('僅支援 CSV、XLS、XLSX 格式', 'error');
+        showMessage(t('SHIFT_FILE_TYPES'), 'error');
     }
 }
 function parseBatchData(content, filename) {
@@ -1695,7 +1695,7 @@ function displayBatchPreview(data) {
  *  批量上傳（使用 FormData 避免 CORS）
  */
 async function confirmBatchUpload() {
-    if (!checkSchedulingPermission('批量上傳')) return;
+    if (!checkSchedulingPermission('SHIFT_ACTION_UPLOAD')) return;
     if (batchData.length === 0) return;
     
     try {
@@ -1738,17 +1738,17 @@ async function confirmBatchUpload() {
         }
        
         if (data.ok || data.success) {
-            showMessage(data.msg || data.message || '批量上傳成功！', 'success');
+            showMessage(data.msg || data.message || t('SHIFT_UPLOAD_OK'), 'success');
             cancelBatchUpload();
             switchTab('view');
             loadShifts();
         } else {
-            let errorMsg = data.msg || data.message || '批量上傳失敗';
+            let errorMsg = data.msg || data.message || t('SHIFT_UPLOAD_FAILED');
             
             if (data.results && data.results.errors && data.results.errors.length > 0) {
-                errorMsg += '\n\n錯誤詳情：\n' + data.results.errors.slice(0, 5).join('\n');
+                errorMsg += '\n\n' + t('SHIFT_UPLOAD_ERRORS') + '\n' + data.results.errors.slice(0, 5).join('\n');
                 if (data.results.errors.length > 5) {
-                    errorMsg += `\n...還有 ${data.results.errors.length - 5} 個錯誤`;
+                    errorMsg += '\n' + t('SHIFT_UPLOAD_MORE_ERRORS', { n: data.results.errors.length - 5 });
                 }
             }
             
@@ -1759,12 +1759,12 @@ async function confirmBatchUpload() {
         console.error(' 批量上傳失敗:', error);
         console.error('錯誤堆疊:', error.stack);
         
-        let errorMsg = '批量上傳失敗：' + error.message;
+        let errorMsg = t('SHIFT_UPLOAD_FAILED') + ': ' + error.message;
         
         if (error.message.includes('Failed to fetch')) {
-            errorMsg = '網路連線失敗，請檢查：\n1. 網路連線是否正常\n2. API 網址是否正確\n3. 伺服器是否運作中';
+            errorMsg = t('SHIFT_UPLOAD_NETWORK');
         } else if (error.message.includes('CORS')) {
-            errorMsg = 'CORS 錯誤，請確認：\n1. Google Apps Script 已正確部署\n2. 使用的是正確的部署 URL';
+            errorMsg = t('SHIFT_UPLOAD_CORS');
         }
         
         showMessage(errorMsg, 'error');
@@ -1786,13 +1786,14 @@ function downloadTemplate() {
     // 要臨時調整就直接填時間或休息分鐘。員工ID 請到管理員頁的員工管理複製。
     const codes = shiftTemplates.filter(tpl => tpl.active).map(tpl => tpl.code);
     const pick = (i, fallback) => codes[i] || fallback;
-    const template = '員工ID,員工姓名,日期,班別,上班時間,下班時間,地點,備註,休息分鐘\n' +
+    // 上傳時照欄位位置讀、略過第一列，所以標題可以翻譯；資料列的班別（排休等）要保持原樣
+    const template = t('SHIFT_TEMPLATE_HEADERS') + '\n' +
         `員工ID,王小明,2026-10-01,${pick(0, 'E')},,,總店,兩頭班：時間與休息分鐘自動帶入,\n` +
         `員工ID,王小明,2026-10-02,${pick(6, 'C')},,,總店,,\n` +
         `員工ID,王小明,2026-10-03,${pick(3, 'F')},11:00,15:00,總店,手動調整時間,0\n` +
         '員工ID,王小明,2026-10-04,排休,00:00,00:00,總店,,\n';
 
-    downloadCSV(template, '排班範本.csv');
+    downloadCSV(template, `${t('SHIFT_TEMPLATE_FILE')}.csv`);
     showMessage(t('SHIFT_TEMPLATE_DOWNLOADED'), 'success');
 }
 
@@ -1820,9 +1821,7 @@ async function loadStats() {
 }
 
 function updateMonthDisplay() {
-    const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', 
-                        '7月', '8月', '9月', '10月', '11月', '12月'];
-    const displayText = `${currentYear}年${monthNames[currentMonth]}`;
+    const displayText = t('SHIFT_MONTH_TITLE', { year: currentYear, month: currentMonth + 1 });
     const monthEl = document.getElementById('current-month');
     if (monthEl) monthEl.textContent = displayText;
 }
@@ -1927,28 +1926,28 @@ function displayMonthlyStats(shifts) {
             <div class="stat-value">${stats.total}</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">廚房班別</div>
+            <div class="stat-label">${escapeHtml(t('SHIFT_STAT_KITCHEN'))}</div>
             <div class="stat-value" style="color: #ff9800;">${stats.kitchenShifts}</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">外場班別</div>
+            <div class="stat-label">${escapeHtml(t('SHIFT_STAT_FLOOR'))}</div>
             <div class="stat-value" style="color: #2196f3;">${stats.floorShifts}</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">年假(特休)</div>
+            <div class="stat-label">${escapeHtml(t('SHIFT_STAT_ANNUAL'))}</div>
             <div class="stat-value" style="color: #4caf50;">${stats.annualLeave}</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">過年假</div>
+            <div class="stat-label">${escapeHtml(t('SHIFT_TYPE_CNY_LEAVE'))}</div>
             <div class="stat-value" style="color: #f44336;">${stats.cnyLeave}</div>
         </div>
         <!--  新增國定假日統計 -->
         <div class="stat-card">
-            <div class="stat-label">國定假日</div>
+            <div class="stat-label">${escapeHtml(t('SHIFT_STAT_HOLIDAY'))}</div>
             <div class="stat-value" style="color: #ff9800;">${stats.nationalHoliday}</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">排休</div>
+            <div class="stat-label">${escapeHtml(t('SHIFT_TYPE_DAYOFF'))}</div>
             <div class="stat-value" style="color: #757575;">${stats.dayoff}</div>
         </div>
         ${stats.custom > 0 ? `
@@ -1967,13 +1966,13 @@ async function loadMonthlyShifts() {
     const calendarGrid = document.getElementById('calendar-grid');
     if (!calendarGrid) return;
     
-    calendarGrid.innerHTML = '<div class="loading">載入月曆中</div>';
+    calendarGrid.innerHTML = `<div class="loading">${escapeHtml(t('SHIFT_CALENDAR_LOADING'))}</div>`;
     
     try {
         displayMonthCalendar(allMonthShifts);
     } catch (error) {
         console.error('載入月曆失敗:', error);
-        calendarGrid.innerHTML = '<div class="loading">載入失敗</div>';
+        calendarGrid.innerHTML = `<div class="loading">${escapeHtml(t('SHIFT_LOAD_FAILED'))}</div>`;
     }
 }
 
@@ -2143,7 +2142,7 @@ function displayShiftDistribution(shifts) {
     const maxCount = Math.max(...Object.values(employeeStats), 1);
     
     let html = '<div class="distribution-section">';
-    html += '<h3 class="distribution-title"> 本月員工排班分布</h3>';
+    html += `<h3 class="distribution-title">${escapeHtml(t('SHIFT_DIST_EMPLOYEES'))}</h3>`;
     html += '<div class="distribution-bars">';
     
     const sortedEmployees = Object.entries(employeeStats)
@@ -2157,7 +2156,7 @@ function displayShiftDistribution(shifts) {
                 <div class="distribution-bar-label">${escapeHtml(name)}</div>
                 <div class="distribution-bar-container">
                     <div class="distribution-bar" style="width: ${percentage}%">
-                        <div class="distribution-bar-value">${count} 班</div>
+                        <div class="distribution-bar-value">${escapeHtml(t('SHIFT_COUNT_N', { n: count }))}</div>
                     </div>
                 </div>
             </div>
@@ -2167,7 +2166,7 @@ function displayShiftDistribution(shifts) {
     html += '</div></div>';
     
     html += '<div class="distribution-section">';
-    html += '<h3 class="distribution-title"> 本月班別分布</h3>';
+    html += `<h3 class="distribution-title">${escapeHtml(t('SHIFT_DIST_TYPES'))}</h3>`;
     html += '<div class="shift-type-distribution">';
     
     const totalShifts = Object.values(shiftTypeStats).reduce((a, b) => a + b, 0);
@@ -2187,7 +2186,7 @@ function displayShiftDistribution(shifts) {
         html += `
             <div class="shift-type-stat">
                 <div class="shift-type-stat-header">
-                    <span class="shift-type-label ${getShiftClass(type)}">${type}</span>
+                    <span class="shift-type-label ${getShiftClass(type)}">${escapeHtml(shiftCategoryLabel(type))}</span>
                     <span class="shift-type-count">${count}</span>
                 </div>
                 <div class="shift-type-bar-container">
@@ -2289,3 +2288,10 @@ function goBack() {
 }
 
 console.log(' 排班管理系統(含月曆功能)已載入');
+// 班別分類（早班、排休…）存在試算表裡是中文，畫面上顯示時翻譯；沒對應的照原樣顯示
+const SHIFT_CATEGORY_KEYS = { '早班': 'SHIFT_TYPE_MORNING', '中班': 'SHIFT_TYPE_AFTERNOON', '晚班': 'SHIFT_TYPE_NIGHT',
+                              '全日班': 'SHIFT_TYPE_FULL', '排休': 'SHIFT_TYPE_DAYOFF', '自訂': 'SHIFT_TYPE_CUSTOM',
+                              '過年假': 'SHIFT_TYPE_CNY_LEAVE' };
+function shiftCategoryLabel(type) {
+    return SHIFT_CATEGORY_KEYS[type] ? t(SHIFT_CATEGORY_KEYS[type]) : type;
+}

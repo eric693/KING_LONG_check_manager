@@ -422,8 +422,9 @@ async function startLineLogin() {
 
 function showLoginUI() {
     setElementDisplay('login-btn', 'block');
-    document.getElementById('user-header').style.display = 'none';
-    document.getElementById('main-app').style.display = 'none';
+    // 薪資頁、排班頁也載入 script.js，但沒有這兩個區塊
+    setElementDisplay('user-header', 'none');
+    setElementDisplay('main-app', 'none');
     setElementText("status", t("SUBTITLE_LOGIN"));
 }
 

@@ -395,7 +395,7 @@
       "terms": [
         [
           "Manual payslip",
-          "A payslip whose amounts an admin entered item by item. Its status is \"手動輸入\" and it is never recalculated."
+          "A payslip whose amounts an admin entered item by item. Its status is \"Manual entry\" and it is never recalculated."
         ],
         [
           "Net pay",

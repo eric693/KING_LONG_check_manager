@@ -862,7 +862,7 @@
                         <select id="filter-employees" multiple size="3" style="height: auto; min-height: 100px;">
                             <option value="" data-i18n-option="OPTION_ALL">全部</option>
                         </select>
-                        <small style="color: #666; font-size: 12px; margin-top: 4px; display: block;">
+                        <small data-i18n="SHIFT_MULTISELECT_HINT" style="color: #666; font-size: 12px; margin-top: 4px; display: block;">
                             按住 Ctrl/Cmd 可多選
                         </small>
                     </div>
@@ -871,10 +871,10 @@
                         <select id="filter-shift-type">
                             <option value="" data-i18n-option="OPTION_ALL">全部</option>
                             <!-- 班別設定的班別由 shift.js 載入後插在這裡 -->
-                            <optgroup label="假別" class="leave-group">
+                            <optgroup label="假別" data-i18n-label="SHIFT_GROUP_LEAVE" class="leave-group">
                                 <option value="年假" data-i18n-option="SHIFT_TYPE_ANNUAL_LEAVE">年假(特休)</option>
                                 <option value="過年假" data-i18n-option="SHIFT_TYPE_CNY_LEAVE">過年假</option>
-                                <option value="國定假日">國定假日</option>
+                                <option value="國定假日" data-i18n-option="SHIFT_STAT_HOLIDAY">國定假日</option>
                                 <option value="排休" data-i18n-option="SHIFT_TYPE_DAYOFF">排休</option>
                             </optgroup>
                             <option value="自訂" data-i18n-option="SHIFT_TYPE_CUSTOM">自訂</option>
@@ -923,10 +923,10 @@
                             <select id="shift-type" required>
                                 <option value="" data-i18n-option="SHIFT_SELECT_TYPE">請選擇班別</option>
                                 <!-- 班別設定的班別由 shift.js 載入後插在這裡 -->
-                                <optgroup label="假別" class="leave-group">
+                                <optgroup label="假別" data-i18n-label="SHIFT_GROUP_LEAVE" class="leave-group">
                                     <option value="年假" data-i18n-option="SHIFT_TYPE_ANNUAL_LEAVE">年假(特休)</option>
                                     <option value="過年假" data-i18n-option="SHIFT_TYPE_CNY_LEAVE">過年假</option>
-                                    <option value="國定假日">國定假日</option>
+                                    <option value="國定假日" data-i18n-option="SHIFT_STAT_HOLIDAY">國定假日</option>
                                     <option value="排休" data-i18n-option="SHIFT_TYPE_DAYOFF">排休</option>
                                 </optgroup>
                                 <option value="自訂" data-i18n-option="SHIFT_TYPE_CUSTOM">自訂時間</option>

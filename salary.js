@@ -1871,6 +1871,7 @@ const SALARY_VALUE_KEYS = {
     '時薪': 'SALARY_TYPE_HOURLY',
     '週薪': 'SALARY_TYPE_WEEKLY',
     '已計算': 'SALARY_STATUS_CALCULATED',
+    '手動輸入': 'SALARY_STATUS_MANUAL',   // 手動薪資單（ManualPayslip.gs）
     '已發放': 'BONUS_STATUS_PAID',
     '待發放': 'BONUS_STATUS_PENDING',
     '春節獎金': 'BONUS_TYPE_SPRING',

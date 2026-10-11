@@ -843,7 +843,8 @@ async function runBatchCalculation() {
       if (res.nextIndex === null || res.nextIndex === undefined) {
         if (progressEl) {
           progressEl.textContent = ta('SALARY_BATCH_DONE', '完成') +
-            `：${succeeded} 成功、${failed} 失敗（共 ${res.total} 位）`;
+            ta('SALARY_BATCH_SUMMARY', '：{ok} 成功、{failed} 失敗（共 {total} 位）')
+              .replace('{ok}', succeeded).replace('{failed}', failed).replace('{total}', res.total);
         }
         showNotification(res.msg || ta('SALARY_BATCH_DONE', '完成'), failed > 0 ? 'info' : 'success');
         break;

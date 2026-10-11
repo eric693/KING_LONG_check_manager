@@ -148,7 +148,7 @@ langs.forEach(l => { dicts[l] = JSON.parse(read(`i18n/${l}.json`)); });
 const usedKeys = new Set();
 htmlFiles.forEach(file => {
   const html = read(file);
-  for (const m of html.matchAll(/data-i18n(?:-option|-key)?="([^"]+)"/g)) usedKeys.add(m[1]);
+  for (const m of html.matchAll(/data-i18n(?:-option|-key|-label)?="([^"]+)"/g)) usedKeys.add(m[1]);
 });
 
 const i18nMissing = [];
