@@ -99,7 +99,7 @@ const DEPLOY_CHECKS = [
   ['LineApi.gs', () => typeof getLineUserInfo_ === 'function'],
   ['LineBotPunch.gs', () => typeof executePunch === 'function' && String(determinePunchType).indexOf('nextPunchType_') !== -1 &&
                              String(generateLinePunchToken_).indexOf('cleanupLinePunchTokens_') !== -1],
-  ['LineNotification.gs', () => typeof sendLineNotification_ === 'function' &&
+  ['LineNotification.gs', () => typeof sendLineNotification_ === 'function' && typeof notifyAdminsNewWorklog === 'function' &&
                                  String(sendLineNotification_).indexOf('isLineUserId_') !== -1],
   ['ManualPayslip.gs', () => typeof handleSaveManualPayslip === 'function' && typeof readManualPayslip_ === 'function' &&
                               typeof sheetNumber_ === 'function'],
@@ -129,11 +129,11 @@ const DEPLOY_CHECKS = [
   ['SystemSettings.gs', () => typeof validatePayrollRules_ === 'function'],
   ['Utils.gs', () => typeof getParam === 'function' && typeof getSheetValues_ === 'function'],
   ['WorklogHandlers.gs', () => typeof handleSubmitWorklog === 'function'],
-  ['WorklogOperations.gs', () => typeof getWorklogSheet === 'function']
+  ['WorklogOperations.gs', () => typeof getWorklogSheet === 'function' && String(submitWorklog).indexOf('notifyAdminsNewWorklog') !== -1]
 ];
 
 // 每次後端有更新就改這個日期，健康檢查會回報，從外面就知道正式區部署到哪一版
-const BACKEND_VERSION = '2026-10-11c';
+const BACKEND_VERSION = '2026-10-14';
 
 function handleHealthCheck() {
   const problems = [];

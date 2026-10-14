@@ -1513,6 +1513,87 @@ function notifyAdminsNewOvertimeRequest(employeeName, overtimeDate, startTime, e
 }
 
 /**
+ * 工作日誌新提交通知（給管理員）
+ * 工作內容可能很長，訊息只放前 300 字，完整內容到網頁看
+ */
+function createNewWorklogNotification_(employeeName, workDate, hours, content) {
+  const text = String(content || '').trim();
+  const preview = text.length > 300 ? text.slice(0, 300) + '…' : (text || "未填寫");
+  return {
+    type: "flex",
+    altText: ` ${employeeName} 提交了工作日誌，請前往審核`,
+    contents: {
+      type: "bubble",
+      size: "mega",
+      header: {
+        type: "box",
+        layout: "vertical",
+        contents: [{
+          type: "text",
+          text: " 新工作日誌待審核",
+          weight: "bold",
+          size: "xl",
+          color: "#FFFFFF",
+          align: "center"
+        }],
+        backgroundColor: "#4285F4",
+        paddingAll: "20px"
+      },
+      body: {
+        type: "box",
+        layout: "vertical",
+        contents: [
+          { type: "text", text: "有新的工作日誌等待您審核", size: "sm", color: "#666666", margin: "md" },
+          { type: "separator", margin: "lg" },
+          {
+            type: "box",
+            layout: "vertical",
+            margin: "lg",
+            spacing: "sm",
+            contents: [
+              { type: "box", layout: "baseline", spacing: "sm", contents: [
+                { type: "text", text: "提交人", color: "#999999", size: "sm", flex: 2 },
+                { type: "text", text: employeeName || "未知", wrap: true, color: "#333333", size: "sm", flex: 5, weight: "bold" }
+              ]},
+              { type: "box", layout: "baseline", spacing: "sm", contents: [
+                { type: "text", text: "日期", color: "#999999", size: "sm", flex: 2 },
+                { type: "text", text: String(workDate), wrap: true, color: "#333333", size: "sm", flex: 5, weight: "bold" }
+              ]},
+              { type: "box", layout: "baseline", spacing: "sm", contents: [
+                { type: "text", text: "時數", color: "#999999", size: "sm", flex: 2 },
+                { type: "text", text: hours + " 小時", wrap: true, color: "#4285F4", size: "sm", flex: 5, weight: "bold" }
+              ]},
+              { type: "box", layout: "baseline", spacing: "sm", contents: [
+                { type: "text", text: "內容", color: "#999999", size: "sm", flex: 2 },
+                { type: "text", text: preview, wrap: true, color: "#333333", size: "sm", flex: 5 }
+              ]}
+            ]
+          }
+        ]
+      },
+      footer: {
+        type: "box",
+        layout: "vertical",
+        contents: [{
+          type: "button",
+          style: "primary",
+          height: "sm",
+          action: { type: "uri", label: "前往審核", uri: "https://eric693.github.io/KING_LONG_check_manager/" },
+          color: "#4285F4"
+        }]
+      }
+    }
+  };
+}
+
+/**
+ * 對外呼叫：通知管理員有新工作日誌
+ */
+function notifyAdminsNewWorklog(employeeName, workDate, hours, content) {
+  notifyAllAdmins_(createNewWorklogNotification_(employeeName, workDate, hours, content));
+}
+
+/**
  * 補打卡新申請通知（給管理員）
  */
 function createNewAdjustPunchRequestNotification_(employeeName, date, time, punchType, reason) {

@@ -122,6 +122,14 @@ function submitWorklog(userId, userName, department, date, hours, content) {
     ];
     
     sheet.appendRow(newRow);
+
+    // 通知所有管理員（請假、加班、補打卡送出時也都會通知）；通知失敗不影響提交
+    try {
+      notifyAdminsNewWorklog(userName, date, hoursNum, content);
+      Logger.log(` 已通知管理員：${userName} 提交工作日誌`);
+    } catch (notifyErr) {
+      Logger.log(' 通知管理員失敗（不影響提交結果）: ' + notifyErr.message);
+    }
     
     Logger.log(' 工作日誌提交成功');
     Logger.log('   日誌ID: ' + worklogId);
